@@ -1,0 +1,14 @@
+services:
+  imgapi-ui:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    ports:
+      - "5173:5173"
+    volumes:
+      - .:/usr/src/app
+      - /usr/src/app/node_modules
+    stdin_open: true
+    tty: true
+    environment:
+      - CHOKIDAR_USEPOLLING=true
