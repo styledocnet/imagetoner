@@ -12,7 +12,7 @@ type MainNavProps = {
 
 const navItems: NavItem[] = [
   { name: "Dashboard", value: "dashboard" },
-  // { name: "Photos", value: "photos" },
+  { name: "Photos", value: "photos" },
   { name: "Filter", value: "image_filter" },
   { name: "RemoveBG", value: "image_rembg" },
 ];

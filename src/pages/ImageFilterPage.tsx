@@ -1,5 +1,6 @@
 import React, { useState } from "react";
 import apiService from "../services/apiService";
+import { ArrowDownIcon } from "@heroicons/react/24/outline";
 
 const ImageFilterPage: React.FC = () => {
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
@@ -47,6 +48,15 @@ const ImageFilterPage: React.FC = () => {
       alert(error.message);
     } finally {
       setLoading(false);
+    }
+  };
+
+  const handleDownload = () => {
+    if (outputImage) {
+      const link = document.createElement("a");
+      link.href = outputImage;
+      link.download = "filtered-image.png";
+      link.click();
     }
   };
 
@@ -107,6 +117,20 @@ const ImageFilterPage: React.FC = () => {
           />
         </div>
       )}
+
+      {filter === "mono" && (
+        <div>
+          <label className="block font-semibold">Color 1:</label>
+          <input
+            type="color"
+            name="color1"
+            value={params.color1}
+            className="w-full"
+            onChange={handleParamChange}
+          />
+        </div>
+      )}
+
       {filter === "duotone" && (
         <div>
           <label className="block font-semibold">Color 1:</label>
@@ -122,6 +146,35 @@ const ImageFilterPage: React.FC = () => {
             type="color"
             name="color2"
             value={params.color2}
+            className="w-full"
+            onChange={handleParamChange}
+          />
+        </div>
+      )}
+
+      {filter === "tritone" && (
+        <div>
+          <label className="block font-semibold">Color 1:</label>
+          <input
+            type="color"
+            name="color1"
+            value={params.color1}
+            className="w-full"
+            onChange={handleParamChange}
+          />
+          <label className="block font-semibold">Color 2:</label>
+          <input
+            type="color"
+            name="color2"
+            value={params.color2}
+            className="w-full"
+            onChange={handleParamChange}
+          />
+          <label className="block font-semibold">Color 3:</label>
+          <input
+            type="color"
+            name="color3"
+            value={params.color3}
             className="w-full"
             onChange={handleParamChange}
           />
@@ -144,6 +197,12 @@ const ImageFilterPage: React.FC = () => {
             className="mt-4 max-w-full rounded-lg shadow-md"
             alt="Filtered Output"
           />
+          <button
+            className="bg-inherit text-current px-4 py-2 rounded-md hover:bg-gray-500"
+            onClick={handleDownload}
+          >
+            <ArrowDownIcon className="w-4 h-4" /> Download
+          </button>
         </div>
       )}
     </div>

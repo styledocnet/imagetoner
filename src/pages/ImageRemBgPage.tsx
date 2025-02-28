@@ -1,6 +1,7 @@
 import React, { useState, useRef, useEffect } from "react";
 import apiService from "../services/apiService";
-import { XMarkIcon } from "@heroicons/react/24/outline";
+import { XMarkIcon, ArrowDownIcon } from "@heroicons/react/24/outline";
+import { storageService } from "../services/storageService";
 
 const aspectRatios = [
   { label: "Original", value: null },
@@ -78,14 +79,57 @@ const ImageRemBgPage: React.FC = () => {
     }
   };
 
+  // const handleExport = () => {
+  //   const canvas = canvasRef.current;
+  //   if (canvas) {
+  //     const link = document.createElement("a");
+  //     link.href = canvas.toDataURL("image/png");
+  //     link.download = "exported-image.png";
+  //     link.click();
+  //   }
+  // };
+
   const handleExport = () => {
-    const canvas = canvasRef.current;
-    if (canvas) {
-      const link = document.createElement("a");
-      link.href = canvas.toDataURL("image/png");
-      link.download = "exported-image.png";
-      link.click();
+    const originalCanvas = document.createElement("canvas");
+    const originalCtx = originalCanvas.getContext("2d");
+
+    if (originalCtx) {
+      // Set the canvas size to the current canvas size
+      originalCanvas.width = canvasWidth;
+      originalCanvas.height = canvasHeight;
+
+      // Draw each layer onto the offscreen canvas
+      layers.forEach((layer) => {
+        if (layer.image) {
+          const layerImg = new Image();
+          layerImg.src = layer.image;
+          layerImg.onload = () => {
+            const imgWidth = layerImg.width * layer.scale;
+            const imgHeight = layerImg.height * layer.scale;
+            const xPos = (originalCanvas.width - imgWidth) / 2 + layer.offsetX;
+            const yPos =
+              (originalCanvas.height - imgHeight) / 2 + layer.offsetY;
+            originalCtx.drawImage(layerImg, xPos, yPos, imgWidth, imgHeight);
+          };
+        }
+      });
+
+      setTimeout(() => {
+        const link = document.createElement("a");
+        link.href = originalCanvas.toDataURL("image/png");
+        link.download = "exported-image.png";
+        link.click();
+      }, 1000); // XXX timeout of images drawn
     }
+  };
+
+  const handleSave = async () => {
+    const document = {
+      name: `Document ${Date.now()}`,
+      layers,
+    };
+    await storageService.addDocument(document);
+    alert("Document saved successfully");
   };
 
   const setLayerProp = (layerIndex: number, prop: string, value: any) => {
@@ -285,10 +329,17 @@ const ImageRemBgPage: React.FC = () => {
       </button>
 
       <button
-        className="w-full mt-4 bg-blue-500 text-white py-2 rounded-md hover:bg-blue-700"
+        className="bg-inherit text-current px-4 py-2 rounded-md hover:bg-gray-500"
         onClick={handleExport}
       >
-        Share / Download
+        <ArrowDownIcon className="w-4 h-4" /> Download
+      </button>
+
+      <button
+        className="bg-inherit text-current px-4 py-2 rounded-md hover:bg-gray-500"
+        onClick={handleSave}
+      >
+        <ArrowDownIcon className="w-4 h-4" /> Save
       </button>
     </div>
   );
