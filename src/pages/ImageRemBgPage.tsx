@@ -1,7 +1,7 @@
 import React, { useState, useRef, useEffect } from "react";
 import apiService from "../services/apiService";
-import { XMarkIcon, ArrowDownIcon } from "@heroicons/react/24/outline";
 import { storageService } from "../services/storageService";
+import { XMarkIcon, ArrowDownIcon } from "@heroicons/react/24/outline";
 
 const aspectRatios = [
   { label: "Original", value: null },
@@ -10,7 +10,10 @@ const aspectRatios = [
   { label: "1:1", value: 1 },
 ];
 
-const ImageRemBgPage: React.FC = () => {
+const ImageRemBgPage: React.FC<{
+  documentId?: number;
+  onBack?: () => void;
+}> = ({ documentId = null, onBack = null }) => {
   const [layers, setLayers] = useState([
     {
       name: "Background",
@@ -37,6 +40,20 @@ const ImageRemBgPage: React.FC = () => {
   const [aspectRatio, setAspectRatio] = useState<number | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const canvasRef = useRef<HTMLCanvasElement>(null);
+
+  useEffect(() => {
+    const loadDocument = async () => {
+      if (documentId) {
+        const document = await storageService.getDocument(documentId);
+        console.log(document);
+        if (document) {
+          console.log(document.layers);
+          setLayers(document.layers);
+        }
+      }
+    };
+    loadDocument();
+  }, [documentId]);
 
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     if (e.target.files && e.target.files[0]) {
@@ -79,26 +96,14 @@ const ImageRemBgPage: React.FC = () => {
     }
   };
 
-  // const handleExport = () => {
-  //   const canvas = canvasRef.current;
-  //   if (canvas) {
-  //     const link = document.createElement("a");
-  //     link.href = canvas.toDataURL("image/png");
-  //     link.download = "exported-image.png";
-  //     link.click();
-  //   }
-  // };
-
   const handleExport = () => {
     const originalCanvas = document.createElement("canvas");
     const originalCtx = originalCanvas.getContext("2d");
 
     if (originalCtx) {
-      // Set the canvas size to the current canvas size
       originalCanvas.width = canvasWidth;
       originalCanvas.height = canvasHeight;
 
-      // Draw each layer onto the offscreen canvas
       layers.forEach((layer) => {
         if (layer.image) {
           const layerImg = new Image();
@@ -119,7 +124,7 @@ const ImageRemBgPage: React.FC = () => {
         link.href = originalCanvas.toDataURL("image/png");
         link.download = "exported-image.png";
         link.click();
-      }, 1000); // XXX timeout of images drawn
+      }, 1000);
     }
   };
 
@@ -129,7 +134,7 @@ const ImageRemBgPage: React.FC = () => {
       layers,
     };
     await storageService.addDocument(document);
-    alert("Document saved successfully");
+    alert("Document saved successfully!");
   };
 
   const setLayerProp = (layerIndex: number, prop: string, value: any) => {
@@ -167,7 +172,7 @@ const ImageRemBgPage: React.FC = () => {
     if (aspectRatio) {
       setCanvasHeight(canvasWidth / aspectRatio);
     } else {
-      setCanvasHeight(600); // Default height if no aspect ratio is selected
+      setCanvasHeight(600);
     }
   }, [aspectRatio, canvasWidth]);
 
@@ -176,8 +181,15 @@ const ImageRemBgPage: React.FC = () => {
       <h1 className="text-2xl font-bold mb-4 text-center">
         Image Background Removal
       </h1>
+      {onBack && (
+        <button
+          className="bg-gray-500 text-white py-2 px-4 rounded-md mb-4"
+          onClick={onBack}
+        >
+          Back
+        </button>
+      )}
 
-      {/* Canvas Toolbar */}
       <div className="flex flex-wrap justify-between mb-4">
         <div className="w-full md:w-auto mb-4">
           <label className="block font-semibold">Zoom:</label>
@@ -328,19 +340,21 @@ const ImageRemBgPage: React.FC = () => {
         {loading ? "Processing..." : "Remove Background"}
       </button>
 
-      <button
-        className="bg-inherit text-current px-4 py-2 rounded-md hover:bg-gray-500"
-        onClick={handleExport}
-      >
-        <ArrowDownIcon className="w-4 h-4" /> Download
-      </button>
+      <div className="flex justify-between mt-4">
+        <button
+          className="min-w-fit bg-inherit text-current py-4 px-4 rounded-md hover:bg-blue-700"
+          onClick={handleExport}
+        >
+          <ArrowDownIcon className="w-4 h-4" /> Download
+        </button>
 
-      <button
-        className="bg-inherit text-current px-4 py-2 rounded-md hover:bg-gray-500"
-        onClick={handleSave}
-      >
-        <ArrowDownIcon className="w-4 h-4" /> Save
-      </button>
+        <button
+          className="min-w-fit mt-4 bg-inherit text-current py-4 px-4 rounded-md hover:bg-blue-700"
+          onClick={handleSave}
+        >
+          <ArrowDownIcon className="w-4 h-4" /> Save
+        </button>
+      </div>
     </div>
   );
 };
