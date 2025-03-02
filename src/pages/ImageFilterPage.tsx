@@ -61,8 +61,8 @@ const ImageFilterPage: React.FC = () => {
   };
 
   return (
-    <div className="max-w-xl mx-auto bg-white p-6 rounded-lg shadow-md">
-      <h1 className="text-2xl font-bold mb-4 text-center">Image Filter</h1>
+    <div className="max-w-xl mx-auto bg-current p-6 rounded-lg shadow-md">
+      {/* <h1 className="text-2xl font-bold mb-4 text-center">Image Filter</h1> */}
 
       <input
         type="file"
@@ -81,10 +81,11 @@ const ImageFilterPage: React.FC = () => {
         <option value="duotone">Duotone</option>
         <option value="mono">Monotone</option>
         <option value="tritone">Tritone</option>
+        <option value="quadtone">Quadtone</option>
       </select>
 
       {filter === "vignette" && (
-        <div>
+        <div className="text-gray-800 dark:text-gray-200">
           <label className="block font-semibold">Strength (0 - 1):</label>
           <input
             type="range"
@@ -119,7 +120,7 @@ const ImageFilterPage: React.FC = () => {
       )}
 
       {filter === "mono" && (
-        <div>
+        <div className="text-gray-800 dark:text-gray-200">
           <label className="block font-semibold">Color 1:</label>
           <input
             type="color"
@@ -132,7 +133,7 @@ const ImageFilterPage: React.FC = () => {
       )}
 
       {filter === "duotone" && (
-        <div>
+        <div className="text-gray-800 dark:text-gray-200">
           <label className="block font-semibold">Color 1:</label>
           <input
             type="color"
@@ -153,7 +154,7 @@ const ImageFilterPage: React.FC = () => {
       )}
 
       {filter === "tritone" && (
-        <div>
+        <div className="text-gray-800 dark:text-gray-200">
           <label className="block font-semibold">Color 1:</label>
           <input
             type="color"
@@ -175,6 +176,43 @@ const ImageFilterPage: React.FC = () => {
             type="color"
             name="color3"
             value={params.color3}
+            className="w-full"
+            onChange={handleParamChange}
+          />
+        </div>
+      )}
+
+      {filter === "quadtone" && (
+        <div className="text-gray-800 dark:text-gray-200">
+          <label className="block font-semibold">Color 1:</label>
+          <input
+            type="color"
+            name="color1"
+            value={params.color1}
+            className="w-full"
+            onChange={handleParamChange}
+          />
+          <label className="block font-semibold">Color 2:</label>
+          <input
+            type="color"
+            name="color2"
+            value={params.color2}
+            className="w-full"
+            onChange={handleParamChange}
+          />
+          <label className="block font-semibold">Color 3:</label>
+          <input
+            type="color"
+            name="color3"
+            value={params.color3}
+            className="w-full"
+            onChange={handleParamChange}
+          />
+          <label className="block font-semibold">Color 4:</label>
+          <input
+            type="color"
+            name="color4"
+            value={params.color4}
             className="w-full"
             onChange={handleParamChange}
           />

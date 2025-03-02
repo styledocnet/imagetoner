@@ -1,21 +1,21 @@
 import React, { useState, useRef, useEffect } from "react";
 import apiService from "../services/apiService";
 import { storageService } from "../services/storageService";
-import { XMarkIcon, ArrowDownIcon } from "@heroicons/react/24/outline";
+import {
+  XMarkIcon,
+  ArrowDownIcon,
+  AdjustmentsHorizontalIcon,
+  PlusIcon,
+} from "@heroicons/react/24/outline";
 import { useGesture } from "@use-gesture/react";
 import { animated, useSpring } from "@react-spring/web";
-
-const aspectRatios = [
-  { label: "Original", value: null },
-  { label: "16:9", value: 16 / 9 },
-  { label: "4:3", value: 4 / 3 },
-  { label: "1:1", value: 1 },
-];
+import FillImageModal from "../components/FillImageModal";
+import AspectRatioModal from "../components/AspectRatioModal";
+import LayerAccordion from "../components/LayerAccordion";
 
 const ImageRemBgPage: React.FC<{
   documentId?: number;
-  onBack?: () => void;
-}> = ({ documentId = null, onBack = null }) => {
+}> = ({ documentId = null }) => {
   const [layers, setLayers] = useState([
     {
       name: "Background",
@@ -36,10 +36,11 @@ const ImageRemBgPage: React.FC<{
   ]);
   const [currentLayer, setCurrentLayer] = useState(1);
   const [loading, setLoading] = useState(false);
-  const [zoom, setZoom] = useState(1);
   const [canvasWidth, setCanvasWidth] = useState(800);
   const [canvasHeight, setCanvasHeight] = useState(600);
   const [aspectRatio, setAspectRatio] = useState<number | null>(null);
+  const [isFillModalOpen, setIsFillModalOpen] = useState(false);
+  const [isAspectRatioModalOpen, setIsAspectRatioModalOpen] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const canvasRef = useRef<HTMLCanvasElement>(null);
 
@@ -48,6 +49,8 @@ const ImageRemBgPage: React.FC<{
     y: 0,
     scale: 1,
   }));
+
+  documentId = "12";
 
   useEffect(() => {
     const loadDocument = async () => {
@@ -153,6 +156,12 @@ const ImageRemBgPage: React.FC<{
     );
   };
 
+  const removeLayer = (layerIndex: number) => {
+    setLayers((prevLayers) =>
+      prevLayers.filter((layer) => layer.index !== layerIndex),
+    );
+  };
+
   const bind = useGesture(
     {
       onDrag: ({ offset: [dx, dy] }) => {
@@ -205,229 +214,111 @@ const ImageRemBgPage: React.FC<{
     }
   }, [aspectRatio, canvasWidth]);
 
+  const handleFill = (image: string) => {
+    setLayers((prev) =>
+      prev.map((layer) =>
+        layer.index === currentLayer ? { ...layer, image } : layer,
+      ),
+    );
+  };
+
   return (
-    <div className="max-w-xl mx-auto bg-white p-6 rounded-lg shadow-md">
-      <h1 className="text-2xl font-bold mb-4 text-center">
-        Image Background Removal
-      </h1>
-      {onBack && (
-        <button
-          className="bg-gray-500 text-white py-2 px-4 rounded-md mb-4"
-          onClick={onBack}
-        >
-          Back
-        </button>
-      )}
+    <div className="w-full h-screen flex flex-col">
+      <div className="bg-gray-800 text-white p-4 flex justify-between items-center">
+        <div className="flex space-x-4">
+          <input
+            ref={fileInputRef}
+            type="file"
+            className="block w-full mt-2 hidden"
+            accept="image/*"
+            onChange={handleFileChange}
+            hidden
+          />
 
-      <div className="flex flex-wrap justify-between mb-4">
-        <div className="w-full md:w-auto mb-4">
-          <label className="block font-semibold">Zoom:</label>
-          <input
-            type="range"
-            min="0.5"
-            max="2"
-            step="0.1"
-            value={zoom}
-            onChange={(e) => setZoom(parseFloat(e.target.value))}
-            className="w-full"
-          />
-          <input
-            type="number"
-            min="0.5"
-            max="2"
-            step="0.1"
-            value={zoom}
-            onChange={(e) => setZoom(parseFloat(e.target.value))}
-            className="w-full mt-1"
-          />
-        </div>
-        <div className="w-full md:w-auto mb-4">
-          <label className="block font-semibold">X:</label>
-          <input
-            type="range"
-            min="-128"
-            max="128"
-            step="1"
-            value={layers[currentLayer].offsetX}
-            onChange={(e) =>
-              setLayerProp(currentLayer, "offsetX", parseFloat(e.target.value))
-            }
-            className="w-full"
-          />
-          <input
-            type="number"
-            min="-128"
-            max="128"
-            step="1"
-            value={layers[currentLayer].offsetX}
-            onChange={(e) =>
-              setLayerProp(currentLayer, "offsetX", parseFloat(e.target.value))
-            }
-            className="w-full mt-1"
-          />
-        </div>
-        <div className="w-full md:w-auto mb-4">
-          <label className="block font-semibold">Y:</label>
-          <input
-            type="range"
-            min="-128"
-            max="128"
-            step="1"
-            value={layers[currentLayer].offsetY}
-            onChange={(e) =>
-              setLayerProp(currentLayer, "offsetY", parseFloat(e.target.value))
-            }
-            className="w-full"
-          />
-          <input
-            type="number"
-            min="-128"
-            max="128"
-            step="1"
-            value={layers[currentLayer].offsetY}
-            onChange={(e) =>
-              setLayerProp(currentLayer, "offsetY", parseFloat(e.target.value))
-            }
-            className="w-full mt-1"
-          />
-        </div>
-        <div className="w-full md:w-auto mb-4">
-          <label className="block font-semibold">Scale:</label>
-          <input
-            type="range"
-            min="0.5"
-            max="2"
-            step="0.1"
-            value={layers[currentLayer].scale}
-            onChange={(e) =>
-              setLayerProp(currentLayer, "scale", parseFloat(e.target.value))
-            }
-            className="w-full"
-          />
-          <input
-            type="number"
-            min="0.5"
-            max="2"
-            step="0.1"
-            value={layers[currentLayer].scale}
-            onChange={(e) =>
-              setLayerProp(currentLayer, "scale", parseFloat(e.target.value))
-            }
-            className="w-full mt-1"
-          />
-        </div>
-        <div className="w-full md:w-auto mb-4">
-          <label className="block font-semibold">Width:</label>
-          <input
-            type="number"
-            min="100"
-            max="1920"
-            value={canvasWidth}
-            onChange={(e) => setCanvasWidth(parseInt(e.target.value))}
-            className="w-full"
-          />
-        </div>
-        <div className="w-full md:w-auto mb-4">
-          <label className="block font-semibold">Height:</label>
-          <input
-            type="number"
-            min="100"
-            max="1080"
-            value={canvasHeight}
-            onChange={(e) => setCanvasHeight(parseInt(e.target.value))}
-            className="w-full"
-            disabled={aspectRatio !== null}
-          />
-        </div>
-        <div className="w-full md:w-auto mb-4">
-          <label className="block font-semibold">Aspect Ratio:</label>
-          <select
-            value={aspectRatio}
-            onChange={(e) =>
-              setAspectRatio(e.target.value ? parseFloat(e.target.value) : null)
-            }
-            className="w-full"
-          >
-            {aspectRatios.map((ratio) => (
-              <option key={ratio.label} value={ratio.value}>
-                {ratio.label}
-              </option>
-            ))}
-          </select>
-        </div>
-      </div>
-
-      <div className="relative mb-4">
-        <animated.canvas
-          {...bind()}
-          ref={canvasRef}
-          width={canvasWidth}
-          height={canvasHeight}
-          className={`border mb-4 w-full h-auto transform scale-[${zoom}]`}
-          style={{ x, y, scale }}
-        />
-      </div>
-
-      <div className="flex justify-between mb-4">
-        {layers.map((layer) => (
           <button
-            key={layer.index}
-            className={`px-4 py-2 border rounded-md ${currentLayer === layer.index ? "bg-blue-500 text-white" : "bg-gray-200"}`}
-            onClick={() => setCurrentLayer(layer.index)}
+            className="bg-green-500 py-2 px-4 rounded-md"
+            onClick={handleRemoveBG}
+            disabled={loading}
           >
-            {layer.name}
+            {loading ? "Processing..." : "Remove Background"}
           </button>
-        ))}
+          <button
+            className="bg-blue-500 py-2 px-4 rounded-md"
+            onClick={() => setIsFillModalOpen(true)}
+          >
+            Fill
+          </button>
+          <button
+            className="bg-yellow-500 py-2 px-4 rounded-md"
+            onClick={() => setIsAspectRatioModalOpen(true)}
+          >
+            Aspect Ratio
+          </button>
+        </div>
+        <div className="flex items-center space-x-2">
+          <label className="block font-semibold">Image:</label>
+          <button
+            className="bg-gray-700 py-2 px-2 rounded-md"
+            onClick={handleDropZoneClick}
+          >
+            <PlusIcon className="w-4 h-4" />
+          </button>
+        </div>
       </div>
 
-      <div
-        className="border-dashed border-2 p-6 rounded-md flex flex-col items-center relative cursor-pointer"
-        onClick={handleDropZoneClick}
-      >
-        {layers[currentLayer].image ? (
-          <img
-            src={layers[currentLayer].image}
-            className="max-w-full rounded-md shadow-md"
-            alt="Layer Preview"
+      <div className="flex-grow flex">
+        <div className="w-1/4 bg-gray-100 p-4 overflow-auto">
+          <LayerAccordion
+            layers={layers}
+            currentLayer={currentLayer}
+            setCurrentLayer={setCurrentLayer}
+            setLayerProp={setLayerProp}
+            removeLayer={removeLayer}
           />
-        ) : (
-          <p className="text-gray-500">Click or Drop to Import an Image</p>
-        )}
-        <XMarkIcon className="absolute top-2 right-2 h-6 w-6 text-red-500 cursor-pointer" />
+        </div>
+        <div className="flex-grow flex justify-center items-center bg-gray-300 p-4">
+          <animated.canvas
+            {...bind()}
+            ref={canvasRef}
+            width={canvasWidth}
+            height={canvasHeight}
+            className="border mb-4 w-full h-auto"
+            style={{ x, y, scale }}
+          />
+        </div>
       </div>
 
-      <input
-        ref={fileInputRef}
-        type="file"
-        className="block w-full mt-2"
-        accept="image/*"
-        onChange={handleFileChange}
-        hidden
-      />
-
-      <button
-        className="w-full mt-4 bg-green-500 text-white py-2 rounded-md hover:bg-green-700"
-        onClick={handleRemoveBG}
-        disabled={loading}
-      >
-        {loading ? "Processing..." : "Remove Background"}
-      </button>
-
-      <div className="flex justify-between mt-4">
+      <div className="bg-gray-800 text-white p-4 flex justify-between items-center">
         <button
-          className="min-w-fit bg-inherit text-current py-4 px-4 rounded-md hover:bg-blue-700"
+          className="bg-inherit text-current py-4 px-4 rounded-md hover:bg-blue-700"
           onClick={handleExport}
         >
           <ArrowDownIcon className="w-4 h-4" /> Download
         </button>
-
         <button
-          className="min-w-fit mt-4 bg-inherit text-current py-4 px-4 rounded-md hover:bg-blue-700"
+          className="bg-inherit text-current py-4 px-4 rounded-md hover:bg-blue-700"
           onClick={handleSave}
         >
           <ArrowDownIcon className="w-4 h-4" /> Save
         </button>
       </div>
+
+      <FillImageModal
+        isOpen={isFillModalOpen}
+        onClose={() => setIsFillModalOpen(false)}
+        onFill={handleFill}
+      />
+
+      <AspectRatioModal
+        isOpen={isAspectRatioModalOpen}
+        onClose={() => setIsAspectRatioModalOpen(false)}
+        aspectRatio={aspectRatio}
+        setAspectRatio={setAspectRatio}
+        canvasWidth={canvasWidth}
+        setCanvasWidth={setCanvasWidth}
+        canvasHeight={canvasHeight}
+        setCanvasHeight={setCanvasHeight}
+      />
     </div>
   );
 };

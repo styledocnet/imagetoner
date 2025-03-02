@@ -2,12 +2,12 @@ import React, { useState, useEffect } from "react";
 import { storageService } from "../services/storageService";
 import { ArrowDownIcon, FunnelIcon } from "@heroicons/react/24/outline";
 
-const PhotosPage: React.FC<{
-  onEditDocument: (documentId: number) => void;
-  onFilterLayer: (imageUrl: string) => void;
-}> = ({ onEditDocument, onFilterLayer }) => {
+const PhotosPage: React.FC<> = () => {
   const [documents, setDocuments] = useState<Document[]>([]);
   const [filter, setFilter] = useState<string>("");
+
+  const onEditDocument = (documentId: number) => {};
+  const onFilterLayer = (imageUrl: string) => {};
 
   useEffect(() => {
     const fetchDocuments = async () => {
@@ -34,8 +34,8 @@ const PhotosPage: React.FC<{
   );
 
   return (
-    <div className="max-w-xl mx-auto bg-white p-6 rounded-lg shadow-md">
-      <h1 className="text-2xl font-bold mb-4">Photos</h1>
+    <div className="max-w-xl max-w-xl mx-auto bg-current p-6 rounded-lg shadow-md p-6 rounded-lg shadow-md">
+      {/* <h1 className="text-2xl font-bold mb-4">Photos</h1> */}
       <input
         type="text"
         placeholder="Filter by name"
