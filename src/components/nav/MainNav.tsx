@@ -1,5 +1,5 @@
 import React from "react";
-import { Link } from "../../context/CustomRouter";
+import { Link, useRouter } from "../../context/CustomRouter";
 
 type NavItem = {
   name: string;
@@ -14,13 +14,15 @@ const navItems: NavItem[] = [
 ];
 
 const MainNav: React.FC = () => {
+  const { currentRoute } = useRouter();
+
   return (
     <nav className="flex space-x-4 ml-2">
       {navItems.map((item) => (
         <Link key={item.value} to={item.value}>
           <button
             className={`px-4 py-2 rounded-md text-sm font-medium ${
-              window.location.pathname === `/${item.value}`
+              currentRoute === item.value
                 ? "bg-blue-500 text-white"
                 : "bg-gray-200 text-gray-800 hover:bg-gray-300"
             }`}

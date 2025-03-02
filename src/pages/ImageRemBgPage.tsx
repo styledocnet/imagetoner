@@ -2,6 +2,8 @@ import React, { useState, useRef, useEffect } from "react";
 import apiService from "../services/apiService";
 import { storageService } from "../services/storageService";
 import { XMarkIcon, ArrowDownIcon } from "@heroicons/react/24/outline";
+import { useGesture } from "@use-gesture/react";
+import { animated, useSpring } from "@react-spring/web";
 
 const aspectRatios = [
   { label: "Original", value: null },
@@ -40,6 +42,12 @@ const ImageRemBgPage: React.FC<{
   const [aspectRatio, setAspectRatio] = useState<number | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const canvasRef = useRef<HTMLCanvasElement>(null);
+
+  const [{ x, y, scale }, api] = useSpring(() => ({
+    x: 0,
+    y: 0,
+    scale: 1,
+  }));
 
   useEffect(() => {
     const loadDocument = async () => {
@@ -145,6 +153,27 @@ const ImageRemBgPage: React.FC<{
     );
   };
 
+  const bind = useGesture(
+    {
+      onDrag: ({ offset: [dx, dy] }) => {
+        setLayerProp(currentLayer, "offsetX", dx);
+        setLayerProp(currentLayer, "offsetY", dy);
+      },
+      onPinch: ({ offset: [d] }) => {
+        setLayerProp(currentLayer, "scale", d);
+      },
+    },
+    {
+      drag: {
+        from: () => [
+          layers[currentLayer].offsetX,
+          layers[currentLayer].offsetY,
+        ],
+      },
+      pinch: { from: () => [layers[currentLayer].scale, 0] },
+    },
+  );
+
   useEffect(() => {
     const canvas = canvasRef.current;
     if (canvas) {
@@ -202,6 +231,15 @@ const ImageRemBgPage: React.FC<{
             onChange={(e) => setZoom(parseFloat(e.target.value))}
             className="w-full"
           />
+          <input
+            type="number"
+            min="0.5"
+            max="2"
+            step="0.1"
+            value={zoom}
+            onChange={(e) => setZoom(parseFloat(e.target.value))}
+            className="w-full mt-1"
+          />
         </div>
         <div className="w-full md:w-auto mb-4">
           <label className="block font-semibold">X:</label>
@@ -216,12 +254,23 @@ const ImageRemBgPage: React.FC<{
             }
             className="w-full"
           />
+          <input
+            type="number"
+            min="-128"
+            max="128"
+            step="1"
+            value={layers[currentLayer].offsetX}
+            onChange={(e) =>
+              setLayerProp(currentLayer, "offsetX", parseFloat(e.target.value))
+            }
+            className="w-full mt-1"
+          />
         </div>
         <div className="w-full md:w-auto mb-4">
           <label className="block font-semibold">Y:</label>
           <input
             type="range"
-            min="-129"
+            min="-128"
             max="128"
             step="1"
             value={layers[currentLayer].offsetY}
@@ -229,6 +278,17 @@ const ImageRemBgPage: React.FC<{
               setLayerProp(currentLayer, "offsetY", parseFloat(e.target.value))
             }
             className="w-full"
+          />
+          <input
+            type="number"
+            min="-128"
+            max="128"
+            step="1"
+            value={layers[currentLayer].offsetY}
+            onChange={(e) =>
+              setLayerProp(currentLayer, "offsetY", parseFloat(e.target.value))
+            }
+            className="w-full mt-1"
           />
         </div>
         <div className="w-full md:w-auto mb-4">
@@ -243,6 +303,17 @@ const ImageRemBgPage: React.FC<{
               setLayerProp(currentLayer, "scale", parseFloat(e.target.value))
             }
             className="w-full"
+          />
+          <input
+            type="number"
+            min="0.5"
+            max="2"
+            step="0.1"
+            value={layers[currentLayer].scale}
+            onChange={(e) =>
+              setLayerProp(currentLayer, "scale", parseFloat(e.target.value))
+            }
+            className="w-full mt-1"
           />
         </div>
         <div className="w-full md:w-auto mb-4">
@@ -287,11 +358,13 @@ const ImageRemBgPage: React.FC<{
       </div>
 
       <div className="relative mb-4">
-        <canvas
+        <animated.canvas
+          {...bind()}
           ref={canvasRef}
           width={canvasWidth}
           height={canvasHeight}
           className={`border mb-4 w-full h-auto transform scale-[${zoom}]`}
+          style={{ x, y, scale }}
         />
       </div>
 

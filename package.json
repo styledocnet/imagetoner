@@ -13,6 +13,7 @@
     "@heroicons/react": "^2.2.0",
     "@preact/signals-react": "^3.0.1",
     "@react-pdf/renderer": "^4.1.6",
+    "@use-gesture/react": "^10.3.1",
     "axios": "^1.7.9",
     "idb": "^8.0.2",
     "react": "^18.3.1",
