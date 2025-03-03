@@ -236,7 +236,7 @@ const ImageFilterPage: React.FC = () => {
             alt="Filtered Output"
           />
           <button
-            className="bg-inherit text-current px-4 py-2 rounded-md hover:bg-gray-500"
+            className="bg-inherit dark:bg-gray-700 dark:text-gray-200 my-4 px-4 py-2 rounded-md hover:bg-gray-500"
             onClick={handleDownload}
           >
             <ArrowDownIcon className="w-4 h-4" /> Download

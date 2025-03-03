@@ -33,8 +33,10 @@ const LayerAccordion: React.FC<LayerAccordionProps> = ({
       {layers.map((layer) => (
         <div key={layer.index} className="border rounded-md shadow-sm">
           <div
-            className={`flex justify-between items-center px-4 py-2 cursor-pointer ${currentLayer === layer.index ? "bg-blue-500 text-white" : "bg-gray-200"}`}
-            onClick={() => setCurrentLayer(layer.index)}
+            className={`flex justify-between items-center px-4 py-2 cursor-pointer ${currentLayer === layer.index ? "bg-gray-500 text-white" : "bg-gray-200"}`}
+            onClick={() =>
+              setCurrentLayer(currentLayer !== layer.index ? layer.index : null)
+            }
           >
             <span>{layer.name}</span>
             <div className="flex items-center space-x-2">

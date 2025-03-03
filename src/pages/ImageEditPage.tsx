@@ -13,7 +13,7 @@ import FillImageModal from "../components/FillImageModal";
 import AspectRatioModal from "../components/AspectRatioModal";
 import LayerAccordion from "../components/LayerAccordion";
 
-const ImageRemBgPage: React.FC<{
+const ImageEditPage: React.FC<{
   documentId?: number;
 }> = ({ documentId = null }) => {
   const [layers, setLayers] = useState([
@@ -36,8 +36,8 @@ const ImageRemBgPage: React.FC<{
   ]);
   const [currentLayer, setCurrentLayer] = useState(1);
   const [loading, setLoading] = useState(false);
-  const [canvasWidth, setCanvasWidth] = useState(800);
-  const [canvasHeight, setCanvasHeight] = useState(600);
+  const [canvasWidth, setCanvasWidth] = useState(1280);
+  const [canvasHeight, setCanvasHeight] = useState(1024);
   const [aspectRatio, setAspectRatio] = useState<number | null>(null);
   const [isFillModalOpen, setIsFillModalOpen] = useState(false);
   const [isAspectRatioModalOpen, setIsAspectRatioModalOpen] = useState(false);
@@ -50,7 +50,7 @@ const ImageRemBgPage: React.FC<{
     scale: 1,
   }));
 
-  documentId = "12";
+  // documentId = "12";
 
   useEffect(() => {
     const loadDocument = async () => {
@@ -210,7 +210,7 @@ const ImageRemBgPage: React.FC<{
     if (aspectRatio) {
       setCanvasHeight(canvasWidth / aspectRatio);
     } else {
-      setCanvasHeight(600);
+      // setCanvasHeight(canvasHeight);
     }
   }, [aspectRatio, canvasWidth]);
 
@@ -235,6 +235,7 @@ const ImageRemBgPage: React.FC<{
             hidden
           />
 
+          {/* TODO only when image is loaded and then under a menupoint */}
           <button
             className="bg-green-500 py-2 px-4 rounded-md"
             onClick={handleRemoveBG}
@@ -242,12 +243,15 @@ const ImageRemBgPage: React.FC<{
           >
             {loading ? "Processing..." : "Remove Background"}
           </button>
+
+          {/* TODO under a menupoint Generate? */}
           <button
             className="bg-blue-500 py-2 px-4 rounded-md"
             onClick={() => setIsFillModalOpen(true)}
           >
             Fill
           </button>
+
           <button
             className="bg-yellow-500 py-2 px-4 rounded-md"
             onClick={() => setIsAspectRatioModalOpen(true)}
@@ -256,7 +260,7 @@ const ImageRemBgPage: React.FC<{
           </button>
         </div>
         <div className="flex items-center space-x-2">
-          <label className="block font-semibold">Image:</label>
+          <label className="block font-semibold">Add Image </label>
           <button
             className="bg-gray-700 py-2 px-2 rounded-md"
             onClick={handleDropZoneClick}
@@ -267,7 +271,7 @@ const ImageRemBgPage: React.FC<{
       </div>
 
       <div className="flex-grow flex">
-        <div className="w-1/4 bg-gray-100 p-4 overflow-auto">
+        <div className="w-1/4 bg-current p-4 overflow-auto">
           <LayerAccordion
             layers={layers}
             currentLayer={currentLayer}
@@ -323,4 +327,4 @@ const ImageRemBgPage: React.FC<{
   );
 };
 
-export default ImageRemBgPage;
+export default ImageEditPage;
