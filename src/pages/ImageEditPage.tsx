@@ -10,6 +10,8 @@ import {
 import { useGesture } from "@use-gesture/react";
 import { animated, useSpring } from "@react-spring/web";
 import FillImageModal from "../components/FillImageModal";
+import FilterModal from "../components/FilterModal";
+
 import AspectRatioModal from "../components/AspectRatioModal";
 import LayerAccordion from "../components/LayerAccordion";
 
@@ -40,6 +42,7 @@ const ImageEditPage: React.FC<{
   const [canvasHeight, setCanvasHeight] = useState(1024);
   const [aspectRatio, setAspectRatio] = useState<number | null>(null);
   const [isFillModalOpen, setIsFillModalOpen] = useState(false);
+  const [isFilterModalOpen, setIsFilterModalOpen] = useState(false);
   const [isAspectRatioModalOpen, setIsAspectRatioModalOpen] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const canvasRef = useRef<HTMLCanvasElement>(null);
@@ -157,6 +160,7 @@ const ImageEditPage: React.FC<{
   };
 
   const removeLayer = (layerIndex: number) => {
+    confirm("Delete the Layer?");
     setLayers((prevLayers) =>
       prevLayers.filter((layer) => layer.index !== layerIndex),
     );
@@ -221,6 +225,137 @@ const ImageEditPage: React.FC<{
       ),
     );
   };
+  const applyFilter = (filter: string, params: any) => {
+    const canvas = canvasRef.current;
+    const ctx = canvas?.getContext("2d");
+    const layer = layers.find((layer) => layer.index === currentLayer);
+
+    if (ctx && layer?.image) {
+      const img = new Image();
+      img.src = layer.image;
+
+      img.onload = () => {
+        ctx.clearRect(0, 0, canvas.width, canvas.height);
+        ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
+
+        switch (filter) {
+          case "vignette":
+            applyVignetteFilter(ctx, canvas, params);
+            break;
+          case "mono":
+            applyMonoFilter(ctx, canvas, params);
+            break;
+          case "duotone":
+            applyDuotoneFilter(ctx, canvas, params);
+            break;
+          case "tritone":
+            applyTritoneFilter(ctx, canvas, params);
+            break;
+          case "quadtone":
+            applyQuadtoneFilter(ctx, canvas, params);
+            break;
+          default:
+            break;
+        }
+
+        const imageUrl = canvas.toDataURL("image/png");
+        setLayerProp(currentLayer, "image", imageUrl);
+      };
+    }
+  };
+
+  const applyVignetteFilter = (
+    ctx: CanvasRenderingContext2D,
+    canvas: HTMLCanvasElement,
+    params: any,
+  ) => {
+    const { strength, sizeFactor, color } = params;
+    ctx.globalCompositeOperation = "source-over";
+    const gradient = ctx.createRadialGradient(
+      canvas.width / 2,
+      canvas.height / 2,
+      canvas.width / sizeFactor,
+      canvas.width / 2,
+      canvas.height / 2,
+      canvas.width / 2,
+    );
+    gradient.addColorStop(0, "transparent");
+    gradient.addColorStop(1, color);
+    ctx.fillStyle = gradient;
+    ctx.globalAlpha = strength;
+    ctx.fillRect(0, 0, canvas.width, canvas.height);
+  };
+
+  const applyMonoFilter = (
+    ctx: CanvasRenderingContext2D,
+    canvas: HTMLCanvasElement,
+    params: any,
+  ) => {
+    const { color1 } = params;
+    ctx.globalCompositeOperation = "source-atop";
+    ctx.fillStyle = color1;
+    ctx.fillRect(0, 0, canvas.width, canvas.height);
+  };
+
+  const applyDuotoneFilter = (
+    ctx: CanvasRenderingContext2D,
+    canvas: HTMLCanvasElement,
+    params: any,
+  ) => {
+    const { color1, color2 } = params;
+    ctx.globalCompositeOperation = "source-atop";
+    const gradient = ctx.createLinearGradient(
+      0,
+      0,
+      canvas.width,
+      canvas.height,
+    );
+    gradient.addColorStop(0, color1);
+    gradient.addColorStop(1, color2);
+    ctx.fillStyle = gradient;
+    ctx.fillRect(0, 0, canvas.width, canvas.height);
+  };
+
+  const applyTritoneFilter = (
+    ctx: CanvasRenderingContext2D,
+    canvas: HTMLCanvasElement,
+    params: any,
+  ) => {
+    const { color1, color2, color3 } = params;
+    ctx.globalCompositeOperation = "source-atop";
+    const gradient = ctx.createLinearGradient(
+      0,
+      0,
+      canvas.width,
+      canvas.height,
+    );
+    gradient.addColorStop(0, color1);
+    gradient.addColorStop(0.5, color2);
+    gradient.addColorStop(1, color3);
+    ctx.fillStyle = gradient;
+    ctx.fillRect(0, 0, canvas.width, canvas.height);
+  };
+
+  const applyQuadtoneFilter = (
+    ctx: CanvasRenderingContext2D,
+    canvas: HTMLCanvasElement,
+    params: any,
+  ) => {
+    const { color1, color2, color3, color4 } = params;
+    ctx.globalCompositeOperation = "source-atop";
+    const gradient = ctx.createLinearGradient(
+      0,
+      0,
+      canvas.width,
+      canvas.height,
+    );
+    gradient.addColorStop(0, color1);
+    gradient.addColorStop(0.33, color2);
+    gradient.addColorStop(0.66, color3);
+    gradient.addColorStop(1, color4);
+    ctx.fillStyle = gradient;
+    ctx.fillRect(0, 0, canvas.width, canvas.height);
+  };
 
   return (
     <div className="w-full h-screen flex flex-col">
@@ -250,6 +385,13 @@ const ImageEditPage: React.FC<{
             onClick={() => setIsFillModalOpen(true)}
           >
             Fill
+          </button>
+
+          <button
+            className="bg-purple-500 py-2 px-4 rounded-md"
+            onClick={() => setIsFilterModalOpen(true)}
+          >
+            Filter
           </button>
 
           <button
@@ -311,6 +453,12 @@ const ImageEditPage: React.FC<{
         isOpen={isFillModalOpen}
         onClose={() => setIsFillModalOpen(false)}
         onFill={handleFill}
+      />
+
+      <FilterModal
+        isOpen={isFilterModalOpen}
+        onClose={() => setIsFilterModalOpen(false)}
+        applyFilter={applyFilter}
       />
 
       <AspectRatioModal

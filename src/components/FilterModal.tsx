@@ -1,9 +1,11 @@
-import React, { useState } from "react";
-import apiService from "../services/apiService";
-import { ArrowDownIcon } from "@heroicons/react/24/outline";
+import React, { useState, useEffect } from "react";
+import Modal from "./Modal";
 
-const ImageFilterPage: React.FC = () => {
-  const [selectedFile, setSelectedFile] = useState<File | null>(null);
+const FilterModal: React.FC<{
+  isOpen: boolean;
+  onClose: () => void;
+  applyFilter: (filter: string, params: any) => void;
+}> = ({ isOpen, onClose, applyFilter }) => {
   const [filter, setFilter] = useState("vignette");
   const [params, setParams] = useState({
     strength: 0.5,
@@ -12,15 +14,38 @@ const ImageFilterPage: React.FC = () => {
     color1: "#FF1133",
     color2: "#770099",
     color3: "#FFFFFF",
+    color4: "#FFFFFF",
   });
-  const [outputImage, setOutputImage] = useState<string | null>(null);
-  const [loading, setLoading] = useState(false);
+  const [presets, setPresets] = useState<{ filter: string; params: any }[]>([]);
+  const [presetName, setPresetName] = useState("");
 
-  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    if (e.target.files && e.target.files[0]) {
-      setSelectedFile(e.target.files[0]);
+  useEffect(() => {
+    // Set default parameters for the selected filter
+    switch (filter) {
+      case "vignette":
+        setParams({ strength: 0.5, sizeFactor: 1.5, color: "#000000" });
+        break;
+      case "mono":
+        setParams({ color1: "#FF1133" });
+        break;
+      case "duotone":
+        setParams({ color1: "#FF1133", color2: "#770099" });
+        break;
+      case "tritone":
+        setParams({ color1: "#FF1133", color2: "#770099", color3: "#FFFFFF" });
+        break;
+      case "quadtone":
+        setParams({
+          color1: "#FF1133",
+          color2: "#770099",
+          color3: "#FFFFFF",
+          color4: "#000000",
+        });
+        break;
+      default:
+        break;
     }
-  };
+  }, [filter]);
 
   const handleFilterChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
     setFilter(e.target.value);
@@ -30,47 +55,35 @@ const ImageFilterPage: React.FC = () => {
     setParams({ ...params, [e.target.name]: e.target.value });
   };
 
-  const handleApplyFilter = async () => {
-    if (!selectedFile) {
-      alert("Please select an image.");
-      return;
-    }
-
-    setLoading(true);
-    try {
-      const imageUrl = await apiService.applyFilter(
-        selectedFile,
-        filter,
-        params,
-      );
-      setOutputImage(imageUrl);
-    } catch (error) {
-      alert(error.message);
-    } finally {
-      setLoading(false);
-    }
+  const handleApply = () => {
+    applyFilter(filter, params);
+    onClose();
   };
 
-  const handleDownload = () => {
-    if (outputImage) {
-      const link = document.createElement("a");
-      link.href = outputImage;
-      link.download = "filtered-image.png";
-      link.click();
-    }
+  const handleSavePreset = () => {
+    setPresets([...presets, { filter, params }]);
+    setPresetName("");
+  };
+
+  const handleLoadPreset = (preset: { filter: string; params: any }) => {
+    setFilter(preset.filter);
+    setParams(preset.params);
   };
 
   return (
-    <div className="max-w-xl mx-auto bg-current p-6 rounded-lg shadow-md">
-      {/* <h1 className="text-2xl font-bold mb-4 text-center">Image Filter</h1> */}
-
-      <input
-        type="file"
-        className="block w-full mb-4 border p-2 rounded-md"
-        accept="image/*"
-        onChange={handleFileChange}
-      />
-
+    <Modal
+      isOpen={isOpen}
+      title="Apply Filter"
+      onClose={onClose}
+      footer={
+        <button
+          onClick={handleApply}
+          className="bg-blue-500 text-white py-2 px-4 rounded-md"
+        >
+          Apply
+        </button>
+      }
+    >
       <label className="block mb-2 font-semibold">Select Filter:</label>
       <select
         className="w-full border p-2 rounded-md mb-4"
@@ -219,32 +232,40 @@ const ImageFilterPage: React.FC = () => {
         </div>
       )}
 
-      <button
-        onClick={handleApplyFilter}
-        className="w-full mt-4 bg-blue-500 text-white py-2 rounded-md hover:bg-blue-700"
-        disabled={loading}
-      >
-        {loading ? "Processing..." : "Apply Filter"}
-      </button>
+      <div className="mt-4">
+        <label className="block mb-2 font-semibold">Preset Name:</label>
+        <input
+          type="text"
+          value={presetName}
+          onChange={(e) => setPresetName(e.target.value)}
+          className="w-full border p-2 rounded-md mb-4"
+        />
+        <button
+          onClick={handleSavePreset}
+          className="w-full bg-blue-500 text-white py-2 rounded-md hover:bg-blue-700"
+        >
+          Save Preset
+        </button>
+      </div>
 
-      {outputImage && (
-        <div className="mt-6 text-center">
-          <h2 className="text-xl font-semibold">Filtered Image:</h2>
-          <img
-            src={outputImage}
-            className="mt-4 max-w-full rounded-lg shadow-md"
-            alt="Filtered Output"
-          />
-          <button
-            className="bg-inherit dark:bg-gray-700 dark:text-gray-200 my-4 px-4 py-2 rounded-md hover:bg-gray-500"
-            onClick={handleDownload}
-          >
-            <ArrowDownIcon className="w-4 h-4" /> Download
-          </button>
+      {presets.length > 0 && (
+        <div className="mt-6">
+          <h2 className="text-xl font-semibold mb-4">Presets</h2>
+          {presets.map((preset, index) => (
+            <div key={index} className="flex justify-between items-center mb-2">
+              <span>{preset.filter}</span>
+              <button
+                onClick={() => handleLoadPreset(preset)}
+                className="text-blue-500"
+              >
+                Load
+              </button>
+            </div>
+          ))}
         </div>
       )}
-    </div>
+    </Modal>
   );
 };
 
-export default ImageFilterPage;
+export default FilterModal;
