@@ -1,56 +1,44 @@
 import React from "react";
-import { XMarkIcon } from "@heroicons/react/24/outline";
+import ReactDOM from "react-dom";
 
 interface ModalProps {
   isOpen: boolean;
   title: string;
-  children: React.ReactNode;
   onClose: () => void;
   footer?: React.ReactNode;
-  size?: "small" | "medium" | "large";
+  children: React.ReactNode;
 }
 
 const Modal: React.FC<ModalProps> = ({
   isOpen,
   title,
-  children,
   onClose,
   footer,
-  size = "medium",
+  children,
 }) => {
   if (!isOpen) return null;
 
-  const sizeClasses = {
-    small: "max-w-sm",
-    medium: "max-w-lg",
-    large: "max-w-3xl",
-  };
-
-  return (
-    <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-      {/* Modal container */}
+  return ReactDOM.createPortal(
+    <div className="fixed inset-0 flex items-center justify-center z-50">
       <div
-        className={`bg-white rounded-lg shadow-lg w-full ${sizeClasses[size]} mx-4`}
-      >
-        {/* Modal header */}
-        <div className="flex justify-between items-center p-4 border-b">
-          <h2 className="text-xl font-bold">{title}</h2>
+        className="fixed inset-0 bg-black opacity-50"
+        onClick={onClose}
+      ></div>
+      <div className="bg-white dark:bg-gray-800 text-black dark:text-white p-6 rounded-md shadow-lg z-10 max-w-md w-full">
+        <div className="flex justify-between items-center mb-4">
+          <h2 className="text-xl font-semibold">{title}</h2>
           <button
             onClick={onClose}
-            className="p-2 rounded hover:bg-gray-100 transition"
-            title="Close"
+            className="text-black dark:text-white hover:text-gray-600 dark:hover:text-gray-400"
           >
-            <XMarkIcon className="h-6 w-6 text-gray-500" />
+            &times;
           </button>
         </div>
-
-        {/* Modal body */}
-        <div className="p-4">{children}</div>
-
-        {/* Modal footer */}
-        {footer && <div className="p-4 border-t">{footer}</div>}
+        <div className="mb-4">{children}</div>
+        {footer && <div className="mt-4">{footer}</div>}
       </div>
-    </div>
+    </div>,
+    document.body,
   );
 };
 

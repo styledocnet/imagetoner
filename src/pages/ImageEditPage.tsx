@@ -1,24 +1,20 @@
 import React, { useState, useRef, useEffect } from "react";
-import apiService from "../services/apiService";
 import { storageService } from "../services/storageService";
-import {
-  XMarkIcon,
-  ArrowDownIcon,
-  AdjustmentsHorizontalIcon,
-  PlusIcon,
-} from "@heroicons/react/24/outline";
+import { ArrowDownIcon, PlusIcon } from "@heroicons/react/24/outline";
 import { useGesture } from "@use-gesture/react";
 import { animated, useSpring } from "@react-spring/web";
 import FillImageModal from "../components/FillImageModal";
-import FilterModal from "../components/FilterModal";
-
 import AspectRatioModal from "../components/AspectRatioModal";
+import FilterModal from "../components/FilterModal";
 import LayerAccordion from "../components/LayerAccordion";
+import AddLayerModal from "../components/AddLayerModal";
+import { applyFilterToCanvas } from "../utils/filterUtils";
+import { Layer, FilterParams } from "../types";
 
-const ImageEditPage: React.FC<{
-  documentId?: number;
-}> = ({ documentId = null }) => {
-  const [layers, setLayers] = useState([
+const ImageEditPage: React.FC<{ documentId?: number }> = ({
+  documentId = null,
+}) => {
+  const [layers, setLayers] = useState<Layer[]>([
     {
       name: "Background",
       index: 0,
@@ -26,6 +22,8 @@ const ImageEditPage: React.FC<{
       offsetX: 0,
       offsetY: 0,
       scale: 1,
+      type: "image",
+      visible: true,
     },
     {
       name: "Foreground",
@@ -34,6 +32,8 @@ const ImageEditPage: React.FC<{
       offsetX: 0,
       offsetY: 0,
       scale: 1,
+      type: "image",
+      visible: true,
     },
   ]);
   const [currentLayer, setCurrentLayer] = useState(1);
@@ -42,8 +42,9 @@ const ImageEditPage: React.FC<{
   const [canvasHeight, setCanvasHeight] = useState(1024);
   const [aspectRatio, setAspectRatio] = useState<number | null>(null);
   const [isFillModalOpen, setIsFillModalOpen] = useState(false);
-  const [isFilterModalOpen, setIsFilterModalOpen] = useState(false);
   const [isAspectRatioModalOpen, setIsAspectRatioModalOpen] = useState(false);
+  const [isFilterModalOpen, setIsFilterModalOpen] = useState(false);
+  const [isAddLayerModalOpen, setIsAddLayerModalOpen] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const canvasRef = useRef<HTMLCanvasElement>(null);
 
@@ -53,61 +54,36 @@ const ImageEditPage: React.FC<{
     scale: 1,
   }));
 
-  // documentId = "12";
-
   useEffect(() => {
-    const loadDocument = async () => {
-      if (documentId) {
-        const document = await storageService.getDocument(documentId);
-        console.log(document);
-        if (document) {
-          console.log(document.layers);
-          setLayers(document.layers);
-        }
-      }
-    };
-    loadDocument();
+    if (documentId) {
+      loadDocument(documentId);
+    }
   }, [documentId]);
+
+  const loadDocument = async (id: number) => {
+    const document = await storageService.getDocument(id);
+    if (document) {
+      const updatedLayers = document.layers.map((layer) => ({
+        ...layer,
+        image: layer.image ? `data:image/png;base64,${layer.image}` : null,
+      }));
+      setLayers(updatedLayers);
+    }
+  };
 
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     if (e.target.files && e.target.files[0]) {
-      setLayers((prev) =>
-        prev.map((layer) =>
-          layer.index === currentLayer
-            ? { ...layer, image: URL.createObjectURL(e.target.files[0]) }
-            : layer,
-        ),
-      );
+      const file = e.target.files[0];
+      const reader = new FileReader();
+      reader.onload = () => {
+        updateLayerProp(currentLayer, "image", reader.result as string);
+      };
+      reader.readAsDataURL(file);
     }
   };
 
   const handleDropZoneClick = () => {
     fileInputRef.current?.click();
-  };
-
-  const handleRemoveBG = async () => {
-    const selectedLayer = layers.find((layer) => layer.index === currentLayer);
-    if (!selectedLayer?.image) return;
-
-    setLoading(true);
-    try {
-      const response = await fetch(selectedLayer.image);
-      const blob = await response.blob();
-      const file = new File([blob], "uploaded-image.png", { type: blob.type });
-
-      const bgRemovedImage = await apiService.removeBackground(file);
-      setLayers((prev) =>
-        prev.map((layer) =>
-          layer.index === currentLayer
-            ? { ...layer, image: bgRemovedImage }
-            : layer,
-        ),
-      );
-    } catch (error) {
-      alert("Error removing background");
-    } finally {
-      setLoading(false);
-    }
   };
 
   const handleExport = () => {
@@ -118,20 +94,12 @@ const ImageEditPage: React.FC<{
       originalCanvas.width = canvasWidth;
       originalCanvas.height = canvasHeight;
 
-      layers.forEach((layer) => {
-        if (layer.image) {
-          const layerImg = new Image();
-          layerImg.src = layer.image;
-          layerImg.onload = () => {
-            const imgWidth = layerImg.width * layer.scale;
-            const imgHeight = layerImg.height * layer.scale;
-            const xPos = (originalCanvas.width - imgWidth) / 2 + layer.offsetX;
-            const yPos =
-              (originalCanvas.height - imgHeight) / 2 + layer.offsetY;
-            originalCtx.drawImage(layerImg, xPos, yPos, imgWidth, imgHeight);
-          };
-        }
-      });
+      renderLayers(
+        originalCtx,
+        layers,
+        originalCanvas.width,
+        originalCanvas.height,
+      );
 
       setTimeout(() => {
         const link = document.createElement("a");
@@ -143,15 +111,18 @@ const ImageEditPage: React.FC<{
   };
 
   const handleSave = async () => {
-    const document = {
+    const document: Document = {
       name: `Document ${Date.now()}`,
-      layers,
+      layers: layers.map((layer) => ({
+        ...layer,
+        image: layer.image?.split(",")[1] || null,
+      })),
     };
     await storageService.addDocument(document);
     alert("Document saved successfully!");
   };
 
-  const setLayerProp = (layerIndex: number, prop: string, value: any) => {
+  const updateLayerProp = (layerIndex: number, prop: string, value: any) => {
     setLayers((prevLayers) =>
       prevLayers.map((layer) =>
         layer.index === layerIndex ? { ...layer, [prop]: value } : layer,
@@ -160,20 +131,45 @@ const ImageEditPage: React.FC<{
   };
 
   const removeLayer = (layerIndex: number) => {
-    confirm("Delete the Layer?");
     setLayers((prevLayers) =>
       prevLayers.filter((layer) => layer.index !== layerIndex),
     );
   };
 
+  const moveLayerUp = (index: number) => {
+    if (index > 0) {
+      setLayers((prevLayers) => {
+        const newLayers = [...prevLayers];
+        [newLayers[index], newLayers[index - 1]] = [
+          newLayers[index - 1],
+          newLayers[index],
+        ];
+        return newLayers;
+      });
+    }
+  };
+
+  const moveLayerDown = (index: number) => {
+    if (index < layers.length - 1) {
+      setLayers((prevLayers) => {
+        const newLayers = [...prevLayers];
+        [newLayers[index], newLayers[index + 1]] = [
+          newLayers[index + 1],
+          newLayers[index],
+        ];
+        return newLayers;
+      });
+    }
+  };
+
   const bind = useGesture(
     {
       onDrag: ({ offset: [dx, dy] }) => {
-        setLayerProp(currentLayer, "offsetX", dx);
-        setLayerProp(currentLayer, "offsetY", dy);
+        updateLayerProp(currentLayer, "offsetX", dx);
+        updateLayerProp(currentLayer, "offsetY", dy);
       },
       onPinch: ({ offset: [d] }) => {
-        setLayerProp(currentLayer, "scale", d);
+        updateLayerProp(currentLayer, "scale", d);
       },
     },
     {
@@ -188,223 +184,221 @@ const ImageEditPage: React.FC<{
   );
 
   useEffect(() => {
-    const canvas = canvasRef.current;
-    if (canvas) {
-      const ctx = canvas.getContext("2d");
-      if (ctx) {
-        ctx.clearRect(0, 0, canvas.width, canvas.height);
-        layers.forEach((layer) => {
-          if (layer.image) {
-            const img = new Image();
-            img.src = layer.image;
-            img.onload = () => {
-              const imgWidth = img.width * layer.scale;
-              const imgHeight = img.height * layer.scale;
-              const xPos = (canvas.width - imgWidth) / 2 + layer.offsetX;
-              const yPos = (canvas.height - imgHeight) / 2 + layer.offsetY;
-              ctx.drawImage(img, xPos, yPos, imgWidth, imgHeight);
-            };
-          }
-        });
-      }
-    }
+    renderCanvas();
   }, [layers, canvasWidth, canvasHeight]);
 
   useEffect(() => {
     if (aspectRatio) {
       setCanvasHeight(canvasWidth / aspectRatio);
     } else {
-      // setCanvasHeight(canvasHeight);
+      setCanvasHeight(1024);
     }
   }, [aspectRatio, canvasWidth]);
 
-  const handleFill = (image: string) => {
-    setLayers((prev) =>
-      prev.map((layer) =>
-        layer.index === currentLayer ? { ...layer, image } : layer,
-      ),
-    );
+  const renderCanvas = () => {
+    const canvas = canvasRef.current;
+    if (canvas) {
+      const ctx = canvas.getContext("2d");
+      if (ctx) {
+        ctx.clearRect(0, 0, canvas.width, canvas.height);
+        renderLayers(ctx, layers, canvas.width, canvas.height);
+      }
+    }
   };
-  const applyFilter = (filter: string, params: any) => {
+  const renderLayers = (
+    ctx: CanvasRenderingContext2D,
+    layers: Layer[],
+    width: number,
+    height: number,
+  ) => {
+    // Sort layers by index
+    const sortedLayers = [...layers].sort((a, b) => a.index - b.index);
+
+    const drawLayer = (layer: Layer) => {
+      if (layer.visible) {
+        if (layer.type === "image" && layer.image) {
+          return new Promise<void>((resolve) => {
+            const img = new Image();
+            img.src = layer.image;
+            img.onload = () => {
+              const imgWidth = img.width * layer.scale;
+              const imgHeight = img.height * layer.scale;
+              const xPos = (width - imgWidth) / 2 + layer.offsetX;
+              const yPos = (height - imgHeight) / 2 + layer.offsetY;
+              ctx.drawImage(img, xPos, yPos, imgWidth, imgHeight);
+              resolve();
+            };
+          });
+        } else if (layer.type === "text") {
+          ctx.font = `${layer.fontSize}px ${layer.fontFamily}`;
+          ctx.fillStyle = layer.color;
+          ctx.fillText(layer.text || "", layer.offsetX, layer.offsetY);
+          return Promise.resolve();
+        }
+      }
+      return Promise.resolve();
+    };
+
+    const drawLayersSequentially = async () => {
+      for (const layer of sortedLayers) {
+        await drawLayer(layer);
+      }
+    };
+
+    drawLayersSequentially();
+  };
+
+  const handleFill = (image: string) => {
+    const canvas = canvasRef.current;
+    if (canvas) {
+      const ctx = canvas.getContext("2d");
+      if (ctx) {
+        const img = new Image();
+        img.src = image;
+        img.onload = () => {
+          ctx.clearRect(0, 0, canvas.width, canvas.height);
+          ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
+          const imageUrl = canvas.toDataURL("image/png");
+          updateLayerProp(currentLayer, "image", imageUrl);
+        };
+      }
+    }
+  };
+
+  const applyFilter = (
+    filter: string,
+    params: FilterParams,
+    option: string,
+  ) => {
     const canvas = canvasRef.current;
     const ctx = canvas?.getContext("2d");
     const layer = layers.find((layer) => layer.index === currentLayer);
 
-    if (ctx && layer?.image) {
+    if (ctx && layer) {
       const img = new Image();
-      img.src = layer.image;
+      img.src = layer.image || "";
 
       img.onload = () => {
         ctx.clearRect(0, 0, canvas.width, canvas.height);
         ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
 
-        switch (filter) {
-          case "vignette":
-            applyVignetteFilter(ctx, canvas, params);
-            break;
-          case "mono":
-            applyMonoFilter(ctx, canvas, params);
-            break;
-          case "duotone":
-            applyDuotoneFilter(ctx, canvas, params);
-            break;
-          case "tritone":
-            applyTritoneFilter(ctx, canvas, params);
-            break;
-          case "quadtone":
-            applyQuadtoneFilter(ctx, canvas, params);
-            break;
-          default:
-            break;
-        }
+        applyFilterToCanvas(filter, ctx, canvas, params);
 
         const imageUrl = canvas.toDataURL("image/png");
-        setLayerProp(currentLayer, "image", imageUrl);
+
+        if (option === "applyCurrent") {
+          updateLayerProp(currentLayer, "image", imageUrl);
+        } else if (option === "createNew") {
+          const newLayer: Layer = {
+            name: `${filter} Layer`,
+            index: layers.length,
+            image: imageUrl,
+            offsetX: 0,
+            offsetY: 0,
+            scale: 1,
+            type: "image",
+            visible: true,
+          };
+          setLayers([...layers, newLayer]);
+        } else if (option === "mergeAndCreateNew") {
+          createMergedLayerWithFilter(filter, params);
+        }
+
+        // Ensure the canvas is re-rendered after applying the filter
+        renderCanvas();
       };
     }
   };
 
-  const applyVignetteFilter = (
-    ctx: CanvasRenderingContext2D,
-    canvas: HTMLCanvasElement,
-    params: any,
+  const createMergedLayerWithFilter = (
+    filter: string,
+    params: FilterParams,
   ) => {
-    const { strength, sizeFactor, color } = params;
-    ctx.globalCompositeOperation = "source-over";
-    const gradient = ctx.createRadialGradient(
-      canvas.width / 2,
-      canvas.height / 2,
-      canvas.width / sizeFactor,
-      canvas.width / 2,
-      canvas.height / 2,
-      canvas.width / 2,
-    );
-    gradient.addColorStop(0, "transparent");
-    gradient.addColorStop(1, color);
-    ctx.fillStyle = gradient;
-    ctx.globalAlpha = strength;
-    ctx.fillRect(0, 0, canvas.width, canvas.height);
+    const mergedCanvas = document.createElement("canvas");
+    const mergedCtx = mergedCanvas.getContext("2d");
+
+    if (mergedCtx) {
+      mergedCanvas.width = canvasWidth;
+      mergedCanvas.height = canvasHeight;
+
+      renderLayers(mergedCtx, layers, mergedCanvas.width, mergedCanvas.height);
+
+      setTimeout(() => {
+        const filterCanvas = document.createElement("canvas");
+        const filterCtx = filterCanvas.getContext("2d");
+        filterCanvas.width = mergedCanvas.width;
+        filterCanvas.height = mergedCanvas.height;
+
+        if (filterCtx) {
+          filterCtx.drawImage(
+            mergedCanvas,
+            0,
+            0,
+            filterCanvas.width,
+            filterCanvas.height,
+          );
+
+          applyFilterToCanvas(filter, filterCtx, filterCanvas, params);
+
+          const mergedImageUrl = filterCanvas.toDataURL("image/png");
+
+          const newLayer: Layer = {
+            name: `${filter} Merged Layer`,
+            index: layers.length,
+            image: mergedImageUrl,
+            offsetX: 0,
+            offsetY: 0,
+            scale: 1,
+            type: "image",
+            visible: true,
+          };
+          setLayers([...layers, newLayer]);
+
+          // Ensure the canvas is re-rendered after creating the merged layer
+          renderCanvas();
+        }
+      }, 1000);
+    }
   };
 
-  const applyMonoFilter = (
-    ctx: CanvasRenderingContext2D,
-    canvas: HTMLCanvasElement,
-    params: any,
-  ) => {
-    const { color1 } = params;
-    ctx.globalCompositeOperation = "source-atop";
-    ctx.fillStyle = color1;
-    ctx.fillRect(0, 0, canvas.width, canvas.height);
-  };
-
-  const applyDuotoneFilter = (
-    ctx: CanvasRenderingContext2D,
-    canvas: HTMLCanvasElement,
-    params: any,
-  ) => {
-    const { color1, color2 } = params;
-    ctx.globalCompositeOperation = "source-atop";
-    const gradient = ctx.createLinearGradient(
-      0,
-      0,
-      canvas.width,
-      canvas.height,
-    );
-    gradient.addColorStop(0, color1);
-    gradient.addColorStop(1, color2);
-    ctx.fillStyle = gradient;
-    ctx.fillRect(0, 0, canvas.width, canvas.height);
-  };
-
-  const applyTritoneFilter = (
-    ctx: CanvasRenderingContext2D,
-    canvas: HTMLCanvasElement,
-    params: any,
-  ) => {
-    const { color1, color2, color3 } = params;
-    ctx.globalCompositeOperation = "source-atop";
-    const gradient = ctx.createLinearGradient(
-      0,
-      0,
-      canvas.width,
-      canvas.height,
-    );
-    gradient.addColorStop(0, color1);
-    gradient.addColorStop(0.5, color2);
-    gradient.addColorStop(1, color3);
-    ctx.fillStyle = gradient;
-    ctx.fillRect(0, 0, canvas.width, canvas.height);
-  };
-
-  const applyQuadtoneFilter = (
-    ctx: CanvasRenderingContext2D,
-    canvas: HTMLCanvasElement,
-    params: any,
-  ) => {
-    const { color1, color2, color3, color4 } = params;
-    ctx.globalCompositeOperation = "source-atop";
-    const gradient = ctx.createLinearGradient(
-      0,
-      0,
-      canvas.width,
-      canvas.height,
-    );
-    gradient.addColorStop(0, color1);
-    gradient.addColorStop(0.33, color2);
-    gradient.addColorStop(0.66, color3);
-    gradient.addColorStop(1, color4);
-    ctx.fillStyle = gradient;
-    ctx.fillRect(0, 0, canvas.width, canvas.height);
+  const addNewLayer = (layer: Layer) => {
+    setLayers((prev) => [...prev, { ...layer, index: prev.length }]);
   };
 
   return (
-    <div className="w-full h-screen flex flex-col">
-      <div className="bg-gray-800 text-white p-4 flex justify-between items-center">
+    <div className="w-full h-screen flex flex-col bg-gray-100 dark:bg-gray-900">
+      <div className="bg-gray-800 dark:bg-gray-700 text-white p-4 flex justify-between items-center shadow-md">
         <div className="flex space-x-4">
           <input
             ref={fileInputRef}
             type="file"
-            className="block w-full mt-2 hidden"
+            className="hidden"
             accept="image/*"
             onChange={handleFileChange}
-            hidden
           />
-
-          {/* TODO only when image is loaded and then under a menupoint */}
           <button
-            className="bg-green-500 py-2 px-4 rounded-md"
-            onClick={handleRemoveBG}
-            disabled={loading}
-          >
-            {loading ? "Processing..." : "Remove Background"}
-          </button>
-
-          {/* TODO under a menupoint Generate? */}
-          <button
-            className="bg-blue-500 py-2 px-4 rounded-md"
+            className="bg-blue-500 hover:bg-blue-600 py-2 px-4 rounded-md transition"
             onClick={() => setIsFillModalOpen(true)}
           >
             Fill
           </button>
-
           <button
-            className="bg-purple-500 py-2 px-4 rounded-md"
-            onClick={() => setIsFilterModalOpen(true)}
-          >
-            Filter
-          </button>
-
-          <button
-            className="bg-yellow-500 py-2 px-4 rounded-md"
+            className="bg-yellow-500 hover:bg-yellow-600 py-2 px-4 rounded-md transition"
             onClick={() => setIsAspectRatioModalOpen(true)}
           >
             Aspect Ratio
+          </button>
+          <button
+            className="bg-purple-500 hover:bg-purple-600 py-2 px-4 rounded-md transition"
+            onClick={() => setIsFilterModalOpen(true)}
+          >
+            Filter
           </button>
         </div>
         <div className="flex items-center space-x-2">
           <label className="block font-semibold">Add Image </label>
           <button
-            className="bg-gray-700 py-2 px-2 rounded-md"
+            className="bg-gray-700 hover:bg-gray-800 py-2 px-2 rounded-md transition"
             onClick={handleDropZoneClick}
           >
             <PlusIcon className="w-4 h-4" />
@@ -413,39 +407,50 @@ const ImageEditPage: React.FC<{
       </div>
 
       <div className="flex-grow flex">
-        <div className="w-1/4 bg-current p-4 overflow-auto">
+        <div className="w-1/4 bg-gray-200 dark:bg-gray-800 p-4 overflow-auto">
           <LayerAccordion
             layers={layers}
             currentLayer={currentLayer}
             setCurrentLayer={setCurrentLayer}
-            setLayerProp={setLayerProp}
-            removeLayer={removeLayer}
+            setLayerProp={updateLayerProp}
+            removeLayer={() => (confirm("remove?") ? removeLayer() : null)}
+            moveLayerUp={moveLayerUp}
+            moveLayerDown={moveLayerDown}
           />
+          <button
+            className="w-full mt-4 py-2 px-4 bg-gray-700 text-white rounded-md flex items-center justify-center hover:bg-gray-800 transition"
+            onClick={() => setIsAddLayerModalOpen(true)}
+          >
+            <PlusIcon className="w-4 h-4 mr-2" />
+            Add Layer
+          </button>
         </div>
-        <div className="flex-grow flex justify-center items-center bg-gray-300 p-4">
+        <div className="flex-grow flex justify-center items-center bg-gray-300 dark:bg-gray-700 p-4">
           <animated.canvas
             {...bind()}
             ref={canvasRef}
             width={canvasWidth}
             height={canvasHeight}
-            className="border mb-4 w-full h-auto"
+            className="border mb-4 w-full h-auto shadow-lg"
             style={{ x, y, scale }}
           />
         </div>
       </div>
 
-      <div className="bg-gray-800 text-white p-4 flex justify-between items-center">
+      <div className="bg-gray-800 dark:bg-gray-700 text-white p-4 flex justify-between items-center shadow-md">
         <button
-          className="bg-inherit text-current py-4 px-4 rounded-md hover:bg-blue-700"
+          className="bg-blue-500 hover:bg-blue-600 py-2 px-4 rounded-md transition"
           onClick={handleExport}
         >
-          <ArrowDownIcon className="w-4 h-4" /> Download
+          <ArrowDownIcon className="w-4 h-4 inline-block mr-2" />
+          Download
         </button>
         <button
-          className="bg-inherit text-current py-4 px-4 rounded-md hover:bg-blue-700"
+          className="bg-green-500 hover:bg-green-600 py-2 px-4 rounded-md transition"
           onClick={handleSave}
         >
-          <ArrowDownIcon className="w-4 h-4" /> Save
+          <ArrowDownIcon className="w-4 h-4 inline-block mr-2" />
+          Save
         </button>
       </div>
 
@@ -453,12 +458,6 @@ const ImageEditPage: React.FC<{
         isOpen={isFillModalOpen}
         onClose={() => setIsFillModalOpen(false)}
         onFill={handleFill}
-      />
-
-      <FilterModal
-        isOpen={isFilterModalOpen}
-        onClose={() => setIsFilterModalOpen(false)}
-        applyFilter={applyFilter}
       />
 
       <AspectRatioModal
@@ -470,6 +469,18 @@ const ImageEditPage: React.FC<{
         setCanvasWidth={setCanvasWidth}
         canvasHeight={canvasHeight}
         setCanvasHeight={setCanvasHeight}
+      />
+
+      <FilterModal
+        isOpen={isFilterModalOpen}
+        onClose={() => setIsFilterModalOpen(false)}
+        applyFilter={applyFilter}
+      />
+
+      <AddLayerModal
+        isOpen={isAddLayerModalOpen}
+        onClose={() => setIsAddLayerModalOpen(false)}
+        onAddLayer={addNewLayer}
       />
     </div>
   );

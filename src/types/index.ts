@@ -1,0 +1,24 @@
+export interface Layer {
+  name: string;
+  index: number;
+  image: string | null;
+  offsetX: number;
+  offsetY: number;
+  scale: number;
+  type: "image" | "text";
+  text?: string;
+  fontFamily?: string;
+  fontSize?: number;
+  color?: string;
+  visible: boolean;
+}
+
+export interface FilterParams {
+  [key: string]: any;
+}
+
+export interface Document {
+  id?: number;
+  name: string;
+  layers: Layer[];
+}

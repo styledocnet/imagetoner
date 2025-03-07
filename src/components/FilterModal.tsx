@@ -4,7 +4,7 @@ import Modal from "./Modal";
 const FilterModal: React.FC<{
   isOpen: boolean;
   onClose: () => void;
-  applyFilter: (filter: string, params: any) => void;
+  applyFilter: (filter: string, params: any, option: string) => void;
 }> = ({ isOpen, onClose, applyFilter }) => {
   const [filter, setFilter] = useState("vignette");
   const [params, setParams] = useState({
@@ -20,7 +20,6 @@ const FilterModal: React.FC<{
   const [presetName, setPresetName] = useState("");
 
   useEffect(() => {
-    // Set default parameters for the selected filter
     switch (filter) {
       case "vignette":
         setParams({ strength: 0.5, sizeFactor: 1.5, color: "#000000" });
@@ -55,8 +54,8 @@ const FilterModal: React.FC<{
     setParams({ ...params, [e.target.name]: e.target.value });
   };
 
-  const handleApply = () => {
-    applyFilter(filter, params);
+  const handleApply = (option: string) => {
+    applyFilter(filter, params, option);
     onClose();
   };
 
@@ -76,12 +75,26 @@ const FilterModal: React.FC<{
       title="Apply Filter"
       onClose={onClose}
       footer={
-        <button
-          onClick={handleApply}
-          className="bg-blue-500 text-white py-2 px-4 rounded-md"
-        >
-          Apply
-        </button>
+        <div className="flex space-x-2">
+          <button
+            onClick={() => handleApply("applyCurrent")}
+            className="bg-blue-500 text-white py-2 px-4 rounded-md hover:bg-blue-700"
+          >
+            Apply to Current Layer
+          </button>
+          <button
+            onClick={() => handleApply("createNew")}
+            className="bg-green-500 text-white py-2 px-4 rounded-md hover:bg-green-700"
+          >
+            Create New Layer
+          </button>
+          <button
+            onClick={() => handleApply("mergeAndCreateNew")}
+            className="bg-purple-500 text-white py-2 px-4 rounded-md hover:bg-purple-700"
+          >
+            Merge and Create New Layer
+          </button>
+        </div>
       }
     >
       <label className="block mb-2 font-semibold">Select Filter:</label>

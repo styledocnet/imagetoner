@@ -2,12 +2,19 @@ import React, { useState, useEffect } from "react";
 import { storageService } from "../services/storageService";
 import { ArrowDownIcon, FunnelIcon } from "@heroicons/react/24/outline";
 
-const PhotosPage: React.FC<> = () => {
+const PhotosPage: React.FC = () => {
   const [documents, setDocuments] = useState<Document[]>([]);
   const [filter, setFilter] = useState<string>("");
 
-  const onEditDocument = (documentId: number) => {};
-  const onFilterLayer = (imageUrl: string) => {};
+  const onEditDocument = (documentId: number) => {
+    // Navigate to ImageEditPage with the documentId
+    // This function should be implemented to handle navigation to the edit page
+  };
+
+  const onFilterLayer = (imageUrl: string) => {
+    // Apply filter to the layer
+    // This function should be implemented to handle filtering
+  };
 
   useEffect(() => {
     const fetchDocuments = async () => {
@@ -34,8 +41,8 @@ const PhotosPage: React.FC<> = () => {
   );
 
   return (
-    <div className="max-w-xl max-w-xl mx-auto bg-current p-6 rounded-lg shadow-md p-6 rounded-lg shadow-md">
-      {/* <h1 className="text-2xl font-bold mb-4">Photos</h1> */}
+    <div className="max-w-xl mx-auto bg-current p-6 rounded-lg shadow-md">
+      <h1 className="text-2xl font-bold mb-4">Photos</h1>
       <input
         type="text"
         placeholder="Filter by name"
@@ -46,7 +53,7 @@ const PhotosPage: React.FC<> = () => {
       <div className="accordion">
         {filteredDocuments.map((doc) => (
           <div key={doc.id} className="accordion-item border rounded-md mb-4">
-            <div className="accordion-header flex justify-between items-center p-4 bg-gray-100">
+            <div className="accordion-header flex justify-between items-center p-4 bg-gray-100 dark:bg-gray-700">
               <h2 className="font-semibold">{doc.name}</h2>
               <div className="flex space-x-2">
                 <button

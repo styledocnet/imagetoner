@@ -7,6 +7,12 @@ interface Layer {
   offsetX: number;
   offsetY: number;
   scale: number;
+  type: "image" | "text";
+  text?: string;
+  fontFamily?: string;
+  fontSize?: number;
+  color?: string;
+  visible: boolean;
 }
 
 interface Document {

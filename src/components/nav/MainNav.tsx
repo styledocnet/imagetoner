@@ -39,10 +39,10 @@ const MainNav: React.FC = () => {
   return (
     <div className="relative">
       <button
-        className="p-2 rounded-full bg-gray-700 text-white dark:bg-gray-200 dark:text-black"
+        className="group focus:outline-none p-2 rounded-full bg-gray-700 text-white dark:bg-gray-200 dark:text-black"
         onClick={toggleNav}
       >
-        <Bars3Icon className="h-6 w-6" />
+        <Bars3Icon className="h-6 w-6 group-hover:animate-bounce" />
       </button>
       <nav
         className={`absolute top-12 left-0 w-48 p-4 rounded-lg bg-white dark:bg-gray-800 shadow-lg transition-transform transform ${
