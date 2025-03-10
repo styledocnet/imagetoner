@@ -1,6 +1,10 @@
 import React, { useState, useRef, useEffect } from "react";
 import { storageService } from "../services/storageService";
-import { ArrowDownIcon, PlusIcon } from "@heroicons/react/24/outline";
+import {
+  ArrowDownIcon,
+  PlusIcon,
+  Cog6ToothIcon,
+} from "@heroicons/react/24/outline";
 import { useGesture } from "@use-gesture/react";
 import { animated, useSpring } from "@react-spring/web";
 import FillImageModal from "../components/FillImageModal";
@@ -387,16 +391,19 @@ const ImageEditPage: React.FC = () => {
             Fill
           </button>
           <button
-            className="bg-yellow-500 hover:bg-yellow-600 py-2 px-4 rounded-md transition"
-            onClick={() => setIsAspectRatioModalOpen(true)}
-          >
-            Aspect Ratio
-          </button>
-          <button
             className="bg-purple-500 hover:bg-purple-600 py-2 px-4 rounded-md transition"
             onClick={() => setIsFilterModalOpen(true)}
           >
             Filter
+          </button>
+        </div>
+        <div className="flex items-center space-x-2">
+          <button
+            className="bg-yellow-500 hover:bg-yellow-600 py-2 px-4 rounded-md transition"
+            onClick={() => setIsAspectRatioModalOpen(true)}
+          >
+            {/* Aspect Ratio */}
+            <Cog6ToothIcon className="w-4 h-4" />
           </button>
         </div>
         <div className="flex items-center space-x-2">

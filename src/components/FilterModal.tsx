@@ -251,7 +251,7 @@ const FilterModal: React.FC<{
           type="text"
           value={presetName}
           onChange={(e) => setPresetName(e.target.value)}
-          className="w-full border p-2 rounded-md mb-4"
+          className="w-full border border-gray-300 dark:border-gray-600 p-2 rounded-md bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100"
         />
         <button
           onClick={handleSavePreset}

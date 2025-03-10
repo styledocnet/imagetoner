@@ -5,3 +5,23 @@
 body {
     @apply bg-gray-100 dark:bg-gray-900 text-gray-900 dark:text-gray-100;
 }
+
+.columns-1 {
+    column-count: 1;
+}
+
+.columns-2 {
+    column-count: 2;
+}
+
+.columns-3 {
+    column-count: 3;
+}
+
+.columns-4 {
+    column-count: 4;
+}
+
+.break-inside-avoid {
+    break-inside: avoid;
+}

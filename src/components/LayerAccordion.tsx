@@ -147,6 +147,7 @@ const LayerAccordion: React.FC<LayerAccordionProps> = ({
                 </div>
               )}
               <div className="space-y-2">
+                {/* TODO - Add text Position Presets (vert: left, middle, right; CENTER(middle,middle); horizontal: top, middle, bottom) properties here */}
                 <div>
                   <label className="block text-sm font-semibold text-gray-700 dark:text-gray-300">
                     Offset X:

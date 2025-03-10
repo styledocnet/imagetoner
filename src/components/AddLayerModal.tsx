@@ -6,7 +6,7 @@ const AddLayerModal: React.FC<{
   onClose: () => void;
   onAddLayer: (layer: any) => void;
 }> = ({ isOpen, onClose, onAddLayer }) => {
-  const [layerName, setLayerName] = useState("");
+  const [layerName, setLayerName] = useState("new layer");
   const [layerType, setLayerType] = useState("image");
   const [text, setText] = useState("");
   const [fontFamily, setFontFamily] = useState("Arial");
@@ -122,7 +122,7 @@ const AddLayerModal: React.FC<{
                 type="color"
                 value={color}
                 onChange={(e) => setColor(e.target.value)}
-                className="w-full border border-gray-300 dark:border-gray-600 p-2 rounded-md bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100"
+                className="w-full  border border-gray-300 dark:border-gray-600  rounded-md"
               />
             </div>
           </>
