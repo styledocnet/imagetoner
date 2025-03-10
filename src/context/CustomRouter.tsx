@@ -6,29 +6,28 @@ import React, {
   ReactNode,
 } from "react";
 
-// Define the context type
 interface RouterContextType {
   currentRoute: string;
   navigate: (route: string) => void;
 }
 
-// Create the context
 const RouterContext = createContext<RouterContextType | undefined>(undefined);
 
-// Create the RouterProvider component
 const RouterProvider: React.FC<{ children: ReactNode }> = ({ children }) => {
   const [currentRoute, setCurrentRoute] = useState(
-    window.location.pathname.substring(1) || "dashboard",
+    window.location.pathname + window.location.search || "/dashboard",
   );
 
   const navigate = (route: string) => {
-    window.history.pushState({}, "", `/${route}`);
+    window.history.pushState({}, "", route);
     setCurrentRoute(route);
   };
 
   useEffect(() => {
     const onPopState = () => {
-      setCurrentRoute(window.location.pathname.substring(1) || "dashboard");
+      setCurrentRoute(
+        window.location.pathname + window.location.search || "/dashboard",
+      );
     };
 
     window.addEventListener("popstate", onPopState);
@@ -45,7 +44,7 @@ const RouterProvider: React.FC<{ children: ReactNode }> = ({ children }) => {
   );
 };
 
-// Custom hook to use the router context
+// hook to use the router context
 const useRouter = () => {
   const context = useContext(RouterContext);
   if (!context) {
@@ -54,13 +53,14 @@ const useRouter = () => {
   return context;
 };
 
-// Create the Route component
+// Route component
 const Route: React.FC<{ path: string; component: ReactNode }> = ({
   path,
   component,
 }) => {
   const { currentRoute } = useRouter();
-  return currentRoute === path ? <>{component}</> : null;
+  const routeWithoutSearch = currentRoute.split("?")[0];
+  return routeWithoutSearch === path ? <>{component}</> : null;
 };
 
 // Create the Link component

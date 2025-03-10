@@ -10,10 +10,9 @@ import LayerAccordion from "../components/LayerAccordion";
 import AddLayerModal from "../components/AddLayerModal";
 import { applyFilterToCanvas } from "../utils/filterUtils";
 import { Layer, FilterParams } from "../types";
+import { useRouter } from "../context/CustomRouter";
 
-const ImageEditPage: React.FC<{ documentId?: number }> = ({
-  documentId = null,
-}) => {
+const ImageEditPage: React.FC = () => {
   const [layers, setLayers] = useState<Layer[]>([
     {
       name: "Background",
@@ -54,11 +53,15 @@ const ImageEditPage: React.FC<{ documentId?: number }> = ({
     scale: 1,
   }));
 
+  const { navigate, currentRoute } = useRouter();
+
   useEffect(() => {
+    const params = new URLSearchParams(window.location.search);
+    const documentId = params.get("id");
     if (documentId) {
-      loadDocument(documentId);
+      loadDocument(parseInt(documentId));
     }
-  }, [documentId]);
+  }, [currentRoute]);
 
   const loadDocument = async (id: number) => {
     const document = await storageService.getDocument(id);
@@ -120,6 +123,7 @@ const ImageEditPage: React.FC<{ documentId?: number }> = ({
     };
     await storageService.addDocument(document);
     alert("Document saved successfully!");
+    navigate("photos");
   };
 
   const updateLayerProp = (layerIndex: number, prop: string, value: any) => {
@@ -205,13 +209,13 @@ const ImageEditPage: React.FC<{ documentId?: number }> = ({
       }
     }
   };
+
   const renderLayers = (
     ctx: CanvasRenderingContext2D,
     layers: Layer[],
     width: number,
     height: number,
   ) => {
-    // Sort layers by index
     const sortedLayers = [...layers].sort((a, b) => a.index - b.index);
 
     const drawLayer = (layer: Layer) => {
@@ -413,7 +417,7 @@ const ImageEditPage: React.FC<{ documentId?: number }> = ({
             currentLayer={currentLayer}
             setCurrentLayer={setCurrentLayer}
             setLayerProp={updateLayerProp}
-            removeLayer={() => (confirm("remove?") ? removeLayer() : null)}
+            removeLayer={removeLayer}
             moveLayerUp={moveLayerUp}
             moveLayerDown={moveLayerDown}
           />
