@@ -21,10 +21,11 @@ const AddLayerModal: React.FC<{
       fontFamily: layerType === "text" ? fontFamily : "",
       fontSize: layerType === "text" ? fontSize : 0,
       color: layerType === "text" ? color : "",
-      offsetX: 0,
-      offsetY: 0,
+      offsetX: 100,
+      offsetY: 100,
       scale: 1,
       image: null,
+      visible: true,
     };
     onAddLayer(newLayer);
     onClose();

@@ -115,7 +115,8 @@ const LayerAccordion: React.FC<LayerAccordionProps> = ({
                 className="w-5 h-5 text-red-500"
                 onClick={(e) => {
                   e.stopPropagation();
-                  removeLayer(layer.index);
+                  confirm("Are you sure you want to delete this layer?") &&
+                    removeLayer(layer.index);
                 }}
               />
             </div>

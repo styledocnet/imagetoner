@@ -84,7 +84,7 @@ const AspectRatioModal: React.FC<AspectRatioModalProps> = ({
               e.target.value ? parseFloat(e.target.value) : null,
             )
           }
-          className="w-full border p-2 rounded-md"
+          className="w-full border border-gray-300 dark:border-gray-600 p-2 rounded-md bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100"
         >
           <option value="">Original</option>
           <option value={16 / 9}>16:9</option>

@@ -61,11 +61,13 @@ const FillImageModal: React.FC<FillImageModalProps> = ({
       }
     >
       <div className="mb-4">
-        <label className="block font-semibold mb-2">Fill Type:</label>
+        <label className="block font-semibold mb-2 text-gray-700 dark:text-gray-300">
+          Fill Type:
+        </label>
         <select
           value={fillType}
           onChange={(e) => setFillType(e.target.value)}
-          className="w-full"
+          className="w-full border border-gray-300 dark:border-gray-600 p-2 rounded-md bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100"
         >
           <option value="solid">Solid Color</option>
           <option value="gradient">Gradient</option>
@@ -73,7 +75,9 @@ const FillImageModal: React.FC<FillImageModalProps> = ({
       </div>
       {fillType === "solid" && (
         <div className="mb-4">
-          <label className="block font-semibold mb-2">Color:</label>
+          <label className="block font-semibold mb-2 text-gray-700 dark:text-gray-300">
+            Color:
+          </label>
           <input
             type="color"
             value={color}
