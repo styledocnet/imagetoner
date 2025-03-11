@@ -1,4 +1,4 @@
-import { FilterParams } from "../types/filters";
+import { FilterParams } from "../types";
 
 export const applyVignetteFilter = (
   ctx: CanvasRenderingContext2D,
@@ -76,4 +76,47 @@ export const applyQuadtoneFilter = (
   gradient.addColorStop(1, color4);
   ctx.fillStyle = gradient;
   ctx.fillRect(0, 0, canvas.width, canvas.height);
+};
+
+export const applyGrayscaleFilter = (
+  ctx: CanvasRenderingContext2D,
+  canvas: HTMLCanvasElement,
+  params: FilterParams,
+) => {
+  const imageData = ctx.getImageData(0, 0, canvas.width, canvas.height);
+  const data = imageData.data;
+  for (let i = 0; i < data.length; i += 4) {
+    const avg = (data[i] + data[i + 1] + data[i + 2]) / 2;
+    data[i] = avg;
+    data[i + 1] = avg;
+    data[i + 2] = avg;
+  }
+  ctx.putImageData(imageData, 0, 0);
+};
+
+export const applySepiaFilter = (
+  ctx: CanvasRenderingContext2D,
+  canvas: HTMLCanvasElement,
+  params: FilterParams,
+) => {
+  const imageData = ctx.getImageData(0, 0, canvas.width, canvas.height);
+  const data = imageData.data;
+  for (let i = 0; i < data.length; i += 4) {
+    const avg = 0.3 * data[i] + 0.59 * data[i + 1] + 0.11 * data[i + 2];
+    data[i] = avg + 100;
+    data[i + 1] = avg + 50;
+    data[i + 2] = avg;
+  }
+  ctx.putImageData(imageData, 0, 0);
+};
+
+export const applyBlurFilter = (
+  ctx: CanvasRenderingContext2D,
+  canvas: HTMLCanvasElement,
+  params: FilterParams,
+) => {
+  const { strength } = params;
+  ctx.filter = `blur(${strength}px)`;
+  ctx.drawImage(canvas, 0, 0);
+  ctx.filter = "none";
 };

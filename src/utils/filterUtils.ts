@@ -4,6 +4,9 @@ import {
   applyDuotoneFilter,
   applyTritoneFilter,
   applyQuadtoneFilter,
+  applyGrayscaleFilter,
+  applySepiaFilter,
+  applyBlurFilter,
 } from "./filters";
 import { FilterParams } from "../types";
 
@@ -28,6 +31,15 @@ export const applyFilterToCanvas = (
       break;
     case "quadtone":
       applyQuadtoneFilter(ctx, canvas, params);
+      break;
+    case "grayscale":
+      applyGrayscaleFilter(ctx, canvas, params);
+      break;
+    case "sepia":
+      applySepiaFilter(ctx, canvas, params);
+      break;
+    case "blur":
+      applyBlurFilter(ctx, canvas, params);
       break;
     default:
       break;

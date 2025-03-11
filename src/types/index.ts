@@ -22,3 +22,18 @@ export interface Document {
   name: string;
   layers: Layer[];
 }
+
+export type FilterType =
+  | "quadtone"
+  | "tritone"
+  | "duotone"
+  | "mono"
+  | "vignette";
+  | "blur"
+  | "brightness"
+  | "contrast"
+  | "grayscale"
+  | "hue-rotate"
+  | "invert"
+  | "saturate"
+  | "sepia";

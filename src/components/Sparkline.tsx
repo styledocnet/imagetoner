@@ -1,61 +1,57 @@
 import React from "react";
 
-type SparklineProps = {
+interface SparklineProps {
   data: number[];
   width?: number;
   height?: number;
   strokeColor?: string;
   fillColor?: string;
-  strokeWidth?: number;
-};
+}
 
 const Sparkline: React.FC<SparklineProps> = ({
   data,
-  width = 200,
-  height = 50,
-  strokeColor = "#D97706",
-  fillColor = "none",
-  strokeWidth = 2,
+  width = 300,
+  height = 100,
+  strokeColor = "#3b82f6",
+  fillColor = "rgba(59, 130, 246, 0.2)",
 }) => {
-  if (data.length === 0) return null;
-
-  // data points to SVG dimensions
-  const maxDataValue = Math.max(...data);
-  const minDataValue = Math.min(...data);
-  const normalizedData = data.map(
-    (value) =>
-      ((value - minDataValue) / (maxDataValue - minDataValue || 1)) * height,
+  // Filter out any invalid numbers from the data array
+  const sanitizedData = data.filter(
+    (value) => !isNaN(value) && isFinite(value),
   );
 
-  const points = normalizedData
+  if (sanitizedData.length === 0) return null;
+
+  const max = Math.max(...sanitizedData);
+  const min = Math.min(...sanitizedData);
+
+  const getX = (index: number) => (index / (sanitizedData.length - 1)) * width;
+  const getY = (value: number) =>
+    height - ((value - min) / (max - min)) * height;
+
+  const pathData = sanitizedData
     .map(
       (value, index) =>
-        `${(index / (data.length - 1)) * width},${height - value}`,
+        `${index === 0 ? "M" : "L"} ${getX(index)},${getY(value)}`,
     )
     .join(" ");
 
   return (
     <svg
+      viewBox={`0 0 ${width} ${height}`}
       width={width}
       height={height}
-      viewBox={`0 0 ${width} ${height}`}
-      xmlns="http://www.w3.org/2000/svg"
-      className="sparkline"
+      fill="none"
+      stroke={strokeColor}
+      strokeWidth="2"
+      strokeLinecap="round"
+      strokeLinejoin="round"
     >
-      {fillColor !== "none" && (
-        <polygon
-          points={`${points} ${width},${height} 0,${height}`}
-          fill={fillColor}
-          stroke="none"
-        />
-      )}
-      {/* Sparkline */}
-      <polyline
-        points={points}
-        fill="none"
-        stroke={strokeColor}
-        strokeWidth={strokeWidth}
+      <path
+        d={`${pathData} L ${width},${height} L 0,${height} Z`}
+        fill={fillColor}
       />
+      <path d={pathData} />
     </svg>
   );
 };

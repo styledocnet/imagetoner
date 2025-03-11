@@ -8,9 +8,9 @@ export default defineConfig({
     VitePWA({
       registerType: "autoUpdate",
       manifest: {
-        name: "ImageToner",
+        name: "Photo Editor",
         short_name: "imgapi-ui",
-        description: "Image Filter and Edit UI",
+        description: "PhotoGraphy, Filter and Edit UI",
         theme_color: "#FF7F50",
         background_color: "#FFFFFF",
         icons: [

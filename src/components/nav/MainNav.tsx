@@ -28,16 +28,6 @@ const MainNav: React.FC = () => {
     setIsNavOpen(!isNavOpen);
   };
 
-  // useEffect(() => {
-  //   const handleRouteChange = () => {
-  //     setIsNavOpen(false);
-  //   };
-  //   window.addEventListener("routechange", handleRouteChange);
-  //   return () => {
-  //     window.removeEventListener("routechange", handleRouteChange);
-  //   };
-  // }, []);
-
   useEffect(() => {
     setIsNavOpen(false);
   }, [currentRoute]);

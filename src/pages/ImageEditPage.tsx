@@ -1,9 +1,10 @@
-import React, { useState, useRef, useEffect } from "react";
+import React, { useRef, useEffect, useState } from "react";
 import { storageService } from "../services/storageService";
 import {
   ArrowDownIcon,
   PlusIcon,
   Cog6ToothIcon,
+  CameraIcon,
 } from "@heroicons/react/24/outline";
 import { useGesture } from "@use-gesture/react";
 import { animated, useSpring } from "@react-spring/web";
@@ -12,42 +13,32 @@ import AspectRatioModal from "../components/AspectRatioModal";
 import FilterModal from "../components/FilterModal";
 import LayerAccordion from "../components/LayerAccordion";
 import AddLayerModal from "../components/AddLayerModal";
+import WebCamInputModal from "../components/WebCamInputModal";
+import useLayers from "../hooks/useLayers";
+import { renderLayers } from "../utils/canvasUtils";
 import { applyFilterToCanvas } from "../utils/filterUtils";
-import { Layer, FilterParams } from "../types";
 import { useRouter } from "../context/CustomRouter";
+import { Document, Layer } from "../types";
 
 const ImageEditPage: React.FC = () => {
-  const [layers, setLayers] = useState<Layer[]>([
-    {
-      name: "Background",
-      index: 0,
-      image: null,
-      offsetX: 0,
-      offsetY: 0,
-      scale: 1,
-      type: "image",
-      visible: true,
-    },
-    {
-      name: "Foreground",
-      index: 1,
-      image: null,
-      offsetX: 0,
-      offsetY: 0,
-      scale: 1,
-      type: "image",
-      visible: true,
-    },
-  ]);
+  const { layers, setLayers, updateLayerProp, removeLayer, addNewLayer } =
+    useLayers();
   const [currentLayer, setCurrentLayer] = useState(1);
   const [loading, setLoading] = useState(false);
   const [canvasWidth, setCanvasWidth] = useState(1280);
   const [canvasHeight, setCanvasHeight] = useState(1024);
+  const [documentSize, setDocumentSize] = useState({
+    width: 1920,
+    height: 1080,
+  }); // Actual Document Size
+  const [canvasSize, setCanvasSize] = useState({ width: 960, height: 540 }); // Scaled Preview
+
   const [aspectRatio, setAspectRatio] = useState<number | null>(null);
   const [isFillModalOpen, setIsFillModalOpen] = useState(false);
   const [isAspectRatioModalOpen, setIsAspectRatioModalOpen] = useState(false);
   const [isFilterModalOpen, setIsFilterModalOpen] = useState(false);
   const [isAddLayerModalOpen, setIsAddLayerModalOpen] = useState(false);
+  const [isWebcamOpen, setIsWebcamOpen] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const canvasRef = useRef<HTMLCanvasElement>(null);
 
@@ -66,6 +57,13 @@ const ImageEditPage: React.FC = () => {
       loadDocument(parseInt(documentId));
     }
   }, [currentRoute]);
+
+  useEffect(() => {
+    setCanvasSize({
+      width: documentSize.width / 2, // Scale down for preview
+      height: documentSize.height / 2,
+    });
+  }, [documentSize]);
 
   const loadDocument = async (id: number) => {
     const document = await storageService.getDocument(id);
@@ -91,6 +89,10 @@ const ImageEditPage: React.FC = () => {
 
   const handleDropZoneClick = () => {
     fileInputRef.current?.click();
+  };
+
+  const handleCamInputClick = () => {
+    setIsWebcamOpen(true);
   };
 
   const handleExport = () => {
@@ -130,46 +132,6 @@ const ImageEditPage: React.FC = () => {
     navigate("photos");
   };
 
-  const updateLayerProp = (layerIndex: number, prop: string, value: any) => {
-    setLayers((prevLayers) =>
-      prevLayers.map((layer) =>
-        layer.index === layerIndex ? { ...layer, [prop]: value } : layer,
-      ),
-    );
-  };
-
-  const removeLayer = (layerIndex: number) => {
-    setLayers((prevLayers) =>
-      prevLayers.filter((layer) => layer.index !== layerIndex),
-    );
-  };
-
-  const moveLayerUp = (index: number) => {
-    if (index > 0) {
-      setLayers((prevLayers) => {
-        const newLayers = [...prevLayers];
-        [newLayers[index], newLayers[index - 1]] = [
-          newLayers[index - 1],
-          newLayers[index],
-        ];
-        return newLayers;
-      });
-    }
-  };
-
-  const moveLayerDown = (index: number) => {
-    if (index < layers.length - 1) {
-      setLayers((prevLayers) => {
-        const newLayers = [...prevLayers];
-        [newLayers[index], newLayers[index + 1]] = [
-          newLayers[index + 1],
-          newLayers[index],
-        ];
-        return newLayers;
-      });
-    }
-  };
-
   const bind = useGesture(
     {
       onDrag: ({ offset: [dx, dy] }) => {
@@ -193,7 +155,7 @@ const ImageEditPage: React.FC = () => {
 
   useEffect(() => {
     renderCanvas();
-  }, [layers, canvasWidth, canvasHeight]);
+  }, [layers, documentSize]);
 
   useEffect(() => {
     if (aspectRatio) {
@@ -208,76 +170,13 @@ const ImageEditPage: React.FC = () => {
     if (canvas) {
       const ctx = canvas.getContext("2d");
       if (ctx) {
-        ctx.clearRect(0, 0, canvas.width, canvas.height);
-        renderLayers(ctx, layers, canvas.width, canvas.height);
+        ctx.clearRect(0, 0, documentSize.width, documentSize.height);
+        renderLayers(ctx, layers, documentSize.width, documentSize.height);
       }
     }
   };
 
-  const renderLayers = (
-    ctx: CanvasRenderingContext2D,
-    layers: Layer[],
-    width: number,
-    height: number,
-  ) => {
-    const sortedLayers = [...layers].sort((a, b) => a.index - b.index);
-
-    const drawLayer = (layer: Layer) => {
-      if (layer.visible) {
-        if (layer.type === "image" && layer.image) {
-          return new Promise<void>((resolve) => {
-            const img = new Image();
-            img.src = layer.image;
-            img.onload = () => {
-              const imgWidth = img.width * layer.scale;
-              const imgHeight = img.height * layer.scale;
-              const xPos = (width - imgWidth) / 2 + layer.offsetX;
-              const yPos = (height - imgHeight) / 2 + layer.offsetY;
-              ctx.drawImage(img, xPos, yPos, imgWidth, imgHeight);
-              resolve();
-            };
-          });
-        } else if (layer.type === "text") {
-          ctx.font = `${layer.fontSize}px ${layer.fontFamily}`;
-          ctx.fillStyle = layer.color;
-          ctx.fillText(layer.text || "", layer.offsetX, layer.offsetY);
-          return Promise.resolve();
-        }
-      }
-      return Promise.resolve();
-    };
-
-    const drawLayersSequentially = async () => {
-      for (const layer of sortedLayers) {
-        await drawLayer(layer);
-      }
-    };
-
-    drawLayersSequentially();
-  };
-
-  const handleFill = (image: string) => {
-    const canvas = canvasRef.current;
-    if (canvas) {
-      const ctx = canvas.getContext("2d");
-      if (ctx) {
-        const img = new Image();
-        img.src = image;
-        img.onload = () => {
-          ctx.clearRect(0, 0, canvas.width, canvas.height);
-          ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
-          const imageUrl = canvas.toDataURL("image/png");
-          updateLayerProp(currentLayer, "image", imageUrl);
-        };
-      }
-    }
-  };
-
-  const applyFilter = (
-    filter: string,
-    params: FilterParams,
-    option: string,
-  ) => {
+  const applyFilter = (filter: string, params: any, option: string) => {
     const canvas = canvasRef.current;
     const ctx = canvas?.getContext("2d");
     const layer = layers.find((layer) => layer.index === currentLayer);
@@ -307,21 +206,17 @@ const ImageEditPage: React.FC = () => {
             type: "image",
             visible: true,
           };
-          setLayers([...layers, newLayer]);
+          addNewLayer(newLayer);
         } else if (option === "mergeAndCreateNew") {
           createMergedLayerWithFilter(filter, params);
         }
 
-        // Ensure the canvas is re-rendered after applying the filter
         renderCanvas();
       };
     }
   };
 
-  const createMergedLayerWithFilter = (
-    filter: string,
-    params: FilterParams,
-  ) => {
+  const createMergedLayerWithFilter = (filter: string, params: any) => {
     const mergedCanvas = document.createElement("canvas");
     const mergedCtx = mergedCanvas.getContext("2d");
 
@@ -360,17 +255,12 @@ const ImageEditPage: React.FC = () => {
             type: "image",
             visible: true,
           };
-          setLayers([...layers, newLayer]);
+          addNewLayer(newLayer);
 
-          // Ensure the canvas is re-rendered after creating the merged layer
           renderCanvas();
         }
       }, 1000);
     }
-  };
-
-  const addNewLayer = (layer: Layer) => {
-    setLayers((prev) => [...prev, { ...layer, index: prev.length }]);
   };
 
   return (
@@ -402,12 +292,22 @@ const ImageEditPage: React.FC = () => {
             className="bg-yellow-500 hover:bg-yellow-600 py-2 px-4 rounded-md transition"
             onClick={() => setIsAspectRatioModalOpen(true)}
           >
-            {/* Aspect Ratio */}
             <Cog6ToothIcon className="w-4 h-4" />
           </button>
         </div>
         <div className="flex items-center space-x-2">
-          <label className="block font-semibold">Add Image </label>
+          <label className="block font-semibold">Add </label>
+          <button
+            className="bg-gray-700 hover:bg-gray-800 py-2 px-2 rounded-md transition"
+            onClick={handleCamInputClick}
+          >
+            <CameraIcon className="w-4 h-4" />
+          </button>
+        </div>
+        <div className="flex items-center space-x-2">
+          <label htmlFor="" className="block font-semibold">
+            Add Image{" "}
+          </label>
           <button
             className="bg-gray-700 hover:bg-gray-800 py-2 px-2 rounded-md transition"
             onClick={handleDropZoneClick}
@@ -425,8 +325,6 @@ const ImageEditPage: React.FC = () => {
             setCurrentLayer={setCurrentLayer}
             setLayerProp={updateLayerProp}
             removeLayer={removeLayer}
-            moveLayerUp={moveLayerUp}
-            moveLayerDown={moveLayerDown}
           />
           <button
             className="w-full mt-4 py-2 px-4 bg-gray-700 text-white rounded-md flex items-center justify-center hover:bg-gray-800 transition"
@@ -440,10 +338,14 @@ const ImageEditPage: React.FC = () => {
           <animated.canvas
             {...bind()}
             ref={canvasRef}
-            width={canvasWidth}
-            height={canvasHeight}
+            width={documentSize.width}
+            height={documentSize.height}
             className="border mb-4 w-full h-auto shadow-lg"
-            style={{ x, y, scale }}
+            // style={{ x, y, scale }}
+            style={{
+              width: `${canvasSize.width}px`,
+              height: `${canvasSize.height}px`,
+            }}
           />
         </div>
       </div>
@@ -465,10 +367,10 @@ const ImageEditPage: React.FC = () => {
         </button>
       </div>
 
-      <FillImageModal
-        isOpen={isFillModalOpen}
-        onClose={() => setIsFillModalOpen(false)}
-        onFill={handleFill}
+      <WebCamInputModal
+        isOpen={isWebcamOpen}
+        onClose={() => setIsWebcamOpen(false)}
+        onCapture={(image) => updateLayerProp(currentLayer, "image", image)}
       />
 
       <AspectRatioModal
@@ -476,10 +378,15 @@ const ImageEditPage: React.FC = () => {
         onClose={() => setIsAspectRatioModalOpen(false)}
         aspectRatio={aspectRatio}
         setAspectRatio={setAspectRatio}
-        canvasWidth={canvasWidth}
-        setCanvasWidth={setCanvasWidth}
-        canvasHeight={canvasHeight}
-        setCanvasHeight={setCanvasHeight}
+        canvasSize={canvasSize}
+        setCanvasSize={setCanvasSize}
+      />
+
+      <FillImageModal
+        isOpen={isFillModalOpen}
+        onClose={() => setIsFillModalOpen(false)}
+        canvasSize={canvasSize}
+        onFill={(image) => updateLayerProp(0, "image", image)}
       />
 
       <FilterModal
