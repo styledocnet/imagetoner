@@ -19,6 +19,7 @@ import { renderLayers } from "../utils/canvasUtils";
 import { applyFilterToCanvas } from "../utils/filterUtils";
 import { useRouter } from "../context/CustomRouter";
 import { Document, Layer } from "../types";
+import Toolbar from "../components/Toolbar";
 
 const ImageEditPage: React.FC = () => {
   const {
@@ -257,57 +258,14 @@ const ImageEditPage: React.FC = () => {
 
   return (
     <div className="w-full h-screen flex flex-col bg-gray-100 dark:bg-gray-900">
-      <div className="bg-gray-800 dark:bg-gray-700 text-white p-4 flex justify-between items-center shadow-md">
-        <div className="flex space-x-4">
-          <input
-            ref={fileInputRef}
-            type="file"
-            className="hidden"
-            accept="image/*"
-            onChange={handleFileChange}
-          />
-          <button
-            className="bg-blue-500 hover:bg-blue-600 py-2 px-4 rounded-md transition"
-            onClick={() => setIsFillModalOpen(true)}
-          >
-            Fill
-          </button>
-          <button
-            className="bg-purple-500 hover:bg-purple-600 py-2 px-4 rounded-md transition"
-            onClick={() => setIsFilterModalOpen(true)}
-          >
-            Filter
-          </button>
-        </div>
-        <div className="flex items-center space-x-2">
-          <button
-            className="bg-yellow-500 hover:bg-yellow-600 py-2 px-4 rounded-md transition"
-            onClick={() => setIsAspectRatioModalOpen(true)}
-          >
-            <Cog6ToothIcon className="w-4 h-4" />
-          </button>
-        </div>
-        <div className="flex items-center space-x-2">
-          <label className="block font-semibold">Add </label>
-          <button
-            className="bg-gray-700 hover:bg-gray-800 py-2 px-2 rounded-md transition"
-            onClick={handleCamInputClick}
-          >
-            <CameraIcon className="w-4 h-4" />
-          </button>
-        </div>
-        <div className="flex items-center space-x-2">
-          <label htmlFor="" className="block font-semibold">
-            Add Image{" "}
-          </label>
-          <button
-            className="bg-gray-700 hover:bg-gray-800 py-2 px-2 rounded-md transition"
-            onClick={handleDropZoneClick}
-          >
-            <PlusIcon className="w-4 h-4" />
-          </button>
-        </div>
-      </div>
+      <Toolbar
+        onImportImage={handleFileChange}
+        onFillBackground={() => setIsFillModalOpen(true)}
+        onApplyFilter={() => setIsFilterModalOpen(true)}
+        onExport={handleExport}
+        onOpenAspectRatioModal={() => setIsAspectRatioModalOpen(true)}
+        onOpenWebcamModal={handleCamInputClick}
+      />
 
       <div className="flex-grow flex flex-col sm:flex-row-reverse sm:flex-wrap-reverse">
         <div className="w-full sm:w-1/4 bg-gray-200 dark:bg-gray-800 p-4 overflow-auto">
