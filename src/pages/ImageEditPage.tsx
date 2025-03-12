@@ -18,7 +18,7 @@ import useLayers from "../hooks/useLayers";
 import { renderLayers } from "../utils/canvasUtils";
 import { applyFilterToCanvas } from "../utils/filterUtils";
 import { useRouter } from "../context/CustomRouter";
-import { Document } from "../types";
+import { Document, Layer } from "../types";
 
 const ImageEditPage: React.FC = () => {
   const {
@@ -364,6 +364,7 @@ const ImageEditPage: React.FC = () => {
         isOpen={isWebcamOpen}
         onClose={() => setIsWebcamOpen(false)}
         onCapture={(image) => updateLayerProp(currentLayer!, "image", image)}
+        canvasSize={documentSize}
       />
       <AspectRatioModal
         isOpen={isAspectRatioModalOpen}

@@ -1,78 +1,66 @@
-import React, { useEffect, useRef, useState } from "react";
+import React, {
+  forwardRef,
+  useImperativeHandle,
+  useRef,
+  useEffect,
+} from "react";
 
 interface WebcamProps {
-  audio?: boolean;
-  videoConstraints?: MediaStreamConstraints["video"];
-  onCapture: (image: string) => void;
+  audio: boolean;
+  screenshotFormat: string;
+  width: number;
+  height: number;
 }
 
-const Webcam: React.FC<WebcamProps> = ({
-  audio = false,
-  videoConstraints,
-  onCapture,
-}: WebcamProps) => {
-  const videoRef = useRef<HTMLVideoElement>(null);
-  const canvasRef = useRef<HTMLCanvasElement>(null);
-  const [stream, setStream] = useState<MediaStream | null>(null);
+const Webcam = forwardRef(
+  ({ audio, screenshotFormat, width, height }: WebcamProps, ref) => {
+    const videoRef = useRef<HTMLVideoElement>(null);
+    const streamRef = useRef<MediaStream | null>(null);
 
-  useEffect(() => {
-    const startWebcam = async () => {
-      try {
-        const mediaStream = await navigator.mediaDevices.getUserMedia({
-          video: videoConstraints || true,
-          audio,
-        });
-        setStream(mediaStream);
-        if (videoRef.current) {
-          videoRef.current.srcObject = mediaStream;
+    useImperativeHandle(ref, () => ({
+      getScreenshot: () => {
+        const canvas = document.createElement("canvas");
+        canvas.width = width;
+        canvas.height = height;
+        const ctx = canvas.getContext("2d");
+        if (ctx && videoRef.current) {
+          ctx.drawImage(videoRef.current, 0, 0, width, height);
+          return canvas.toDataURL(screenshotFormat);
         }
-      } catch (error) {
-        console.error("Webcam error:", error);
-      }
-    };
+        return null;
+      },
+      stopWebcam: () => {
+        if (streamRef.current) {
+          streamRef.current.getTracks().forEach((track) => track.stop());
+        }
+      },
+    }));
 
-    startWebcam();
+    useEffect(() => {
+      const startWebcam = async () => {
+        try {
+          const stream = await navigator.mediaDevices.getUserMedia({
+            video: true,
+            audio: false,
+          });
+          videoRef.current!.srcObject = stream;
+          streamRef.current = stream;
+        } catch (err) {
+          console.error("Error accessing webcam: ", err);
+        }
+      };
 
-    return () => {
-      if (stream) {
-        stream.getTracks().forEach((track) => track.stop());
-      }
-    };
-  }, [videoConstraints, audio]);
+      startWebcam();
 
-  const handleCapture = () => {
-    if (videoRef.current && canvasRef.current) {
-      const canvas = canvasRef.current;
-      const context = canvas.getContext("2d");
-      if (context) {
-        canvas.width = videoRef.current.videoWidth;
-        canvas.height = videoRef.current.videoHeight;
+      return () => {
+        if (streamRef.current) {
+          streamRef.current.getTracks().forEach((track) => track.stop());
+        }
+      };
+    }, []);
 
-        context.drawImage(videoRef.current, 0, 0, canvas.width, canvas.height);
-        const imageSrc = canvas.toDataURL("image/png");
-        console.log("Captured Image Data URL:", imageSrc);
-        onCapture(imageSrc);
-      }
-    }
-  };
-
-  return (
-    <div className="flex flex-col items-center">
-      <video
-        ref={videoRef}
-        autoPlay
-        playsInline
-        className="w-full rounded-md shadow-md"
-      />
-      <canvas ref={canvasRef} className="hidden"></canvas>
-      <button
-        onClick={handleCapture}
-        className="mt-4 bg-blue-500 text-white py-2 px-4 rounded-md hover:bg-blue-700 transition"
-      >
-        Capture Image
-      </button>
-    </div>
-  );
-};
+    return <video ref={videoRef} autoPlay width={width} height={height} />;
+  },
+);
 
 export default Webcam;

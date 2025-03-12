@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React, { useRef, useEffect } from "react";
 import Modal from "./Modal";
 
 interface AspectRatioModalProps {
@@ -18,32 +18,31 @@ const AspectRatioModal: React.FC<AspectRatioModalProps> = ({
   canvasSize,
   setCanvasSize,
 }) => {
-  const [width, setWidth] = useState(canvasSize.width);
-  const [height, setHeight] = useState(canvasSize.height);
-  const [linked, setLinked] = useState(true);
+  const widthRef = useRef<HTMLInputElement>(null);
+  const heightRef = useRef<HTMLInputElement>(null);
+  const linkedRef = useRef<HTMLInputElement>(null);
 
   useEffect(() => {
-    if (linked && aspectRatio) {
-      setHeight(Math.round(width / aspectRatio));
+    if (linkedRef.current?.checked && aspectRatio) {
+      heightRef.current!.value = String(
+        Math.round(Number(widthRef.current!.value) / aspectRatio),
+      );
     }
-  }, [width, aspectRatio, linked]);
+  }, [widthRef.current?.value, aspectRatio]);
 
   useEffect(() => {
-    if (linked && aspectRatio) {
-      setWidth(Math.round(height * aspectRatio));
+    if (linkedRef.current?.checked && aspectRatio) {
+      widthRef.current!.value = String(
+        Math.round(Number(heightRef.current!.value) * aspectRatio),
+      );
     }
-  }, [height, aspectRatio, linked]);
-
-  const handleWidthChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    setWidth(Number(e.target.value));
-  };
-
-  const handleHeightChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    setHeight(Number(e.target.value));
-  };
+  }, [heightRef.current?.value, aspectRatio]);
 
   const handleApply = () => {
-    setCanvasSize({ width, height });
+    setCanvasSize({
+      width: Number(widthRef.current!.value),
+      height: Number(heightRef.current!.value),
+    });
     onClose();
   };
 
@@ -62,13 +61,13 @@ const AspectRatioModal: React.FC<AspectRatioModalProps> = ({
       }
     >
       <div className="mb-4">
-        <label className="block text-sm font-medium text-gray-700">
+        <label className="block text-sm font-medium text-gray-700 dark:text-gray-300">
           Aspect Ratio:
         </label>
         <select
           value={aspectRatio || ""}
           onChange={(e) => setAspectRatio(parseFloat(e.target.value) || null)}
-          className="w-full p-2 border border-gray-300 rounded-md"
+          className="w-full p-2 border border-gray-300 rounded-md dark:bg-gray-800 dark:text-gray-100"
         >
           <option value="">Free</option>
           <option value={16 / 9}>16:9</option>
@@ -77,40 +76,40 @@ const AspectRatioModal: React.FC<AspectRatioModalProps> = ({
         </select>
       </div>
       <div className="mb-4">
-        <label className="block text-sm font-medium text-gray-700">
+        <label className="block text-sm font-medium text-gray-700 dark:text-gray-300">
           Width:
         </label>
         <input
+          ref={widthRef}
           type="number"
-          value={width}
-          onChange={handleWidthChange}
-          className="w-full p-2 border border-gray-300 rounded-md"
+          defaultValue={canvasSize.width}
+          className="w-full p-2 border border-gray-300 rounded-md dark:bg-gray-800 dark:text-gray-100"
         />
       </div>
       <div className="mb-4">
-        <label className="block text-sm font-medium text-gray-700">
+        <label className="block text-sm font-medium text-gray-700 dark:text-gray-300">
           Height:
         </label>
         <input
+          ref={heightRef}
           type="number"
-          value={height}
-          onChange={handleHeightChange}
-          className="w-full p-2 border border-gray-300 rounded-md"
+          defaultValue={canvasSize.height}
+          className="w-full p-2 border border-gray-300 rounded-md dark:bg-gray-800 dark:text-gray-100"
         />
       </div>
       <div className="mb-4 flex items-center">
         <input
+          ref={linkedRef}
           type="checkbox"
-          checked={linked}
-          onChange={() => setLinked(!linked)}
+          defaultChecked={true}
           className="mr-2"
         />
-        <label className="block text-sm font-medium text-gray-700">
+        <label className="block text-sm font-medium text-gray-700 dark:text-gray-300">
           Maintain Aspect Ratio
         </label>
       </div>
       <div className="mb-4">
-        <label className="block text-sm font-medium text-gray-700">
+        <label className="block text-sm font-medium text-gray-700 dark:text-gray-300">
           Presets:
         </label>
         <select
@@ -118,10 +117,10 @@ const AspectRatioModal: React.FC<AspectRatioModalProps> = ({
             const [presetWidth, presetHeight] = e.target.value
               .split("x")
               .map(Number);
-            setWidth(presetWidth);
-            setHeight(presetHeight);
+            widthRef.current!.value = String(presetWidth);
+            heightRef.current!.value = String(presetHeight);
           }}
-          className="w-full p-2 border border-gray-300 rounded-md"
+          className="w-full p-2 border border-gray-300 rounded-md dark:bg-gray-800 dark:text-gray-100"
         >
           <option value="">Select a preset</option>
           <option value="1080x1080">Instagram Post (1080x1080)</option>
