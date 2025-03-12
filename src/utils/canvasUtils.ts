@@ -6,7 +6,7 @@ export const renderLayers = (
   width: number,
   height: number,
 ) => {
-  const sortedLayers = [...layers].sort((a, b) => a.index - b.index);
+  // const sortedLayers = [...layers].sort((a, b) => a.index - b.index);
 
   const drawLayer = (layer: Layer) => {
     if (layer.visible) {
@@ -34,7 +34,7 @@ export const renderLayers = (
   };
 
   const drawLayersSequentially = async () => {
-    for (const layer of sortedLayers) {
+    for (const layer of layers) {
       await drawLayer(layer);
     }
   };

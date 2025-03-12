@@ -18,7 +18,7 @@ import useLayers from "../hooks/useLayers";
 import { renderLayers } from "../utils/canvasUtils";
 import { applyFilterToCanvas } from "../utils/filterUtils";
 import { useRouter } from "../context/CustomRouter";
-import { Document, Layer } from "../types";
+import { Document } from "../types";
 
 const ImageEditPage: React.FC = () => {
   const {
@@ -62,6 +62,21 @@ const ImageEditPage: React.FC = () => {
       height: documentSize.height / 2,
     });
   }, [documentSize]);
+
+  useEffect(() => {
+    renderCanvas();
+  }, [layers, documentSize]);
+
+  useEffect(() => {
+    if (aspectRatio) {
+      setCanvasSize((prevSize) => ({
+        ...prevSize,
+        height: prevSize.width / aspectRatio,
+      }));
+    } else {
+      setCanvasSize((prevSize) => ({ ...prevSize, height: 1024 }));
+    }
+  }, [aspectRatio, canvasSize.width]);
 
   const loadDocument = async (id: number) => {
     const document = await storageService.getDocument(id);
@@ -155,21 +170,6 @@ const ImageEditPage: React.FC = () => {
       pinch: { from: () => [layers[currentLayer!].scale, 0] },
     },
   );
-
-  useEffect(() => {
-    renderCanvas();
-  }, [layers, documentSize]);
-
-  useEffect(() => {
-    if (aspectRatio) {
-      setCanvasSize((prevSize) => ({
-        ...prevSize,
-        height: prevSize.width / aspectRatio,
-      }));
-    } else {
-      setCanvasSize((prevSize) => ({ ...prevSize, height: 1024 }));
-    }
-  }, [aspectRatio, canvasSize.width]);
 
   const renderCanvas = () => {
     const canvas = canvasRef.current;
