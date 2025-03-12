@@ -25,8 +25,6 @@ const ImageEditPage: React.FC = () => {
     useLayers();
   const [currentLayer, setCurrentLayer] = useState(1);
   const [loading, setLoading] = useState(false);
-  const [canvasWidth, setCanvasWidth] = useState(1280);
-  const [canvasHeight, setCanvasHeight] = useState(1024);
   const [documentSize, setDocumentSize] = useState({
     width: 1920,
     height: 1080,
@@ -100,8 +98,8 @@ const ImageEditPage: React.FC = () => {
     const originalCtx = originalCanvas.getContext("2d");
 
     if (originalCtx) {
-      originalCanvas.width = canvasWidth;
-      originalCanvas.height = canvasHeight;
+      originalCanvas.width = documentSize.width;
+      originalCanvas.height = documentSize.height;
 
       renderLayers(
         originalCtx,
@@ -159,11 +157,17 @@ const ImageEditPage: React.FC = () => {
 
   useEffect(() => {
     if (aspectRatio) {
-      setCanvasHeight(canvasWidth / aspectRatio);
+      setCanvasSize((prevSize) => ({
+        ...prevSize,
+        height: prevSize.width / aspectRatio,
+      }));
     } else {
-      setCanvasHeight(1024);
+      setCanvasSize((prevSize) => ({
+        ...prevSize,
+        height: 1024,
+      }));
     }
-  }, [aspectRatio, canvasWidth]);
+  }, [aspectRatio, canvasSize.width]);
 
   const renderCanvas = () => {
     const canvas = canvasRef.current;
@@ -186,8 +190,8 @@ const ImageEditPage: React.FC = () => {
       img.src = layer.image || "";
 
       img.onload = () => {
-        ctx.clearRect(0, 0, canvas.width, canvas.height);
-        ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
+        ctx.clearRect(0, 0, documentSize.width, documentSize.height);
+        ctx.drawImage(img, 0, 0, documentSize.width, documentSize.height);
 
         applyFilterToCanvas(filter, ctx, canvas, params);
 
@@ -221,8 +225,8 @@ const ImageEditPage: React.FC = () => {
     const mergedCtx = mergedCanvas.getContext("2d");
 
     if (mergedCtx) {
-      mergedCanvas.width = canvasWidth;
-      mergedCanvas.height = canvasHeight;
+      mergedCanvas.width = documentSize.width;
+      mergedCanvas.height = documentSize.height;
 
       renderLayers(mergedCtx, layers, mergedCanvas.width, mergedCanvas.height);
 
@@ -317,8 +321,8 @@ const ImageEditPage: React.FC = () => {
         </div>
       </div>
 
-      <div className="flex-grow flex">
-        <div className="w-1/4 bg-gray-200 dark:bg-gray-800 p-4 overflow-auto">
+      <div className="flex-grow flex flex-col sm:flex-row">
+        <div className="w-full sm:w-1/4 bg-gray-200 dark:bg-gray-800 p-4 overflow-auto">
           <LayerAccordion
             layers={layers}
             currentLayer={currentLayer}
@@ -334,7 +338,7 @@ const ImageEditPage: React.FC = () => {
             Add Layer
           </button>
         </div>
-        <div className="flex-grow flex justify-center items-center bg-gray-300 dark:bg-gray-700 p-4">
+        <div className="flex-grow flex justify-center items-start bg-gray-300 dark:bg-gray-700 p-4">
           <animated.canvas
             {...bind()}
             ref={canvasRef}
@@ -385,7 +389,7 @@ const ImageEditPage: React.FC = () => {
       <FillImageModal
         isOpen={isFillModalOpen}
         onClose={() => setIsFillModalOpen(false)}
-        canvasSize={canvasSize}
+        canvasSize={documentSize} // Use documentSize for internal data
         onFill={(image) => updateLayerProp(0, "image", image)}
       />
 
