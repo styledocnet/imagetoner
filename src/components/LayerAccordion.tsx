@@ -6,24 +6,12 @@ import {
   ChevronDownIcon,
   XMarkIcon,
 } from "@heroicons/react/24/outline";
+import { Layer } from "../types";
 
 interface LayerAccordionProps {
-  layers: {
-    name: string;
-    index: number;
-    image: string | null;
-    offsetX: number;
-    offsetY: number;
-    scale: number;
-    type: "image" | "text";
-    text?: string;
-    fontFamily?: string;
-    fontSize?: number;
-    color?: string;
-    visible: boolean;
-  }[];
-  currentLayer: number;
-  setCurrentLayer: (index: number) => void;
+  layers: Layer[];
+  currentLayer: number | null;
+  setCurrentLayer: (index: number | null) => void;
   setLayerProp: (layerIndex: number, prop: string, value: any) => void;
   removeLayer: (index: number) => void;
   moveLayerUp: (index: number) => void;
@@ -59,27 +47,27 @@ const LayerAccordion: React.FC<LayerAccordionProps> = ({
                 ? "bg-blue-500 text-white"
                 : "bg-gray-200 dark:bg-gray-700 dark:text-gray-300"
             }`}
-            onClick={() =>
-              currentLayer === layer.index
-                ? setCurrentLayer(null)
-                : setCurrentLayer(layer.index)
-            }
+            onClick={() => setCurrentLayer(layer.index)}
           >
             {editLayerName === layer.index ? (
               <input
-                type="text"
                 value={layer.name}
                 onChange={(e) => handleNameChange(layer.index, e.target.value)}
-                className="w-full border border-gray-300 dark:border-gray-600 p-2 rounded-md bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100"
-                onBlur={() => setEditLayerName(null)}
+                onBlur={() => handleNameChange(layer.index, layer.name)}
                 autoFocus
+                className="bg-transparent border-b border-gray-600 dark:border-gray-400 outline-none"
               />
             ) : (
-              <span onDoubleClick={() => setEditLayerName(layer.index)}>
+              <span
+                onDoubleClick={(e) => {
+                  e.stopPropagation();
+                  setEditLayerName(layer.index);
+                }}
+              >
                 {layer.name}
               </span>
             )}
-            <div className="flex items-center space-x-2">
+            <div className="flex space-x-2 items-center">
               {layer.visible ? (
                 <EyeIcon
                   className="w-5 h-5"
@@ -101,22 +89,23 @@ const LayerAccordion: React.FC<LayerAccordionProps> = ({
                 className="w-5 h-5"
                 onClick={(e) => {
                   e.stopPropagation();
-                  moveLayerUp(idx);
+                  moveLayerUp(layer.index);
                 }}
               />
               <ChevronDownIcon
                 className="w-5 h-5"
                 onClick={(e) => {
                   e.stopPropagation();
-                  moveLayerDown(idx);
+                  moveLayerDown(layer.index);
                 }}
               />
               <XMarkIcon
-                className="w-5 h-5 text-red-500"
+                className="w-5 h-5"
                 onClick={(e) => {
                   e.stopPropagation();
-                  confirm("Are you sure you want to delete this layer?") &&
+                  if (confirm("Are you sure you want to delete this layer?")) {
                     removeLayer(layer.index);
+                  }
                 }}
               />
             </div>
@@ -147,7 +136,6 @@ const LayerAccordion: React.FC<LayerAccordionProps> = ({
                 </div>
               )}
               <div className="space-y-2">
-                {/* TODO - Add text Position Presets (vert: left, middle, right; CENTER(middle,middle); horizontal: top, middle, bottom) properties here */}
                 <div>
                   <label className="block text-sm font-semibold text-gray-700 dark:text-gray-300">
                     Offset X:

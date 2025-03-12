@@ -46,7 +46,45 @@ const useLayers = () => {
     ]);
   };
 
-  return { layers, setLayers, updateLayerProp, removeLayer, addNewLayer };
+  const moveLayerUp = (layerIndex: number) => {
+    setLayers((prevLayers) => {
+      const index = prevLayers.findIndex((layer) => layer.index === layerIndex);
+      if (index > 0) {
+        const newLayers = [...prevLayers];
+        [newLayers[index - 1], newLayers[index]] = [
+          newLayers[index],
+          newLayers[index - 1],
+        ];
+        return newLayers;
+      }
+      return prevLayers;
+    });
+  };
+
+  const moveLayerDown = (layerIndex: number) => {
+    setLayers((prevLayers) => {
+      const index = prevLayers.findIndex((layer) => layer.index === layerIndex);
+      if (index < prevLayers.length - 1) {
+        const newLayers = [...prevLayers];
+        [newLayers[index + 1], newLayers[index]] = [
+          newLayers[index],
+          newLayers[index + 1],
+        ];
+        return newLayers;
+      }
+      return prevLayers;
+    });
+  };
+
+  return {
+    layers,
+    setLayers,
+    updateLayerProp,
+    removeLayer,
+    addNewLayer,
+    moveLayerUp,
+    moveLayerDown,
+  };
 };
 
 export default useLayers;

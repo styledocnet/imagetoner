@@ -21,16 +21,22 @@ import { useRouter } from "../context/CustomRouter";
 import { Document, Layer } from "../types";
 
 const ImageEditPage: React.FC = () => {
-  const { layers, setLayers, updateLayerProp, removeLayer, addNewLayer } =
-    useLayers();
-  const [currentLayer, setCurrentLayer] = useState(1);
+  const {
+    layers,
+    setLayers,
+    updateLayerProp,
+    removeLayer,
+    addNewLayer,
+    moveLayerUp,
+    moveLayerDown,
+  } = useLayers();
+  const [currentLayer, setCurrentLayer] = useState<number | null>(null);
   const [loading, setLoading] = useState(false);
   const [documentSize, setDocumentSize] = useState({
     width: 1920,
     height: 1080,
-  }); // Actual Document Size
-  const [canvasSize, setCanvasSize] = useState({ width: 960, height: 540 }); // Scaled Preview
-
+  });
+  const [canvasSize, setCanvasSize] = useState({ width: 960, height: 540 });
   const [aspectRatio, setAspectRatio] = useState<number | null>(null);
   const [isFillModalOpen, setIsFillModalOpen] = useState(false);
   const [isAspectRatioModalOpen, setIsAspectRatioModalOpen] = useState(false);
@@ -39,13 +45,7 @@ const ImageEditPage: React.FC = () => {
   const [isWebcamOpen, setIsWebcamOpen] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const canvasRef = useRef<HTMLCanvasElement>(null);
-
-  const [{ x, y, scale }, api] = useSpring(() => ({
-    x: 0,
-    y: 0,
-    scale: 1,
-  }));
-
+  const [{ x, y, scale }, api] = useSpring(() => ({ x: 0, y: 0, scale: 1 }));
   const { navigate, currentRoute } = useRouter();
 
   useEffect(() => {
@@ -58,7 +58,7 @@ const ImageEditPage: React.FC = () => {
 
   useEffect(() => {
     setCanvasSize({
-      width: documentSize.width / 2, // Scale down for preview
+      width: documentSize.width / 2,
       height: documentSize.height / 2,
     });
   }, [documentSize]);
@@ -69,8 +69,14 @@ const ImageEditPage: React.FC = () => {
       const updatedLayers = document.layers.map((layer) => ({
         ...layer,
         image: layer.image ? `data:image/png;base64,${layer.image}` : null,
+        width: layer.width || documentSize.width,
+        height: layer.height || documentSize.height,
       }));
       setLayers(updatedLayers);
+      if (updatedLayers.length > 0) {
+        const firstLayer = updatedLayers[0];
+        setDocumentSize({ width: firstLayer.width, height: firstLayer.height });
+      }
     }
   };
 
@@ -79,7 +85,7 @@ const ImageEditPage: React.FC = () => {
       const file = e.target.files[0];
       const reader = new FileReader();
       reader.onload = () => {
-        updateLayerProp(currentLayer, "image", reader.result as string);
+        updateLayerProp(currentLayer!, "image", reader.result as string);
       };
       reader.readAsDataURL(file);
     }
@@ -96,18 +102,15 @@ const ImageEditPage: React.FC = () => {
   const handleExport = () => {
     const originalCanvas = document.createElement("canvas");
     const originalCtx = originalCanvas.getContext("2d");
-
     if (originalCtx) {
       originalCanvas.width = documentSize.width;
       originalCanvas.height = documentSize.height;
-
       renderLayers(
         originalCtx,
         layers,
         originalCanvas.width,
         originalCanvas.height,
       );
-
       setTimeout(() => {
         const link = document.createElement("a");
         link.href = originalCanvas.toDataURL("image/png");
@@ -123,6 +126,8 @@ const ImageEditPage: React.FC = () => {
       layers: layers.map((layer) => ({
         ...layer,
         image: layer.image?.split(",")[1] || null,
+        width: documentSize.width,
+        height: documentSize.height,
       })),
     };
     await storageService.addDocument(document);
@@ -133,21 +138,21 @@ const ImageEditPage: React.FC = () => {
   const bind = useGesture(
     {
       onDrag: ({ offset: [dx, dy] }) => {
-        updateLayerProp(currentLayer, "offsetX", dx);
-        updateLayerProp(currentLayer, "offsetY", dy);
+        updateLayerProp(currentLayer!, "offsetX", dx);
+        updateLayerProp(currentLayer!, "offsetY", dy);
       },
       onPinch: ({ offset: [d] }) => {
-        updateLayerProp(currentLayer, "scale", d);
+        updateLayerProp(currentLayer!, "scale", d);
       },
     },
     {
       drag: {
         from: () => [
-          layers[currentLayer].offsetX,
-          layers[currentLayer].offsetY,
+          layers[currentLayer!].offsetX,
+          layers[currentLayer!].offsetY,
         ],
       },
-      pinch: { from: () => [layers[currentLayer].scale, 0] },
+      pinch: { from: () => [layers[currentLayer!].scale, 0] },
     },
   );
 
@@ -162,10 +167,7 @@ const ImageEditPage: React.FC = () => {
         height: prevSize.width / aspectRatio,
       }));
     } else {
-      setCanvasSize((prevSize) => ({
-        ...prevSize,
-        height: 1024,
-      }));
+      setCanvasSize((prevSize) => ({ ...prevSize, height: 1024 }));
     }
   }, [aspectRatio, canvasSize.width]);
 
@@ -184,21 +186,16 @@ const ImageEditPage: React.FC = () => {
     const canvas = canvasRef.current;
     const ctx = canvas?.getContext("2d");
     const layer = layers.find((layer) => layer.index === currentLayer);
-
     if (ctx && layer) {
       const img = new Image();
       img.src = layer.image || "";
-
       img.onload = () => {
         ctx.clearRect(0, 0, documentSize.width, documentSize.height);
         ctx.drawImage(img, 0, 0, documentSize.width, documentSize.height);
-
         applyFilterToCanvas(filter, ctx, canvas, params);
-
         const imageUrl = canvas.toDataURL("image/png");
-
         if (option === "applyCurrent") {
-          updateLayerProp(currentLayer, "image", imageUrl);
+          updateLayerProp(currentLayer!, "image", imageUrl);
         } else if (option === "createNew") {
           const newLayer: Layer = {
             name: `${filter} Layer`,
@@ -214,7 +211,6 @@ const ImageEditPage: React.FC = () => {
         } else if (option === "mergeAndCreateNew") {
           createMergedLayerWithFilter(filter, params);
         }
-
         renderCanvas();
       };
     }
@@ -223,19 +219,15 @@ const ImageEditPage: React.FC = () => {
   const createMergedLayerWithFilter = (filter: string, params: any) => {
     const mergedCanvas = document.createElement("canvas");
     const mergedCtx = mergedCanvas.getContext("2d");
-
     if (mergedCtx) {
       mergedCanvas.width = documentSize.width;
       mergedCanvas.height = documentSize.height;
-
       renderLayers(mergedCtx, layers, mergedCanvas.width, mergedCanvas.height);
-
       setTimeout(() => {
         const filterCanvas = document.createElement("canvas");
         const filterCtx = filterCanvas.getContext("2d");
         filterCanvas.width = mergedCanvas.width;
         filterCanvas.height = mergedCanvas.height;
-
         if (filterCtx) {
           filterCtx.drawImage(
             mergedCanvas,
@@ -244,11 +236,8 @@ const ImageEditPage: React.FC = () => {
             filterCanvas.width,
             filterCanvas.height,
           );
-
           applyFilterToCanvas(filter, filterCtx, filterCanvas, params);
-
           const mergedImageUrl = filterCanvas.toDataURL("image/png");
-
           const newLayer: Layer = {
             name: `${filter} Merged Layer`,
             index: layers.length,
@@ -260,7 +249,6 @@ const ImageEditPage: React.FC = () => {
             visible: true,
           };
           addNewLayer(newLayer);
-
           renderCanvas();
         }
       }, 1000);
@@ -321,7 +309,7 @@ const ImageEditPage: React.FC = () => {
         </div>
       </div>
 
-      <div className="flex-grow flex flex-col sm:flex-row">
+      <div className="flex-grow flex flex-col sm:flex-row-reverse sm:flex-wrap-reverse">
         <div className="w-full sm:w-1/4 bg-gray-200 dark:bg-gray-800 p-4 overflow-auto">
           <LayerAccordion
             layers={layers}
@@ -329,6 +317,8 @@ const ImageEditPage: React.FC = () => {
             setCurrentLayer={setCurrentLayer}
             setLayerProp={updateLayerProp}
             removeLayer={removeLayer}
+            moveLayerUp={moveLayerUp}
+            moveLayerDown={moveLayerDown}
           />
           <button
             className="w-full mt-4 py-2 px-4 bg-gray-700 text-white rounded-md flex items-center justify-center hover:bg-gray-800 transition"
@@ -345,7 +335,6 @@ const ImageEditPage: React.FC = () => {
             width={documentSize.width}
             height={documentSize.height}
             className="border mb-4 w-full h-auto shadow-lg"
-            // style={{ x, y, scale }}
             style={{
               width: `${canvasSize.width}px`,
               height: `${canvasSize.height}px`,
@@ -374,9 +363,8 @@ const ImageEditPage: React.FC = () => {
       <WebCamInputModal
         isOpen={isWebcamOpen}
         onClose={() => setIsWebcamOpen(false)}
-        onCapture={(image) => updateLayerProp(currentLayer, "image", image)}
+        onCapture={(image) => updateLayerProp(currentLayer!, "image", image)}
       />
-
       <AspectRatioModal
         isOpen={isAspectRatioModalOpen}
         onClose={() => setIsAspectRatioModalOpen(false)}
@@ -385,20 +373,17 @@ const ImageEditPage: React.FC = () => {
         canvasSize={canvasSize}
         setCanvasSize={setCanvasSize}
       />
-
       <FillImageModal
         isOpen={isFillModalOpen}
         onClose={() => setIsFillModalOpen(false)}
-        canvasSize={documentSize} // Use documentSize for internal data
-        onFill={(image) => updateLayerProp(0, "image", image)}
+        canvasSize={documentSize}
+        onFill={(image) => updateLayerProp(currentLayer!, "image", image)}
       />
-
       <FilterModal
         isOpen={isFilterModalOpen}
         onClose={() => setIsFilterModalOpen(false)}
         applyFilter={applyFilter}
       />
-
       <AddLayerModal
         isOpen={isAddLayerModalOpen}
         onClose={() => setIsAddLayerModalOpen(false)}
