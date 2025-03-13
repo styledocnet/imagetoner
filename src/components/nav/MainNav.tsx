@@ -47,18 +47,20 @@ const MainNav: React.FC = () => {
         onClick={toggleNav}
       >
         {navItems.map((item) => (
-          <Link key={item.value} to={item.value}>
-            <button
-              className={`block w-full text-left px-4 py-2 rounded-md text-sm font-medium mb-2 ${
-                currentRoute === item.value
-                  ? "bg-gray-500 text-red-300 dark:bg-gray-400 dark:text-gray-100"
-                  : "bg-gray-200 text-gray-800 dark:bg-gray-700 dark:text-gray-200 hover:bg-gray-300 dark:hover:bg-gray-600"
-              }`}
-            >
-              <item.icon className="h-5 w-5 mr-2" />
-              {item.name}
-            </button>
-          </Link>
+          <div>
+            <Link key={item.value} to={item.value}>
+              <button
+                className={`block w-full text-left px-4 py-2 rounded-md text-sm font-medium mb-2 ${
+                  currentRoute === item.value
+                    ? "bg-gray-500 text-red-300 dark:bg-gray-400 dark:text-gray-100"
+                    : "bg-gray-200 text-gray-800 dark:bg-gray-700 dark:text-gray-200 hover:bg-gray-300 dark:hover:bg-gray-600"
+                }`}
+              >
+                <item.icon className="h-5 w-5 mr-2" />
+                {item.name}
+              </button>
+            </Link>
+          </div>
         ))}
       </nav>
     </div>

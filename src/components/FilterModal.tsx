@@ -1,49 +1,60 @@
 import React, { useState, useEffect } from "react";
 import Modal from "./Modal";
+import WebGLFilterRenderer from "./WebGLFilterRenderer";
+
+const shaderFilterParams = {
+  shader_vignette: { strength: 0.5, sizeFactor: 1, color: "#FFFFFF" },
+  shader_posterize: { levels: 4, fade: 0.5 },
+  shader_solarize: { threshold: 0.5, fade: 0.5 },
+  shader_mirror: { flipX: false, flipY: false, fade: 0.5 }, // Extended with flipX, flipY, and fade
+  shader_blur: { radius: 0.01, fade: 0.5 },
+  shader_tilt_blur: { radius: 0.01, fade: 0.5 },
+  shader_dof: { focusDepth: 0.5, threshold: 0.1, blurRadius: 0.02 }, // Adding focusDepth, threshold, and blurRadius
+  shader_grayscale: { intensity: 0.5 }, // Added intensity parameter
+  shader_tritone: {
+    shadowColor: "#000000",
+    midColor: "#888888",
+    highColor: "#FFFFFF",
+    fade: 0.5,
+  },
+  shader_quadtone: {
+    shadowColor: "#000000",
+    midShadowColor: "#444444",
+    midHighlightColor: "#888888",
+    highColor: "#FFFFFF",
+    fade: 0.5,
+  },
+  // TODO Add more shader filters here
+};
+
+const canvasFilterParams = {
+  quantize: { colors: 128, fade: 0.5 },
+  rotate: { degrees: 45, fade: 0.5 },
+  autocontrast: { cutoff: 0, fade: 0.5 },
+  equalize: { fade: 0.5 },
+  flip: { fade: 0.5 },
+  brightness: { factor: 50, fade: 0.5 },
+  color: { factor: 50, fade: 0.5 },
+  contrast: { factor: 50, fade: 0.5 },
+  sharpness: { factor: 50, fade: 0.5 },
+  gaussian_blur: { radius: 2, fade: 0.5 },
+  unsharp_mask: { radius: 2, percent: 150, threshold: 3, fade: 0.5 },
+  // TODO Add more canvas filters here
+};
 
 const FilterModal: React.FC<{
   isOpen: boolean;
   onClose: () => void;
   applyFilter: (filter: string, params: any, option: string) => void;
-}> = ({ isOpen, onClose, applyFilter }) => {
-  const [filter, setFilter] = useState("vignette");
-  const [params, setParams] = useState({
-    strength: 0.5,
-    sizeFactor: 1.5,
-    color: "#000000",
-    color1: "#FF1133",
-    color2: "#770099",
-    color3: "#FFFFFF",
-    color4: "#FFFFFF",
-  });
+  imageSrc: string;
+}> = ({ isOpen, onClose, applyFilter, imageSrc }) => {
+  const [filter, setFilter] = useState("shader_vignette");
+  const [params, setParams] = useState<any>(shaderFilterParams[filter] || {});
   const [presets, setPresets] = useState<{ filter: string; params: any }[]>([]);
   const [presetName, setPresetName] = useState("");
 
   useEffect(() => {
-    switch (filter) {
-      case "vignette":
-        setParams({ strength: 0.5, sizeFactor: 1.5, color: "#000000" });
-        break;
-      case "mono":
-        setParams({ color1: "#FF1133" });
-        break;
-      case "duotone":
-        setParams({ color1: "#FF1133", color2: "#770099" });
-        break;
-      case "tritone":
-        setParams({ color1: "#FF1133", color2: "#770099", color3: "#FFFFFF" });
-        break;
-      case "quadtone":
-        setParams({
-          color1: "#FF1133",
-          color2: "#770099",
-          color3: "#FFFFFF",
-          color4: "#000000",
-        });
-        break;
-      default:
-        break;
-    }
+    setParams(shaderFilterParams[filter] || canvasFilterParams[filter] || {});
   }, [filter]);
 
   const handleFilterChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
@@ -51,11 +62,19 @@ const FilterModal: React.FC<{
   };
 
   const handleParamChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    setParams({ ...params, [e.target.name]: e.target.value });
+    const { name, type, value, checked } = e.target;
+    setParams({ ...params, [name]: type === "checkbox" ? checked : value });
   };
 
   const handleApply = (option: string) => {
-    applyFilter(filter, params, option);
+    // Parse numeric values to floats before passing to applyFilter
+    const parsedParams = { ...params };
+    Object.keys(parsedParams).forEach((key) => {
+      if (!isNaN(parsedParams[key])) {
+        parsedParams[key] = parseFloat(parsedParams[key]);
+      }
+    });
+    applyFilter(filter, parsedParams, option);
     onClose();
   };
 
@@ -103,145 +122,117 @@ const FilterModal: React.FC<{
         value={filter}
         onChange={handleFilterChange}
       >
-        <option value="vignette">Vignette</option>
-        <option value="duotone">Duotone</option>
-        <option value="mono">Monotone</option>
-        <option value="tritone">Tritone</option>
-        <option value="quadtone">Quadtone</option>
+        <optgroup label="Shader Filters">
+          <option value="shader_vignette">Shader Vignette</option>
+          <option value="shader_posterize">Shader Posterize</option>
+          <option value="shader_solarize">Shader Solarize</option>
+          <option value="shader_mirror">Shader Mirror</option>
+          <option value="shader_blur">Shader Blur</option>
+          <option value="shader_tilt_blur">Shader Tilt Blur</option>
+          <option value="shader_dof">Shader Depth of Field</option>
+          <option value="shader_grayscale">Shader Grayscale</option>
+          <option value="shader_tritone">Shader Tritone</option>
+          <option value="shader_quadtone">Shader Quadtone</option>
+        </optgroup>
+        <optgroup label="Canvas Filters">
+          <option value="quantize">Quantize</option>
+          <option value="rotate">Rotate</option>
+          <option value="autocontrast">Autocontrast</option>
+          <option value="equalize">Equalize</option>
+          <option value="flip">Flip</option>
+          <option value="brightness">Brightness</option>
+          <option value="color">Color</option>
+          <option value="contrast">Contrast</option>
+          <option value="sharpness">Sharpness</option>
+          <option value="gaussian_blur">Gaussian Blur</option>
+          <option value="unsharp_mask">Unsharp Mask</option>
+        </optgroup>
       </select>
 
-      {filter === "vignette" && (
+      {filter in shaderFilterParams && (
         <div className="text-gray-800 dark:text-gray-200">
-          <label className="block font-semibold">Strength (0 - 1):</label>
-          <input
-            type="range"
-            name="strength"
-            min="0"
-            max="1"
-            step="0.1"
-            value={params.strength}
-            className="w-full"
-            onChange={handleParamChange}
-          />
-          <label className="block font-semibold">Size Factor (1 - 2):</label>
-          <input
-            type="range"
-            name="sizeFactor"
-            min="1"
-            max="2"
-            step="0.1"
-            value={params.sizeFactor}
-            className="w-full"
-            onChange={handleParamChange}
-          />
-          <label className="block font-semibold">Color:</label>
-          <input
-            type="color"
-            name="color"
-            value={params.color}
-            className="w-full"
-            onChange={handleParamChange}
-          />
+          {Object.keys(shaderFilterParams[filter]).map((param) => (
+            <div key={param}>
+              <label className="block font-semibold">
+                {param.charAt(0).toUpperCase() + param.slice(1)}:
+              </label>
+              {typeof shaderFilterParams[filter][param] === "boolean" ? (
+                <input
+                  type="checkbox"
+                  name={param}
+                  checked={params[param]}
+                  onChange={handleParamChange}
+                />
+              ) : (
+                <input
+                  type={
+                    typeof shaderFilterParams[filter][param] === "number"
+                      ? "range"
+                      : "color"
+                  }
+                  name={param}
+                  min={param === "radius" || param === "focus" ? "0" : "0"}
+                  max={
+                    param === "radius" || param === "focus"
+                      ? "0.1"
+                      : param === "levels"
+                        ? "32"
+                        : param === "colors"
+                          ? "256"
+                          : "1"
+                  }
+                  step={
+                    param === "radius" || param === "focus" ? "0.001" : "0.1"
+                  }
+                  value={
+                    params[param] !== undefined
+                      ? params[param]
+                      : shaderFilterParams[filter][param]
+                  }
+                  className="w-full"
+                  onChange={handleParamChange}
+                />
+              )}
+            </div>
+          ))}
         </div>
       )}
 
-      {filter === "mono" && (
+      {filter in canvasFilterParams && (
         <div className="text-gray-800 dark:text-gray-200">
-          <label className="block font-semibold">Color 1:</label>
-          <input
-            type="color"
-            name="color1"
-            value={params.color1}
-            className="w-full"
-            onChange={handleParamChange}
-          />
-        </div>
-      )}
-
-      {filter === "duotone" && (
-        <div className="text-gray-800 dark:text-gray-200">
-          <label className="block font-semibold">Color 1:</label>
-          <input
-            type="color"
-            name="color1"
-            value={params.color1}
-            className="w-full"
-            onChange={handleParamChange}
-          />
-          <label className="block font-semibold">Color 2:</label>
-          <input
-            type="color"
-            name="color2"
-            value={params.color2}
-            className="w-full"
-            onChange={handleParamChange}
-          />
-        </div>
-      )}
-
-      {filter === "tritone" && (
-        <div className="text-gray-800 dark:text-gray-200">
-          <label className="block font-semibold">Color 1:</label>
-          <input
-            type="color"
-            name="color1"
-            value={params.color1}
-            className="w-full"
-            onChange={handleParamChange}
-          />
-          <label className="block font-semibold">Color 2:</label>
-          <input
-            type="color"
-            name="color2"
-            value={params.color2}
-            className="w-full"
-            onChange={handleParamChange}
-          />
-          <label className="block font-semibold">Color 3:</label>
-          <input
-            type="color"
-            name="color3"
-            value={params.color3}
-            className="w-full"
-            onChange={handleParamChange}
-          />
-        </div>
-      )}
-
-      {filter === "quadtone" && (
-        <div className="text-gray-800 dark:text-gray-200">
-          <label className="block font-semibold">Color 1 (darkest):</label>
-          <input
-            type="color"
-            name="color1"
-            value={params.color1}
-            className="w-full"
-            onChange={handleParamChange}
-          />
-          <label className="block font-semibold">Color 2 (shadow):</label>
-          <input
-            type="color"
-            name="color2"
-            value={params.color2}
-            className="w-full"
-            onChange={handleParamChange}
-          />
-          <label className="block font-semibold">Color 3 (midtone):</label>
-          <input
-            type="color"
-            name="color3"
-            value={params.color3}
-            className="w-full"
-            onChange={handleParamChange}
-          />
-          <label className="block font-semibold">Color 4 (lightest):</label>
-          <input
-            type="color"
-            name="color4"
-            value={params.color4}
-            className="w-full"
-            onChange={handleParamChange}
-          />
+          {Object.keys(canvasFilterParams[filter]).map((param) => (
+            <div key={param}>
+              <label className="block font-semibold">
+                {param.charAt(0).toUpperCase() + param.slice(1)}:
+              </label>
+              <input
+                type={
+                  typeof canvasFilterParams[filter][param] === "number"
+                    ? "range"
+                    : "color"
+                }
+                name={param}
+                min={param === "radius" ? "0" : "0"}
+                max={
+                  param === "radius"
+                    ? "0.1"
+                    : param === "levels"
+                      ? "32"
+                      : param === "colors"
+                        ? "256"
+                        : "1"
+                }
+                step={param === "radius" ? "0.001" : "0.1"}
+                value={
+                  params[param] !== undefined
+                    ? params[param]
+                    : canvasFilterParams[filter][param]
+                }
+                className="w-full"
+                onChange={handleParamChange}
+              />
+            </div>
+          ))}
         </div>
       )}
 
@@ -277,6 +268,18 @@ const FilterModal: React.FC<{
           ))}
         </div>
       )}
+
+      <div className="mt-6">
+        <h2 className="text-xl font-semibold mb-4">Real-Time Preview</h2>
+        <WebGLFilterRenderer
+          image={imageSrc}
+          filter={filter}
+          params={params}
+          onUpdate={() => {}}
+          width={300}
+          height={300}
+        />
+      </div>
     </Modal>
   );
 };

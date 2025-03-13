@@ -17,6 +17,12 @@ export interface FilterParams {
   [key: string]: any;
 }
 
+export interface FilteredLayer {
+  image: string | null;
+  filter: string;
+  params: any;
+}
+
 export interface Document {
   id?: number;
   name: string;

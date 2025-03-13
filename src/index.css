@@ -2,8 +2,21 @@
 @tailwind components;
 @tailwind utilities;
 
+@font-face {
+    font-family: "Pixelify Sans";
+    font-weight: 400;
+    font-style: normal;
+    src: url("/assets/fonts/pixelify-sans-v1-latin-regular.woff2")
+        format("woff2");
+}
+
 body {
     @apply bg-gray-100 dark:bg-gray-900 text-gray-900 dark:text-gray-100;
+    /* font-family: "Pixelify Sans", sans-serif; */
+}
+
+.font-pixelify {
+    font-family: "Pixelify Sans", sans-serif;
 }
 
 .columns-1 {

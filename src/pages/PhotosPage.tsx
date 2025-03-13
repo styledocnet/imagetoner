@@ -47,20 +47,6 @@ const PhotosPage: React.FC = () => {
     }
   };
 
-  const downloadDocumentAsText = (document: Document) => {
-    const content = document.layers
-      .map((layer) => (layer.type === "text" ? layer.content : ""))
-      .filter((content) => content !== "")
-      .join("\n\n");
-    const blob = new Blob([content], { type: "text/plain" });
-    const url = URL.createObjectURL(blob);
-    const link = document.createElement("a");
-    link.href = url;
-    link.download = `${document.name}.txt`;
-    link.click();
-    URL.revokeObjectURL(url);
-  };
-
   const filteredDocuments = documents.filter((doc) =>
     doc.name.toLowerCase().includes(filter.toLowerCase()),
   );

@@ -25,6 +25,10 @@ const RouterProvider: React.FC<{ children: ReactNode }> = ({ children }) => {
 
   useEffect(() => {
     const onPopState = () => {
+      // TODO FIX THIS
+      console.log("popstate");
+      console.log("window.location.pathname: " + window.location.pathname);
+      console.log(window.location);
       setCurrentRoute(
         window.location.pathname + window.location.search || "/dashboard",
       );
@@ -59,6 +63,7 @@ const Route: React.FC<{ path: string; component: ReactNode }> = ({
   component,
 }) => {
   const { currentRoute } = useRouter();
+  // TODO mount component and give queryString as kv props if they matched the typed interface
   const routeWithoutSearch = currentRoute.split("?")[0];
   return routeWithoutSearch === path ? <>{component}</> : null;
 };

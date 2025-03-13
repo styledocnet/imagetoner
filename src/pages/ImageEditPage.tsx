@@ -19,8 +19,10 @@ import useDocument from "../hooks/useDocument";
 import { renderLayers } from "../utils/canvasUtils";
 import { applyFilterToCanvas } from "../utils/filterUtils";
 import { useRouter } from "../context/CustomRouter";
-import { Document, Layer } from "../types";
+import { Document, Layer, FilteredLayer } from "../types";
 import Toolbar from "../components/Toolbar";
+import WebGLFilterRenderer from "../components/WebGLFilterRenderer";
+import { loadShaderSource } from "../utils/glUtils";
 
 const ImageEditPage: React.FC = () => {
   const {
@@ -47,6 +49,9 @@ const ImageEditPage: React.FC = () => {
   const [isFilterModalOpen, setIsFilterModalOpen] = useState(false);
   const [isAddLayerModalOpen, setIsAddLayerModalOpen] = useState(false);
   const [isWebcamOpen, setIsWebcamOpen] = useState(false);
+  const [filteredLayer, setFilteredLayer] = useState<FilteredLayer | null>(
+    null,
+  );
   const fileInputRef = useRef<HTMLInputElement>(null);
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const [{ x, y, scale }, api] = useSpring(() => ({ x: 0, y: 0, scale: 1 }));
@@ -98,17 +103,6 @@ const ImageEditPage: React.FC = () => {
       }
     }
   };
-
-  // const handleFileChangeUpdate = (e: React.ChangeEvent<HTMLInputElement>) => {
-  //   if (e.target.files && e.target.files[0]) {
-  //     const file = e.target.files[0];
-  //     const reader = new FileReader();
-  //     reader.onload = () => {
-  //       updateLayerProp(currentLayer!, "image", reader.result as string);
-  //     };
-  //     reader.readAsDataURL(file);
-  //   }
-  // };
 
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     if (e.target.files && e.target.files[0]) {
@@ -177,21 +171,28 @@ const ImageEditPage: React.FC = () => {
   const bind = useGesture(
     {
       onDrag: ({ offset: [dx, dy] }) => {
-        updateLayerProp(currentLayer!, "offsetX", dx);
-        updateLayerProp(currentLayer!, "offsetY", dy);
+        if (currentLayer !== null) {
+          updateLayerProp(currentLayer, "offsetX", dx);
+          updateLayerProp(currentLayer, "offsetY", dy);
+        }
       },
       onPinch: ({ offset: [d] }) => {
-        updateLayerProp(currentLayer!, "scale", d);
+        if (currentLayer !== null) {
+          updateLayerProp(currentLayer, "scale", d);
+        }
       },
     },
     {
       drag: {
-        from: () => [
-          layers[currentLayer!].offsetX,
-          layers[currentLayer!].offsetY,
-        ],
+        from: () =>
+          currentLayer !== null
+            ? [layers[currentLayer].offsetX, layers[currentLayer].offsetY]
+            : [0, 0],
       },
-      pinch: { from: () => [layers[currentLayer!].scale, 0] },
+      pinch: {
+        from: () =>
+          currentLayer !== null ? [layers[currentLayer].scale, 0] : [1, 0],
+      },
     },
   );
 
@@ -206,37 +207,68 @@ const ImageEditPage: React.FC = () => {
     }
   };
 
-  const applyFilter = (filter: string, params: any, option: string) => {
-    const canvas = canvasRef.current;
-    const ctx = canvas?.getContext("2d");
-    const layer = layers.find((layer) => layer.index === currentLayer);
-    if (ctx && layer) {
-      const img = new Image();
-      img.src = layer.image || "";
-      img.onload = () => {
-        ctx.clearRect(0, 0, documentSize.width, documentSize.height);
-        ctx.drawImage(img, 0, 0, documentSize.width, documentSize.height);
-        applyFilterToCanvas(filter, ctx, canvas, params);
-        const imageUrl = canvas.toDataURL("image/png");
-        if (option === "applyCurrent") {
-          updateLayerProp(currentLayer!, "image", imageUrl);
-        } else if (option === "createNew") {
-          const newLayer: Layer = {
-            name: `${filter} Layer`,
-            index: layers.length,
-            image: imageUrl,
-            offsetX: 0,
-            offsetY: 0,
-            scale: 1,
-            type: "image",
-            visible: true,
-          };
-          addNewLayer(newLayer);
-        } else if (option === "mergeAndCreateNew") {
-          createMergedLayerWithFilter(filter, params);
-        }
-        renderCanvas();
-      };
+  const applyFilter = async (filter: string, params: any, option: string) => {
+    console.log(
+      "Applying filter:",
+      filter,
+      "with params:",
+      params,
+      "and option:",
+      option,
+    );
+
+    if (filter.startsWith("shader_")) {
+      const shaderName = filter.replace("shader_", "");
+      const shaderSource = await loadShaderSource(shaderName);
+      setFilteredLayer({
+        image: layers[currentLayer!].image,
+        filter: shaderSource,
+        params,
+      });
+    } else {
+      const canvas = canvasRef.current;
+      const ctx = canvas?.getContext("2d");
+      const layer = layers.find((layer) => layer.index === currentLayer);
+
+      if (ctx && layer) {
+        console.log("Current layer found:", layer);
+
+        const img = new Image();
+        img.src = layer.image || "";
+        img.onload = () => {
+          ctx.clearRect(0, 0, documentSize.width, documentSize.height);
+          ctx.drawImage(img, 0, 0, documentSize.width, documentSize.height);
+          applyFilterToCanvas(filter, ctx, canvas, params);
+
+          const imageUrl = canvas.toDataURL("image/png");
+          console.log("Filtered image URL:", imageUrl);
+
+          if (option === "applyCurrent") {
+            console.log("Applying filter to current layer");
+            updateLayerProp(currentLayer!, "image", imageUrl);
+          } else if (option === "createNew") {
+            console.log("Creating new layer with filter");
+            const newLayer: Layer = {
+              name: `${filter} Layer`,
+              index: layers.length,
+              image: imageUrl,
+              offsetX: 0,
+              offsetY: 0,
+              scale: 1,
+              type: "image",
+              visible: true,
+            };
+            addNewLayer(newLayer);
+          } else if (option === "mergeAndCreateNew") {
+            console.log("Merging and creating new layer with filter");
+            createMergedLayerWithFilter(filter, params);
+          }
+
+          renderCanvas();
+        };
+      } else {
+        console.error("No current layer or canvas context found");
+      }
     }
   };
 
@@ -329,7 +361,7 @@ const ImageEditPage: React.FC = () => {
 
       <div className="bg-gray-800 dark:bg-gray-700 text-white p-4 flex justify-between items-center shadow-md">
         <button
-          className="bg-blue-500 hover:bg-blue-600 py-2 px-4 rounded-md transition invisible"
+          className="bg-blue-500 hover:bg-blue-600 py-2 px-4 rounded-md transition"
           onClick={handleExport}
         >
           <ArrowDownIcon className="w-4 h-4 inline-block mr-2" />
@@ -344,14 +376,26 @@ const ImageEditPage: React.FC = () => {
         </button>
       </div>
 
-      {/* {isWebcamOpen && ( */}
+      {filteredLayer && (
+        <WebGLFilterRenderer
+          image={filteredLayer.image}
+          filter={filteredLayer.filter}
+          params={filteredLayer.params}
+          width={documentSize.width}
+          height={documentSize.height}
+          onUpdate={(filteredImage) => {
+            updateLayerProp(currentLayer!, "image", filteredImage);
+            setFilteredLayer(null);
+          }}
+        />
+      )}
+
       <WebCamInputModal
         isOpen={isWebcamOpen}
         onClose={() => setIsWebcamOpen(false)}
         onCapture={(image) => updateLayerProp(currentLayer!, "image", image)}
         canvasSize={documentSize}
       />
-      {/* )} */}
       <AspectRatioModal
         isOpen={isAspectRatioModalOpen}
         onClose={() => setIsAspectRatioModalOpen(false)}
@@ -370,6 +414,7 @@ const ImageEditPage: React.FC = () => {
         isOpen={isFilterModalOpen}
         onClose={() => setIsFilterModalOpen(false)}
         applyFilter={applyFilter}
+        imageSrc={currentLayer !== null ? layers[currentLayer].image : ""}
       />
       <AddLayerModal
         isOpen={isAddLayerModalOpen}
