@@ -265,6 +265,9 @@ const ImageEditPage: React.FC = () => {
         onExport={handleExport}
         onOpenAspectRatioModal={() => setIsAspectRatioModalOpen(true)}
         onOpenWebcamModal={handleCamInputClick}
+        currentLayerType={
+          currentLayer !== null ? layers[currentLayer].type : null
+        }
       />
 
       <div className="flex-grow flex flex-col sm:flex-row-reverse sm:flex-wrap-reverse">
@@ -303,7 +306,7 @@ const ImageEditPage: React.FC = () => {
 
       <div className="bg-gray-800 dark:bg-gray-700 text-white p-4 flex justify-between items-center shadow-md">
         <button
-          className="bg-blue-500 hover:bg-blue-600 py-2 px-4 rounded-md transition"
+          className="bg-blue-500 hover:bg-blue-600 py-2 px-4 rounded-md transition invisible"
           onClick={handleExport}
         >
           <ArrowDownIcon className="w-4 h-4 inline-block mr-2" />
@@ -318,12 +321,14 @@ const ImageEditPage: React.FC = () => {
         </button>
       </div>
 
+      {/* {isWebcamOpen && ( */}
       <WebCamInputModal
         isOpen={isWebcamOpen}
         onClose={() => setIsWebcamOpen(false)}
         onCapture={(image) => updateLayerProp(currentLayer!, "image", image)}
         canvasSize={documentSize}
       />
+      {/* )} */}
       <AspectRatioModal
         isOpen={isAspectRatioModalOpen}
         onClose={() => setIsAspectRatioModalOpen(false)}
