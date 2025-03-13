@@ -53,8 +53,6 @@ const Webcam = forwardRef(
       startWebcam();
 
       return () => {
-        console.log("WebCam cleanup");
-        // Cleanup: Stop the webcam when the component unmounts
         if (streamRef.current) {
           streamRef.current.getTracks().forEach((track) => track.stop());
           streamRef.current = null;

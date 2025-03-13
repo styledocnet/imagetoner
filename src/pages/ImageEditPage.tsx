@@ -15,6 +15,7 @@ import LayerAccordion from "../components/LayerAccordion";
 import AddLayerModal from "../components/AddLayerModal";
 import WebCamInputModal from "../components/WebCamInputModal";
 import useLayers from "../hooks/useLayers";
+import useDocument from "../hooks/useDocument";
 import { renderLayers } from "../utils/canvasUtils";
 import { applyFilterToCanvas } from "../utils/filterUtils";
 import { useRouter } from "../context/CustomRouter";
@@ -33,12 +34,14 @@ const ImageEditPage: React.FC = () => {
   } = useLayers();
   const [currentLayer, setCurrentLayer] = useState<number | null>(null);
   const [loading, setLoading] = useState(false);
-  const [documentSize, setDocumentSize] = useState({
-    width: 1920,
-    height: 1080,
-  });
-  const [canvasSize, setCanvasSize] = useState({ width: 960, height: 540 });
-  const [aspectRatio, setAspectRatio] = useState<number | null>(null);
+  const {
+    documentSize,
+    setDocumentSize,
+    canvasSize,
+    setCanvasSize,
+    aspectRatio,
+    setAspectRatio,
+  } = useDocument();
   const [isFillModalOpen, setIsFillModalOpen] = useState(false);
   const [isAspectRatioModalOpen, setIsAspectRatioModalOpen] = useState(false);
   const [isFilterModalOpen, setIsFilterModalOpen] = useState(false);
@@ -96,12 +99,36 @@ const ImageEditPage: React.FC = () => {
     }
   };
 
+  // const handleFileChangeSimple = (e: React.ChangeEvent<HTMLInputElement>) => {
+  //   if (e.target.files && e.target.files[0]) {
+  //     const file = e.target.files[0];
+  //     const reader = new FileReader();
+  //     reader.onload = () => {
+  //       updateLayerProp(currentLayer!, "image", reader.result as string);
+  //     };
+  //     reader.readAsDataURL(file);
+  //   }
+  // };
+
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     if (e.target.files && e.target.files[0]) {
       const file = e.target.files[0];
       const reader = new FileReader();
       reader.onload = () => {
-        updateLayerProp(currentLayer!, "image", reader.result as string);
+        const img = new Image();
+        img.src = reader.result as string;
+        img.onload = () => {
+          addNewLayer({
+            name: "Image Layer",
+            index: layers.length,
+            image: img.src,
+            offsetX: 0,
+            offsetY: 0,
+            scale: 1,
+            type: "image",
+            visible: true,
+          });
+        };
       };
       reader.readAsDataURL(file);
     }

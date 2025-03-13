@@ -46,6 +46,14 @@ const Toolbar: React.FC<ToolbarProps> = ({
         )}
       </div>
       <div className="flex items-center space-x-2">
+        <button
+          className="bg-yellow-500 hover:bg-yellow-600 py-2 px-4 rounded-md transition"
+          onClick={onOpenAspectRatioModal}
+        >
+          <Cog6ToothIcon className="w-4 h-4" />
+        </button>
+      </div>
+      <div className="flex items-center space-x-2">
         {currentLayerType === "image" && (
           <>
             <label className="block font-semibold">Add </label>
@@ -78,12 +86,6 @@ const Toolbar: React.FC<ToolbarProps> = ({
         >
           <ArrowDownIcon className="w-4 h-4 inline-block mr-2" />
           Download
-        </button>
-        <button
-          className="bg-yellow-500 hover:bg-yellow-600 py-2 px-4 rounded-md transition"
-          onClick={onOpenAspectRatioModal}
-        >
-          <Cog6ToothIcon className="w-4 h-4" />
         </button>
       </div>
     </div>
