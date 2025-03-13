@@ -99,7 +99,7 @@ const ImageEditPage: React.FC = () => {
     }
   };
 
-  // const handleFileChangeSimple = (e: React.ChangeEvent<HTMLInputElement>) => {
+  // const handleFileChangeUpdate = (e: React.ChangeEvent<HTMLInputElement>) => {
   //   if (e.target.files && e.target.files[0]) {
   //     const file = e.target.files[0];
   //     const reader = new FileReader();
@@ -132,10 +132,6 @@ const ImageEditPage: React.FC = () => {
       };
       reader.readAsDataURL(file);
     }
-  };
-
-  const handleDropZoneClick = () => {
-    fileInputRef.current?.click();
   };
 
   const handleCamInputClick = () => {

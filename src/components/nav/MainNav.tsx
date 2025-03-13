@@ -44,6 +44,7 @@ const MainNav: React.FC = () => {
         className={`absolute top-12 -left-1 w-48 p-4 rounded-lg bg-white dark:bg-gray-800 shadow-lg transition-transform transform ${
           isNavOpen ? "translate-x-0" : "-translate-x-full"
         }`}
+        onClick={toggleNav}
       >
         {navItems.map((item) => (
           <Link key={item.value} to={item.value}>

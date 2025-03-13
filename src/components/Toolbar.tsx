@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useRef } from "react";
 import {
   ArrowDownIcon,
   PlusIcon,
@@ -7,7 +7,7 @@ import {
 } from "@heroicons/react/24/outline";
 
 interface ToolbarProps {
-  onImportImage: () => void;
+  onImportImage: (e: React.ChangeEvent<HTMLInputElement>) => void;
   onFillBackground: () => void;
   onApplyFilter: () => void;
   onExport: () => void;
@@ -25,9 +25,22 @@ const Toolbar: React.FC<ToolbarProps> = ({
   onOpenWebcamModal,
   currentLayerType,
 }) => {
+  const fileInputRef = useRef<HTMLInputElement>(null);
+
+  const handleDropZoneClick = () => {
+    fileInputRef.current?.click();
+  };
+
   return (
     <div className="bg-gray-800 dark:bg-gray-700 text-white p-4 flex justify-between items-center shadow-md">
       <div className="flex space-x-4">
+        <input
+          ref={fileInputRef}
+          type="file"
+          className="hidden"
+          accept="image/*"
+          onChange={onImportImage}
+        />
         {currentLayerType === "image" && (
           <>
             <button
@@ -44,14 +57,6 @@ const Toolbar: React.FC<ToolbarProps> = ({
             </button>
           </>
         )}
-      </div>
-      <div className="flex items-center space-x-2">
-        <button
-          className="bg-yellow-500 hover:bg-yellow-600 py-2 px-4 rounded-md transition"
-          onClick={onOpenAspectRatioModal}
-        >
-          <Cog6ToothIcon className="w-4 h-4" />
-        </button>
       </div>
       <div className="flex items-center space-x-2">
         {currentLayerType === "image" && (
@@ -72,7 +77,7 @@ const Toolbar: React.FC<ToolbarProps> = ({
             <label className="block font-semibold">Add Image</label>
             <button
               className="bg-gray-700 hover:bg-gray-800 py-2 px-2 rounded-md transition"
-              onClick={onImportImage}
+              onClick={handleDropZoneClick}
             >
               <PlusIcon className="w-4 h-4" />
             </button>
@@ -80,6 +85,13 @@ const Toolbar: React.FC<ToolbarProps> = ({
         )}
       </div>
       <div className="flex items-center space-x-2">
+        <button
+          className="bg-yellow-500 hover:bg-yellow-600 py-2 px-4 rounded-md transition"
+          onClick={onOpenAspectRatioModal}
+        >
+          <Cog6ToothIcon className="w-4 h-4" />
+        </button>
+
         <button
           className="bg-blue-500 hover:bg-blue-600 py-2 px-4 rounded-md transition"
           onClick={onExport}

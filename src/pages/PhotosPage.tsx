@@ -8,7 +8,7 @@ const PhotosPage: React.FC = () => {
   const [filter, setFilter] = useState<string>("");
   const [page, setPage] = useState<number>(1);
   const [totalPages, setTotalPages] = useState<number>(1);
-  const itemsPerPage = 5; // Number of items per page
+  const itemsPerPage = 5;
   const { navigate } = useRouter();
 
   const onEditDocument = (documentId: number) => {
@@ -30,11 +30,35 @@ const PhotosPage: React.FC = () => {
     setTotalPages(Math.ceil(documents.length / itemsPerPage));
   };
 
-  const handleDownloadLayer = (image: string) => {
+  const handleDownloadLayer = (layer: Layer) => {
+    if (layer.type === "text") {
+      const blob = new Blob([layer.text], { type: "text/plain" });
+      const url = URL.createObjectURL(blob);
+      const link = document.createElement("a");
+      link.href = url;
+      link.download = `${layer.name}.txt`;
+      link.click();
+      URL.revokeObjectURL(url);
+    } else if (layer.image) {
+      const link = document.createElement("a");
+      link.href = `data:image/png;base64,${layer.image}`;
+      link.download = `${layer.name}.png`;
+      link.click();
+    }
+  };
+
+  const downloadDocumentAsText = (document: Document) => {
+    const content = document.layers
+      .map((layer) => (layer.type === "text" ? layer.content : ""))
+      .filter((content) => content !== "")
+      .join("\n\n");
+    const blob = new Blob([content], { type: "text/plain" });
+    const url = URL.createObjectURL(blob);
     const link = document.createElement("a");
-    link.href = `data:image/png;base64,${image}`;
-    link.download = "layer-image.png";
+    link.href = url;
+    link.download = `${document.name}.txt`;
     link.click();
+    URL.revokeObjectURL(url);
   };
 
   const filteredDocuments = documents.filter((doc) =>
@@ -82,11 +106,24 @@ const PhotosPage: React.FC = () => {
               </div>
               <div className="mb-4">
                 <h3 className="font-semibold">Preview:</h3>
-                <img
-                  src={`data:image/png;base64,${doc.layers[0]?.image}`}
-                  alt="Document Preview"
-                  className="max-w-64 max-h-64 rounded-md shadow-md"
-                />
+                {doc.layers.length === 0 ? (
+                  <p>No preview available</p>
+                ) : (
+                  doc.layers.map((layer, index) =>
+                    layer.type === "text" ? (
+                      <div key={index} className="text-preview text-xs">
+                        <p>{layer.text}</p>
+                      </div>
+                    ) : (
+                      <img
+                        key={index}
+                        src={`data:image/png;base64,${layer.image}`}
+                        alt="Document Preview"
+                        className="max-w-64 max-h-64 rounded-md shadow-md"
+                      />
+                    ),
+                  )
+                )}
               </div>
               <div>
                 <h3 className="font-semibold">Layers:</h3>
@@ -99,7 +136,7 @@ const PhotosPage: React.FC = () => {
                     <div className="flex space-x-2">
                       <button
                         className="text-green-500"
-                        onClick={() => handleDownloadLayer(layer.image!)}
+                        onClick={() => handleDownloadLayer(layer)}
                       >
                         <ArrowDownIcon className="w-4 h-4" />
                       </button>
