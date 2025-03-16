@@ -34,7 +34,7 @@ export type FilterType =
   | "tritone"
   | "duotone"
   | "mono"
-  | "vignette";
+  | "vignette"
   | "blur"
   | "brightness"
   | "contrast"
