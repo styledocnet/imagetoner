@@ -28,7 +28,7 @@ const AppContent: React.FC = () => {
         <Route path="dashboard" component={<Dashboard />} />
         <Route path="image_filter" component={<ImageFilterPage />} />
         <Route path="image_edit" component={<ImageEditPage />} />
-        <Route path="/image-edit/:id" element={<ImageEditPage />} />
+        <Route path="/image-edit/:id" component={<ImageEditPage />} />
         <Route path="photos" component={<PhotosPage />} />
         <Route path="not_found" component={<NotFound />} />
       </main>

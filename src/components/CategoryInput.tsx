@@ -4,6 +4,13 @@ interface CategoryInputProps {
   onSave: (name: string) => void;
 }
 
+declare global {
+  interface Window {
+    SpeechRecognition: any;
+    webkitSpeechRecognition: any;
+  }
+}
+
 export const CategoryInput: React.FC<CategoryInputProps> = ({ onSave }) => {
   const [categoryName, setCategoryName] = useState<string>("");
   const [isListening, setIsListening] = useState<boolean>(false);
@@ -21,7 +28,7 @@ export const CategoryInput: React.FC<CategoryInputProps> = ({ onSave }) => {
     recognition.start();
 
     recognition.onstart = () => setIsListening(true);
-    recognition.onresult = (event) => {
+    recognition.onresult = (event: any) => {
       const transcript = event.results[0][0].transcript;
       setCategoryName(transcript);
     };

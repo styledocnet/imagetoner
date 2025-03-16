@@ -31,7 +31,7 @@ const FillImageModal: React.FC<FillImageModalProps> = ({
         ctx.fillStyle = color;
         ctx.fillRect(0, 0, canvas.width, canvas.height);
       } else if (fillType === "gradient") {
-        let gradientFill;
+        let gradientFill: CanvasGradient;
         if (direction === "radial") {
           gradientFill = ctx.createRadialGradient(
             canvas.width / 2,
@@ -42,7 +42,9 @@ const FillImageModal: React.FC<FillImageModalProps> = ({
             Math.sqrt(canvas.width ** 2 + canvas.height ** 2) / 2,
           );
         } else {
-          const gradientDirections = {
+          const gradientDirections: {
+            [key: string]: [number, number, number, number];
+          } = {
             "to bottom": [0, 0, 0, canvas.height],
             "to top": [0, canvas.height, 0, 0],
             "to right": [0, 0, canvas.width, 0],
@@ -127,7 +129,7 @@ const FillImageModal: React.FC<FillImageModalProps> = ({
               type="color"
               value={endColor}
               onChange={(e) => setEndColor(e.target.value)}
-              className="w-full rounded-md "
+              className="w-full rounded-md"
             />
           </div>
           <div className="mb-4">

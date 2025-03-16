@@ -1,4 +1,5 @@
-import React, { useRef, useEffect } from "react";
+import React, { useRef, useEffect, useState } from "react";
+import { LockOpenIcon, LockClosedIcon } from "@heroicons/react/24/outline";
 import Modal from "./Modal";
 
 interface AspectRatioModalProps {
@@ -20,10 +21,37 @@ const AspectRatioModal: React.FC<AspectRatioModalProps> = ({
 }) => {
   const widthRef = useRef<HTMLInputElement>(null);
   const heightRef = useRef<HTMLInputElement>(null);
-  const linkedRef = useRef<HTMLInputElement>(null);
+  const [isLinked, setIsLinked] = useState(true);
+  const [selectedPreset, setSelectedPreset] = useState("");
+
+  const aspectRatios: { [key: string]: number | null } = {
+    Free: null,
+    "16:9": 16 / 9,
+    "4:3": 4 / 3,
+    "1:1": 1,
+  };
+
+  const resolutions: { [key: string]: string[] } = {
+    "16:9": ["1920x1080", "1280x720", "640x360"],
+    "4:3": ["1600x1200", "1024x768", "800x600"],
+    "1:1": ["1080x1080", "1400x1400", "2048x2048"],
+    Free: [],
+  };
+
+  const presets: { [key: string]: string } = {
+    Story: "1080x1920",
+    Tweet: "1024x512",
+    Cover: "1400x1400",
+    Card: "1080x1080",
+    A4: "2480x3508",
+    A5: "1748x2480",
+    FullHD: "1920x1080",
+    UltraHD: "3840x2160",
+    Custom: "",
+  };
 
   useEffect(() => {
-    if (linkedRef.current?.checked && aspectRatio) {
+    if (isLinked && aspectRatio && widthRef.current) {
       heightRef.current!.value = String(
         Math.round(Number(widthRef.current!.value) / aspectRatio),
       );
@@ -31,7 +59,7 @@ const AspectRatioModal: React.FC<AspectRatioModalProps> = ({
   }, [widthRef.current?.value, aspectRatio]);
 
   useEffect(() => {
-    if (linkedRef.current?.checked && aspectRatio) {
+    if (isLinked && aspectRatio && heightRef.current) {
       widthRef.current!.value = String(
         Math.round(Number(heightRef.current!.value) * aspectRatio),
       );
@@ -44,6 +72,30 @@ const AspectRatioModal: React.FC<AspectRatioModalProps> = ({
       height: Number(heightRef.current!.value),
     });
     onClose();
+  };
+
+  const handleAspectRatioChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
+    const value = e.target.value;
+    setAspectRatio(aspectRatios[value]);
+  };
+
+  const handleResolutionChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
+    const [presetWidth, presetHeight] = e.target.value.split("x").map(Number);
+    widthRef.current!.value = String(presetWidth);
+    heightRef.current!.value = String(presetHeight);
+  };
+
+  const handlePresetChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
+    const value = e.target.value;
+    setSelectedPreset(value);
+    if (value === "Custom") {
+      widthRef.current!.value = "";
+      heightRef.current!.value = "";
+    } else {
+      const [presetWidth, presetHeight] = presets[value].split("x").map(Number);
+      widthRef.current!.value = String(presetWidth);
+      heightRef.current!.value = String(presetHeight);
+    }
   };
 
   return (
@@ -60,73 +112,92 @@ const AspectRatioModal: React.FC<AspectRatioModalProps> = ({
         </button>
       }
     >
-      <div className="mb-4">
-        <label className="block text-sm font-medium text-gray-700 dark:text-gray-300">
-          Aspect Ratio:
-        </label>
-        <select
-          value={aspectRatio || ""}
-          onChange={(e) => setAspectRatio(parseFloat(e.target.value) || null)}
-          className="w-full p-2 border border-gray-300 rounded-md dark:bg-gray-800 dark:text-gray-100"
-        >
-          <option value="">Free</option>
-          <option value={16 / 9}>16:9</option>
-          <option value={4 / 3}>4:3</option>
-          <option value={1}>1:1</option>
-        </select>
-      </div>
-      <div className="mb-4">
-        <label className="block text-sm font-medium text-gray-700 dark:text-gray-300">
-          Width:
-        </label>
-        <input
-          ref={widthRef}
-          type="number"
-          defaultValue={canvasSize.width}
-          className="w-full p-2 border border-gray-300 rounded-md dark:bg-gray-800 dark:text-gray-100"
-        />
-      </div>
-      <div className="mb-4">
-        <label className="block text-sm font-medium text-gray-700 dark:text-gray-300">
-          Height:
-        </label>
-        <input
-          ref={heightRef}
-          type="number"
-          defaultValue={canvasSize.height}
-          className="w-full p-2 border border-gray-300 rounded-md dark:bg-gray-800 dark:text-gray-100"
-        />
+      <div className="grid grid-cols-3 gap-4 mb-4">
+        <div>
+          <label className="block text-sm font-medium text-gray-700 dark:text-gray-300">
+            Aspect Ratio:
+          </label>
+          <select
+            value={aspectRatio || "Free"}
+            onChange={handleAspectRatioChange}
+            className="w-full p-2 border border-gray-300 rounded-md dark:bg-gray-800 dark:text-gray-100"
+          >
+            {Object.keys(aspectRatios).map((key) => (
+              <option key={key} value={key}>
+                {key}
+              </option>
+            ))}
+          </select>
+        </div>
+        <div>
+          <label className="block text-sm font-medium text-gray-700 dark:text-gray-300">
+            Resolution:
+          </label>
+          <select
+            onChange={handleResolutionChange}
+            className="w-full p-2 border border-gray-300 rounded-md dark:bg-gray-800 dark:text-gray-100"
+          >
+            {resolutions[
+              aspectRatio
+                ? Object.keys(aspectRatios).find(
+                    (key) => aspectRatios[key] === aspectRatio,
+                  ) || "Free"
+                : "Free"
+            ].map((preset) => (
+              <option key={preset} value={preset}>
+                {preset}
+              </option>
+            ))}
+          </select>
+        </div>
+        <div>
+          <label className="block text-sm font-medium text-gray-700 dark:text-gray-300">
+            Presets:
+          </label>
+          <select
+            value={selectedPreset}
+            onChange={handlePresetChange}
+            className="w-full p-2 border border-gray-300 rounded-md dark:bg-gray-800 dark:text-gray-100"
+          >
+            {Object.keys(presets).map((key) => (
+              <option key={key} value={key}>
+                {key}
+              </option>
+            ))}
+          </select>
+        </div>
       </div>
       <div className="mb-4 flex items-center">
-        <input
-          ref={linkedRef}
-          type="checkbox"
-          defaultChecked={true}
-          className="mr-2"
-        />
-        <label className="block text-sm font-medium text-gray-700 dark:text-gray-300">
-          Maintain Aspect Ratio
-        </label>
-      </div>
-      <div className="mb-4">
-        <label className="block text-sm font-medium text-gray-700 dark:text-gray-300">
-          Presets:
-        </label>
-        <select
-          onChange={(e) => {
-            const [presetWidth, presetHeight] = e.target.value
-              .split("x")
-              .map(Number);
-            widthRef.current!.value = String(presetWidth);
-            heightRef.current!.value = String(presetHeight);
-          }}
-          className="w-full p-2 border border-gray-300 rounded-md dark:bg-gray-800 dark:text-gray-100"
-        >
-          <option value="">Select a preset</option>
-          <option value="1080x1080">Instagram Post (1080x1080)</option>
-          <option value="1080x1920">Instagram Story (1080x1920)</option>
-          <option value="1920x1080">HD (1920x1080)</option>
-        </select>
+        <div className="flex-grow">
+          <label className="block text-sm font-medium text-gray-700 dark:text-gray-300">
+            Width:
+          </label>
+          <input
+            ref={widthRef}
+            type="number"
+            defaultValue={canvasSize.width}
+            className="w-full p-2 border border-gray-300 rounded-md dark:bg-gray-800 dark:text-gray-100"
+          />
+        </div>
+        <span className="mx-2">x</span>
+        <div className="flex-grow">
+          <label className="block text-sm font-medium text-gray-700 dark:text-gray-300">
+            Height:
+          </label>
+          <input
+            ref={heightRef}
+            type="number"
+            defaultValue={canvasSize.height}
+            className="w-full p-2 border border-gray-300 rounded-md dark:bg-gray-800 dark:text-gray-100"
+          />
+        </div>
+        <button onClick={() => setIsLinked(!isLinked)} className="ml-2">
+          {isLinked ? (
+            <LockClosedIcon className="w-6 h-6" />
+          ) : (
+            <LockOpenIcon className="w-6 h-6" />
+          )}
+        </button>
       </div>
     </Modal>
   );
