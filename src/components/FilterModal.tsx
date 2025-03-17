@@ -24,6 +24,27 @@ const shaderFilterParams = {
     highColor: "#FFFFFF",
     fade: 0.5,
   },
+  shader_triangulate: {
+    points: 300,
+    variation: 0.3,
+    cutoff: 5,
+  },
+  shader_polygonate: {
+    points: 300,
+    mutations: 2,
+    variation: 0.3,
+    population: 400,
+    cutoff: 5,
+    block: 5,
+  },
+  shader_hexanate: {
+    points: 300,
+    mutations: 2,
+    variation: 0.3,
+    population: 400,
+    cutoff: 5,
+    block: 5,
+  },
   // TODO Add more shader filters here
 };
 
@@ -133,6 +154,9 @@ const FilterModal: React.FC<{
           <option value="shader_grayscale">Shader Grayscale</option>
           <option value="shader_tritone">Shader Tritone</option>
           <option value="shader_quadtone">Shader Quadtone</option>
+          <option value="shader_triangulate">Shader Triangulate</option>
+          {/* <option value="shader_polygonate">Shader Polygonate</option> */}
+          {/* <option value="shader_hexanate">Shader Hexanate</option> */}
         </optgroup>
         <optgroup label="Canvas Filters">
           <option value="quantize">Quantize</option>

@@ -12,6 +12,9 @@ const shaderAllowList = [
   "tritone",
   "quadtone",
   "dof",
+  "triangulate",
+  "hexanate",
+  "polygonate",
 ];
 
 export const initGL = (gl: WebGLRenderingContext) => {
