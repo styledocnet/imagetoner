@@ -25,9 +25,12 @@ const shaderFilterParams = {
     fade: 0.5,
   },
   shader_triangulate: {
-    points: 300,
-    variation: 0.3,
-    cutoff: 5,
+    points: 300, // Base number of points (density of triangles)
+    variation: 0.3, // Randomization of triangle placement
+    cutoff: 5, // Color matching precision
+    edgeThreshold: 0.5, // Sensitivity to edges
+    blendAmount: 0.5, // Mixing original and stylized color
+    triangleSizeScaling: 1.0, // Scale factor for triangle sizes
   },
   shader_polygonate: {
     points: 300,

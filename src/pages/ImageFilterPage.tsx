@@ -12,6 +12,7 @@ const ImageFilterPage: React.FC = () => {
     color1: "#FF1133",
     color2: "#770099",
     color3: "#FFFFFF",
+    color4: "#654321",
   });
   const [outputImage, setOutputImage] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
@@ -44,8 +45,8 @@ const ImageFilterPage: React.FC = () => {
         params,
       );
       setOutputImage(imageUrl);
-    } catch (error) {
-      alert(error.message);
+    } catch (error: Error | any) {
+      if (error && error.message) alert(error.message);
     } finally {
       setLoading(false);
     }

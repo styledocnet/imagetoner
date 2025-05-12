@@ -2,6 +2,7 @@ import React, { useState, useEffect } from "react";
 import { storageService } from "../services/storageService";
 import { ArrowDownIcon } from "@heroicons/react/24/outline";
 import { useRouter } from "../context/CustomRouter";
+import { Document, Layer } from "../types";
 
 const PhotosPage: React.FC = () => {
   const [documents, setDocuments] = useState<Document[]>([]);
@@ -31,7 +32,7 @@ const PhotosPage: React.FC = () => {
   };
 
   const handleDownloadLayer = (layer: Layer) => {
-    if (layer.type === "text") {
+    if (layer.type === "text" && layer.text) {
       const blob = new Blob([layer.text], { type: "text/plain" });
       const url = URL.createObjectURL(blob);
       const link = document.createElement("a");

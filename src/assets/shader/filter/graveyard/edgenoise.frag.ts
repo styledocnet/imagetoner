@@ -1,3 +1,4 @@
+// Boosted edge detection contrast (doubled Sobel output)
 export default `
 precision mediump float;
 

@@ -2,9 +2,12 @@ export default `
 precision mediump float;
 
 uniform sampler2D u_image;
-uniform float u_points;     // Triangle density
-uniform float u_variation;  // Random placement variation
-uniform float u_cutoff;     // Color cutoff threshold
+uniform float u_points;             // Density of triangles
+uniform float u_variation;          // Random variation
+uniform float u_cutoff;             // Color threshold
+uniform float u_edgeThreshold;      // Edge detection sensitivity
+uniform float u_blendAmount;        // Blending between original and effect
+uniform float u_triangleSizeScaling; // Triangle size scaling factor
 
 varying vec2 vUV;
 
@@ -12,7 +15,7 @@ float random(vec2 st) {
     return fract(sin(dot(st, vec2(12.9898, 78.233))) * 43758.5453);
 }
 
-// Edge Detection with Threshold
+// Edge Detection with Threshold Control
 float edgeDetection(vec2 uv, float stepSize) {
     vec3 TL = texture2D(u_image, uv + vec2(-stepSize, -stepSize)).rgb;
     vec3 TC = texture2D(u_image, uv + vec2( 0.0,   -stepSize)).rgb;
@@ -43,18 +46,19 @@ float edgeDetection(vec2 uv, float stepSize) {
                 + ( 1.0 * BLv) + ( 2.0 * BCv) + ( 1.0 * BRv);
 
     float edgeStrength = sqrt(edgeX * edgeX + edgeY * edgeY);
-    return smoothstep(0.2, 0.8, edgeStrength); // Stronger contours
+    return smoothstep(u_edgeThreshold * 0.1, u_edgeThreshold, edgeStrength);
 }
 
-// Adaptive Grid
+// Adaptive Triangle Size Scaling
 float adaptiveGridSize(vec2 uv) {
     float edgeStrength = edgeDetection(uv, 1.0 / u_points);
-    return mix(1.0 / u_points, 1.0 / (u_points * 3.0), edgeStrength);
+    float adaptiveSize = mix(1.0 / u_points, 1.0 / (u_points * 3.0), edgeStrength);
+    return adaptiveSize * u_triangleSizeScaling;
 }
 
-// Color Matching
+// Color Matching with Cutoff
 vec3 matchColor(vec3 color, float cutoff) {
-    float factor = 1.0 / (u_cutoff + 1.0);
+    float factor = 1.0 / (cutoff + 1.0);
     return floor(color * factor + 0.5) / factor;
 }
 
@@ -72,7 +76,7 @@ void main() {
     }
 
     vec3 baseColor = texture2D(u_image, uv).rgb;
-    vec3 matchedColor = mix(baseColor, matchColor(baseColor, u_cutoff), 0.5);
+    vec3 matchedColor = mix(baseColor, matchColor(baseColor, u_cutoff), u_blendAmount);
 
     float blendFactor = smoothstep(0.2, 0.8, triangleUV.x + triangleUV.y);
     gl_FragColor = vec4(mix(baseColor, matchedColor, blendFactor), 1.0);
