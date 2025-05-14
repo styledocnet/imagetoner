@@ -1,11 +1,5 @@
 import React, { useState } from "react";
-import {
-  EyeIcon,
-  EyeSlashIcon,
-  ChevronUpIcon,
-  ChevronDownIcon,
-  XMarkIcon,
-} from "@heroicons/react/24/outline";
+import { EyeIcon, EyeSlashIcon, ChevronUpIcon, ChevronDownIcon, XMarkIcon } from "@heroicons/react/24/outline";
 import { Layer } from "../types";
 
 interface LayerAccordionProps {
@@ -18,15 +12,7 @@ interface LayerAccordionProps {
   moveLayerDown: (index: number) => void;
 }
 
-const LayerAccordion: React.FC<LayerAccordionProps> = ({
-  layers,
-  currentLayer,
-  setCurrentLayer,
-  setLayerProp,
-  removeLayer,
-  moveLayerUp,
-  moveLayerDown,
-}) => {
+const LayerAccordion: React.FC<LayerAccordionProps> = ({ layers, currentLayer, setCurrentLayer, setLayerProp, removeLayer, moveLayerUp, moveLayerDown }) => {
   const [editLayerName, setEditLayerName] = useState<number | null>(null);
 
   const handleNameChange = (layerIndex: number, name: string) => {
@@ -37,15 +23,10 @@ const LayerAccordion: React.FC<LayerAccordionProps> = ({
   return (
     <div className="space-y-4">
       {layers.map((layer, idx) => (
-        <div
-          key={layer.index}
-          className="border rounded-md shadow-sm bg-white dark:bg-gray-800"
-        >
+        <div key={layer.index} className="border-none rounded-md shadow-sm bg-white dark:bg-gray-800">
           <div
             className={`flex justify-between items-center px-4 py-2 cursor-pointer ${
-              currentLayer === layer.index
-                ? "bg-blue-500 text-white"
-                : "bg-gray-200 dark:bg-gray-700 dark:text-gray-300"
+              currentLayer === layer.index ? "bg-auto-500 text-white" : "bg-gray-200 dark:bg-gray-700 dark:text-gray-300"
             }`}
             onClick={() => setCurrentLayer(layer.index)}
           >
@@ -114,21 +95,21 @@ const LayerAccordion: React.FC<LayerAccordionProps> = ({
             <div className="p-4 bg-gray-50 dark:bg-gray-900 dark:text-gray-100">
               {layer.image && layer.type === "image" && (
                 <div className="relative mb-4">
-                  <img
-                    src={layer.image}
-                    alt={layer.name}
-                    className="w-full h-auto rounded-md shadow-sm"
-                  />
+                  <img src={layer.image} alt={layer.name} className="w-full h-auto rounded-md shadow-sm" />
                 </div>
               )}
               {layer.type === "text" && (
                 <div className="relative mb-4">
                   <div
-                    className="w-full h-auto rounded-md shadow-sm"
+                    className="max-h-60 overflow-auto border rounded bg-white dark:bg-gray-900 p-4 flex items-center justify-start"
                     style={{
+                      maxWidth: "100%",
                       fontFamily: layer.fontFamily,
                       fontSize: layer.fontSize,
                       color: layer.color,
+                      lineHeight: 1.2,
+                      // whiteSpace: "pre-wrap",
+                      // wordBreak: "break-word",
                     }}
                   >
                     {layer.text}
@@ -137,111 +118,67 @@ const LayerAccordion: React.FC<LayerAccordionProps> = ({
               )}
               <div className="space-y-2">
                 <div>
-                  <label className="block text-sm font-semibold text-gray-700 dark:text-gray-300">
-                    Offset X:
-                  </label>
+                  <label className="block text-sm font-semibold text-gray-700 dark:text-gray-300">Offset X:</label>
                   <input
                     type="number"
                     value={layer.offsetX}
-                    onChange={(e) =>
-                      setLayerProp(
-                        layer.index,
-                        "offsetX",
-                        Number(e.target.value),
-                      )
-                    }
+                    onChange={(e) => setLayerProp(layer.index, "offsetX", Number(e.target.value))}
                     className="w-full border border-gray-300 dark:border-gray-600 p-2 rounded-md bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100"
                   />
                 </div>
                 <div>
-                  <label className="block text-sm font-semibold text-gray-700 dark:text-gray-300">
-                    Offset Y:
-                  </label>
+                  <label className="block text-sm font-semibold text-gray-700 dark:text-gray-300">Offset Y:</label>
                   <input
                     type="number"
                     value={layer.offsetY}
-                    onChange={(e) =>
-                      setLayerProp(
-                        layer.index,
-                        "offsetY",
-                        Number(e.target.value),
-                      )
-                    }
+                    onChange={(e) => setLayerProp(layer.index, "offsetY", Number(e.target.value))}
                     className="w-full border border-gray-300 dark:border-gray-600 p-2 rounded-md bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100"
                   />
                 </div>
                 <div>
-                  <label className="block text-sm font-semibold text-gray-700 dark:text-gray-300">
-                    Scale:
-                  </label>
+                  <label className="block text-sm font-semibold text-gray-700 dark:text-gray-300">Scale:</label>
                   <input
                     type="number"
                     value={layer.scale}
-                    onChange={(e) =>
-                      setLayerProp(layer.index, "scale", Number(e.target.value))
-                    }
+                    onChange={(e) => setLayerProp(layer.index, "scale", Number(e.target.value))}
                     className="w-full border border-gray-300 dark:border-gray-600 p-2 rounded-md bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100"
                   />
                 </div>
                 {layer.type === "text" && (
                   <>
                     <div>
-                      <label className="block text-sm font-semibold text-gray-700 dark:text-gray-300">
-                        Font Family:
-                      </label>
+                      <label className="block text-sm font-semibold text-gray-700 dark:text-gray-300">Font Family:</label>
                       <input
                         type="text"
                         value={layer.fontFamily}
-                        onChange={(e) =>
-                          setLayerProp(
-                            layer.index,
-                            "fontFamily",
-                            e.target.value,
-                          )
-                        }
+                        onChange={(e) => setLayerProp(layer.index, "fontFamily", e.target.value)}
                         className="w-full border border-gray-300 dark:border-gray-600 p-2 rounded-md bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100"
                       />
                     </div>
                     <div>
-                      <label className="block text-sm font-semibold text-gray-700 dark:text-gray-300">
-                        Font Size:
-                      </label>
+                      <label className="block text-sm font-semibold text-gray-700 dark:text-gray-300">Font Size:</label>
                       <input
                         type="number"
                         value={layer.fontSize}
-                        onChange={(e) =>
-                          setLayerProp(
-                            layer.index,
-                            "fontSize",
-                            Number(e.target.value),
-                          )
-                        }
+                        onChange={(e) => setLayerProp(layer.index, "fontSize", Number(e.target.value))}
                         className="w-full border border-gray-300 dark:border-gray-600 p-2 rounded-md bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100"
                       />
                     </div>
                     <div>
-                      <label className="block text-sm font-semibold text-gray-700 dark:text-gray-300">
-                        Color:
-                      </label>
+                      <label className="block text-sm font-semibold text-gray-700 dark:text-gray-300">Color:</label>
                       <input
                         type="color"
                         value={layer.color}
-                        onChange={(e) =>
-                          setLayerProp(layer.index, "color", e.target.value)
-                        }
-                        className="w-full border border-gray-300 dark:border-gray-600 p-2 rounded-md bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100"
+                        onChange={(e) => setLayerProp(layer.index, "color", e.target.value)}
+                        className="w-full rounded-md text-gray-900 dark:text-gray-100"
                       />
                     </div>
                     <div>
-                      <label className="block text-sm font-semibold text-gray-700 dark:text-gray-300">
-                        Text:
-                      </label>
+                      <label className="block text-sm font-semibold text-gray-700 dark:text-gray-300">Text:</label>
                       <input
                         type="text"
                         value={layer.text}
-                        onChange={(e) =>
-                          setLayerProp(layer.index, "text", e.target.value)
-                        }
+                        onChange={(e) => setLayerProp(layer.index, "text", e.target.value)}
                         className="w-full border border-gray-300 dark:border-gray-600 p-2 rounded-md bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100"
                       />
                     </div>

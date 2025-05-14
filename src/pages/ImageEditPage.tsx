@@ -1,17 +1,12 @@
 import React, { useRef, useEffect, useState } from "react";
 import { storageService } from "../services/storageService";
-import {
-  ArrowDownIcon,
-  PlusIcon,
-  Cog6ToothIcon,
-  CameraIcon,
-} from "@heroicons/react/24/outline";
+import { ArrowDownIcon, PlusIcon, Cog6ToothIcon, CameraIcon } from "@heroicons/react/24/outline";
 import { useGesture } from "@use-gesture/react";
-import { animated, useSpring } from "@react-spring/web";
 import FillImageModal from "../components/FillImageModal";
 import AspectRatioModal from "../components/AspectRatioModal";
 import FilterModal from "../components/FilterModal";
 import LayerAccordion from "../components/LayerAccordion";
+import LayerSidebar from "../components/LayerSidebar";
 import AddLayerModal from "../components/AddLayerModal";
 import WebCamInputModal from "../components/WebCamInputModal";
 import useLayers from "../hooks/useLayers";
@@ -25,36 +20,19 @@ import WebGLFilterRenderer from "../components/WebGLFilterRenderer";
 import { loadShaderSource } from "../utils/glUtils";
 
 const ImageEditPage: React.FC = () => {
-  const {
-    layers,
-    setLayers,
-    updateLayerProp,
-    removeLayer,
-    addNewLayer,
-    moveLayerUp,
-    moveLayerDown,
-  } = useLayers();
+  const { layers, setLayers, updateLayerProp, removeLayer, addNewLayer, moveLayerUp, moveLayerDown } = useLayers();
   const [currentLayer, setCurrentLayer] = useState<number | null>(null);
   const [loading, setLoading] = useState(false);
-  const {
-    documentSize,
-    setDocumentSize,
-    canvasSize,
-    setCanvasSize,
-    aspectRatio,
-    setAspectRatio,
-  } = useDocument();
+  const { documentSize, setDocumentSize, canvasSize, setCanvasSize, aspectRatio, setAspectRatio } = useDocument();
   const [isFillModalOpen, setIsFillModalOpen] = useState(false);
   const [isAspectRatioModalOpen, setIsAspectRatioModalOpen] = useState(false);
   const [isFilterModalOpen, setIsFilterModalOpen] = useState(false);
   const [isAddLayerModalOpen, setIsAddLayerModalOpen] = useState(false);
+  const [isSidebarOpen, setSidebarOpen] = useState(true);
   const [isWebcamOpen, setIsWebcamOpen] = useState(false);
-  const [filteredLayer, setFilteredLayer] = useState<FilteredLayer | null>(
-    null,
-  );
+  const [filteredLayer, setFilteredLayer] = useState<FilteredLayer | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const canvasRef = useRef<HTMLCanvasElement>(null);
-  const [{ x, y, scale }, api] = useSpring(() => ({ x: 0, y: 0, scale: 1 }));
   const { navigate, currentRoute } = useRouter();
 
   useEffect(() => {
@@ -138,12 +116,7 @@ const ImageEditPage: React.FC = () => {
     if (originalCtx) {
       originalCanvas.width = documentSize.width;
       originalCanvas.height = documentSize.height;
-      renderLayers(
-        originalCtx,
-        layers,
-        originalCanvas.width,
-        originalCanvas.height,
-      );
+      renderLayers(originalCtx, layers, originalCanvas.width, originalCanvas.height);
       setTimeout(() => {
         const link = document.createElement("a");
         link.href = originalCanvas.toDataURL("image/png");
@@ -184,14 +157,10 @@ const ImageEditPage: React.FC = () => {
     },
     {
       drag: {
-        from: () =>
-          currentLayer !== null
-            ? [layers[currentLayer].offsetX, layers[currentLayer].offsetY]
-            : [0, 0],
+        from: () => (currentLayer !== null ? [layers[currentLayer].offsetX, layers[currentLayer].offsetY] : [0, 0]),
       },
       pinch: {
-        from: () =>
-          currentLayer !== null ? [layers[currentLayer].scale, 0] : [1, 0],
+        from: () => (currentLayer !== null ? [layers[currentLayer].scale, 0] : [1, 0]),
       },
     },
   );
@@ -208,14 +177,7 @@ const ImageEditPage: React.FC = () => {
   };
 
   const applyFilter = async (filter: string, params: any, option: string) => {
-    console.log(
-      "Applying filter:",
-      filter,
-      "with params:",
-      params,
-      "and option:",
-      option,
-    );
+    console.log("Applying filter:", filter, "with params:", params, "and option:", option);
 
     if (filter.startsWith("shader_")) {
       const shaderName = filter.replace("shader_", "");
@@ -285,13 +247,7 @@ const ImageEditPage: React.FC = () => {
         filterCanvas.width = mergedCanvas.width;
         filterCanvas.height = mergedCanvas.height;
         if (filterCtx) {
-          filterCtx.drawImage(
-            mergedCanvas,
-            0,
-            0,
-            filterCanvas.width,
-            filterCanvas.height,
-          );
+          filterCtx.drawImage(mergedCanvas, 0, 0, filterCanvas.width, filterCanvas.height);
           applyFilterToCanvas(filter, filterCtx, filterCanvas, params);
           const mergedImageUrl = filterCanvas.toDataURL("image/png");
           const newLayer: Layer = {
@@ -320,14 +276,13 @@ const ImageEditPage: React.FC = () => {
         onExport={handleExport}
         onOpenAspectRatioModal={() => setIsAspectRatioModalOpen(true)}
         onOpenWebcamModal={handleCamInputClick}
-        currentLayerType={
-          currentLayer !== null ? layers[currentLayer].type : null
-        }
+        currentLayerType={currentLayer !== null ? layers[currentLayer].type : null}
       />
-
       <div className="flex-grow flex flex-col sm:flex-row-reverse sm:flex-wrap-reverse">
-        <div className="w-full sm:w-1/4 bg-gray-200 dark:bg-gray-800 p-4 overflow-auto">
-          <LayerAccordion
+        <div className="flex-grow flex overflow-hidden">
+          <LayerSidebar
+            expanded={isSidebarOpen}
+            onToggle={() => setSidebarOpen((v) => !v)}
             layers={layers}
             currentLayer={currentLayer}
             setCurrentLayer={setCurrentLayer}
@@ -336,41 +291,31 @@ const ImageEditPage: React.FC = () => {
             moveLayerUp={moveLayerUp}
             moveLayerDown={moveLayerDown}
           />
-          <button
-            className="w-full mt-4 py-2 px-4 bg-gray-700 text-white rounded-md flex items-center justify-center hover:bg-gray-800 transition"
-            onClick={() => setIsAddLayerModalOpen(true)}
-          >
-            <PlusIcon className="w-4 h-4 mr-2" />
-            Add Layer
-          </button>
-        </div>
-        <div className="flex-grow flex justify-center items-start bg-gray-300 dark:bg-gray-700 p-4">
-          <animated.canvas
-            {...bind()}
-            ref={canvasRef}
-            width={documentSize.width}
-            height={documentSize.height}
-            className="border mb-4 w-full h-auto shadow-lg"
-            style={{
-              width: `${canvasSize.width}px`,
-              height: `${canvasSize.height}px`,
-            }}
-          />
+
+          <div className="flex-grow overflow-auto bg-gray-300 dark:bg-gray-700 p-4">
+            {/* Canvas */}
+            <div className="w-full h-full max-w-[90%] max-h-[80vh] mx-auto flex items-center justify-center relative">
+              <canvas
+                {...bind()}
+                ref={canvasRef}
+                width={documentSize.width}
+                height={documentSize.height}
+                className="w-full h-auto object-contain border shadow-lg"
+                style={{
+                  aspectRatio: `${documentSize.width} / ${documentSize.height}`,
+                }}
+              />
+            </div>
+          </div>
         </div>
       </div>
 
       <div className="bg-gray-800 dark:bg-gray-700 text-white p-4 flex justify-between items-center shadow-md">
-        <button
-          className="bg-blue-500 hover:bg-blue-600 py-2 px-4 rounded-md transition"
-          onClick={handleExport}
-        >
+        <button className="bg-blue-500 hover:bg-blue-600 py-2 px-4 rounded-md transition" onClick={handleExport}>
           <ArrowDownIcon className="w-4 h-4 inline-block mr-2" />
           Download
         </button>
-        <button
-          className="bg-green-500 hover:bg-green-600 py-2 px-4 rounded-md transition"
-          onClick={handleSave}
-        >
+        <button className="bg-green-500 hover:bg-green-600 py-2 px-4 rounded-md transition" onClick={handleSave}>
           <ArrowDownIcon className="w-4 h-4 inline-block mr-2" />
           Save
         </button>
@@ -416,11 +361,7 @@ const ImageEditPage: React.FC = () => {
         applyFilter={applyFilter}
         imageSrc={currentLayer !== null ? layers[currentLayer].image : ""}
       />
-      <AddLayerModal
-        isOpen={isAddLayerModalOpen}
-        onClose={() => setIsAddLayerModalOpen(false)}
-        onAddLayer={addNewLayer}
-      />
+      <AddLayerModal isOpen={isAddLayerModalOpen} onClose={() => setIsAddLayerModalOpen(false)} onAddLayer={addNewLayer} />
     </div>
   );
 };
