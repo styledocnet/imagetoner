@@ -7,18 +7,11 @@ interface AspectRatioModalProps {
   onClose: () => void;
   aspectRatio: number | null;
   setAspectRatio: (aspectRatio: number | null) => void;
-  canvasSize: { width: number; height: number };
-  setCanvasSize: (size: { width: number; height: number }) => void;
+  documentSize: { width: number; height: number };
+  setDocumentSize: (size: { width: number; height: number }) => void;
 }
 
-const AspectRatioModal: React.FC<AspectRatioModalProps> = ({
-  isOpen,
-  onClose,
-  aspectRatio,
-  setAspectRatio,
-  canvasSize,
-  setCanvasSize,
-}) => {
+const AspectRatioModal: React.FC<AspectRatioModalProps> = ({ isOpen, onClose, aspectRatio, setAspectRatio, documentSize, setDocumentSize }) => {
   const widthRef = useRef<HTMLInputElement>(null);
   const heightRef = useRef<HTMLInputElement>(null);
   const [isLinked, setIsLinked] = useState(true);
@@ -52,22 +45,18 @@ const AspectRatioModal: React.FC<AspectRatioModalProps> = ({
 
   useEffect(() => {
     if (isLinked && aspectRatio && widthRef.current) {
-      heightRef.current!.value = String(
-        Math.round(Number(widthRef.current!.value) / aspectRatio),
-      );
+      heightRef.current!.value = String(Math.round(Number(widthRef.current!.value) / aspectRatio));
     }
   }, [widthRef.current?.value, aspectRatio]);
 
   useEffect(() => {
     if (isLinked && aspectRatio && heightRef.current) {
-      widthRef.current!.value = String(
-        Math.round(Number(heightRef.current!.value) * aspectRatio),
-      );
+      widthRef.current!.value = String(Math.round(Number(heightRef.current!.value) * aspectRatio));
     }
   }, [heightRef.current?.value, aspectRatio]);
 
   const handleApply = () => {
-    setCanvasSize({
+    setDocumentSize({
       width: Number(widthRef.current!.value),
       height: Number(heightRef.current!.value),
     });
@@ -104,19 +93,14 @@ const AspectRatioModal: React.FC<AspectRatioModalProps> = ({
       title="Set Document Size"
       onClose={onClose}
       footer={
-        <button
-          onClick={handleApply}
-          className="bg-blue-500 text-white py-2 px-4 rounded-md hover:bg-blue-600 transition"
-        >
+        <button onClick={handleApply} className="bg-blue-500 text-white py-2 px-4 rounded-md hover:bg-blue-600 transition">
           Apply
         </button>
       }
     >
       <div className="grid grid-cols-3 gap-4 mb-4">
         <div>
-          <label className="block text-sm font-medium text-gray-700 dark:text-gray-300">
-            Aspect Ratio:
-          </label>
+          <label className="block text-sm font-medium text-gray-700 dark:text-gray-300">Aspect Ratio:</label>
           <select
             value={aspectRatio || "Free"}
             onChange={handleAspectRatioChange}
@@ -130,20 +114,9 @@ const AspectRatioModal: React.FC<AspectRatioModalProps> = ({
           </select>
         </div>
         <div>
-          <label className="block text-sm font-medium text-gray-700 dark:text-gray-300">
-            Resolution:
-          </label>
-          <select
-            onChange={handleResolutionChange}
-            className="w-full p-2 border border-gray-300 rounded-md dark:bg-gray-800 dark:text-gray-100"
-          >
-            {resolutions[
-              aspectRatio
-                ? Object.keys(aspectRatios).find(
-                    (key) => aspectRatios[key] === aspectRatio,
-                  ) || "Free"
-                : "Free"
-            ].map((preset) => (
+          <label className="block text-sm font-medium text-gray-700 dark:text-gray-300">Resolution:</label>
+          <select onChange={handleResolutionChange} className="w-full p-2 border border-gray-300 rounded-md dark:bg-gray-800 dark:text-gray-100">
+            {resolutions[aspectRatio ? Object.keys(aspectRatios).find((key) => aspectRatios[key] === aspectRatio) || "Free" : "Free"].map((preset) => (
               <option key={preset} value={preset}>
                 {preset}
               </option>
@@ -151,9 +124,7 @@ const AspectRatioModal: React.FC<AspectRatioModalProps> = ({
           </select>
         </div>
         <div>
-          <label className="block text-sm font-medium text-gray-700 dark:text-gray-300">
-            Presets:
-          </label>
+          <label className="block text-sm font-medium text-gray-700 dark:text-gray-300">Presets:</label>
           <select
             value={selectedPreset}
             onChange={handlePresetChange}
@@ -169,34 +140,26 @@ const AspectRatioModal: React.FC<AspectRatioModalProps> = ({
       </div>
       <div className="mb-4 flex items-center">
         <div className="flex-grow">
-          <label className="block text-sm font-medium text-gray-700 dark:text-gray-300">
-            Width:
-          </label>
+          <label className="block text-sm font-medium text-gray-700 dark:text-gray-300">Width:</label>
           <input
             ref={widthRef}
             type="number"
-            defaultValue={canvasSize.width}
+            defaultValue={documentSize.width}
             className="w-full p-2 border border-gray-300 rounded-md dark:bg-gray-800 dark:text-gray-100"
           />
         </div>
         <span className="mx-2">x</span>
         <div className="flex-grow">
-          <label className="block text-sm font-medium text-gray-700 dark:text-gray-300">
-            Height:
-          </label>
+          <label className="block text-sm font-medium text-gray-700 dark:text-gray-300">Height:</label>
           <input
             ref={heightRef}
             type="number"
-            defaultValue={canvasSize.height}
+            defaultValue={documentSize.height}
             className="w-full p-2 border border-gray-300 rounded-md dark:bg-gray-800 dark:text-gray-100"
           />
         </div>
         <button onClick={() => setIsLinked(!isLinked)} className="ml-2">
-          {isLinked ? (
-            <LockClosedIcon className="w-6 h-6" />
-          ) : (
-            <LockOpenIcon className="w-6 h-6" />
-          )}
+          {isLinked ? <LockClosedIcon className="w-6 h-6" /> : <LockOpenIcon className="w-6 h-6" />}
         </button>
       </div>
     </Modal>

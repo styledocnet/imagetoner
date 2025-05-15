@@ -4,8 +4,9 @@ import Dashboard from "./pages/Dashboard";
 import NotFound from "./pages/NotFound";
 import MainNav from "./components/nav/MainNav";
 import PhotosPage from "./pages/PhotosPage";
-import ImageFilterPage from "./pages/ImageFilterPage";
+// import ImageFilterPage from "./pages/ImageFilterPage";
 import ImageEditPage from "./pages/ImageEditPage";
+// import ImageStyleTransferPage from "./pages/ImageStyleTransferPage";
 
 const App: React.FC = () => {
   return (
@@ -26,9 +27,10 @@ const AppContent: React.FC = () => {
       </header>
       <main className="flex-grow p-4">
         <Route path="dashboard" component={<Dashboard />} />
-        <Route path="image_filter" component={<ImageFilterPage />} />
+        {/* <Route path="image_filter" component={<ImageFilterPage />} /> */}
         <Route path="image_edit" component={<ImageEditPage />} />
         <Route path="/image-edit/:id" component={<ImageEditPage />} />
+        {/* <Route path="image_styletransfer" component={<ImageStyleTransferPage />} /> */}
         <Route path="photos" component={<PhotosPage />} />
         <Route path="not_found" component={<NotFound />} />
       </main>

@@ -5,7 +5,6 @@ import { useGesture } from "@use-gesture/react";
 import FillImageModal from "../components/FillImageModal";
 import AspectRatioModal from "../components/AspectRatioModal";
 import FilterModal from "../components/FilterModal";
-import LayerAccordion from "../components/LayerAccordion";
 import LayerSidebar from "../components/LayerSidebar";
 import AddLayerModal from "../components/AddLayerModal";
 import WebCamInputModal from "../components/WebCamInputModal";
@@ -35,6 +34,26 @@ const ImageEditPage: React.FC = () => {
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const { navigate, currentRoute } = useRouter();
 
+  // calculate canvas size from document size
+  const calculateCanvasSize = (docSize: { width: number; height: number }) => {
+    const scaleFactor = 0.5; // Scale down for display purposes
+    return {
+      width: docSize.width * scaleFactor,
+      height: docSize.height * scaleFactor,
+    };
+  };
+
+  // update document size with aspect ratio
+  const updateDocumentSizeWithAspectRatio = (newWidth: number) => {
+    if (aspectRatio) {
+      return {
+        width: newWidth,
+        height: Math.round(newWidth / aspectRatio),
+      };
+    }
+    return { width: newWidth, height: documentSize.height };
+  };
+
   useEffect(() => {
     const params = new URLSearchParams(window.location.search);
     const documentId = params.get("id");
@@ -44,26 +63,23 @@ const ImageEditPage: React.FC = () => {
   }, [currentRoute]);
 
   useEffect(() => {
-    setCanvasSize({
-      width: documentSize.width / 2,
-      height: documentSize.height / 2,
-    });
+    setCanvasSize(calculateCanvasSize(documentSize));
   }, [documentSize]);
 
   useEffect(() => {
     renderCanvas();
   }, [layers, documentSize]);
 
-  useEffect(() => {
-    if (aspectRatio) {
-      setCanvasSize((prevSize) => ({
-        ...prevSize,
-        height: prevSize.width / aspectRatio,
-      }));
-    } else {
-      setCanvasSize((prevSize) => ({ ...prevSize, height: 1024 }));
-    }
-  }, [aspectRatio, canvasSize.width]);
+  // useEffect(() => {
+  //   if (aspectRatio) {
+  //     setCanvasSize((prevSize) => ({
+  //       ...prevSize,
+  //       height: prevSize.width / aspectRatio,
+  //     }));
+  //   } else {
+  //     setCanvasSize((prevSize) => ({ ...prevSize, height: 1024 }));
+  //   }
+  // }, [aspectRatio, canvasSize.width]);
 
   const loadDocument = async (id: number) => {
     const document = await storageService.getDocument(id);
@@ -77,6 +93,7 @@ const ImageEditPage: React.FC = () => {
       setLayers(updatedLayers);
       if (updatedLayers.length > 0) {
         const firstLayer = updatedLayers[0];
+        // TODO save Document Size in Props
         setDocumentSize({ width: firstLayer.width, height: firstLayer.height });
       }
     }
@@ -108,6 +125,13 @@ const ImageEditPage: React.FC = () => {
 
   const handleCamInputClick = () => {
     setIsWebcamOpen(true);
+  };
+
+  const handleAspectRatioUpdate = (newAspectRatio: number | null) => {
+    setAspectRatio(newAspectRatio);
+    if (newAspectRatio) {
+      setDocumentSize(updateDocumentSizeWithAspectRatio(documentSize.width));
+    }
   };
 
   const handleExport = () => {
@@ -290,10 +314,10 @@ const ImageEditPage: React.FC = () => {
             removeLayer={removeLayer}
             moveLayerUp={moveLayerUp}
             moveLayerDown={moveLayerDown}
+            setIsAddLayerModalOpen={setIsAddLayerModalOpen}
           />
 
           <div className="flex-grow overflow-auto bg-gray-300 dark:bg-gray-700 p-4">
-            {/* Canvas */}
             <div className="w-full h-full max-w-[90%] max-h-[80vh] mx-auto flex items-center justify-center relative">
               <canvas
                 {...bind()}
@@ -345,9 +369,9 @@ const ImageEditPage: React.FC = () => {
         isOpen={isAspectRatioModalOpen}
         onClose={() => setIsAspectRatioModalOpen(false)}
         aspectRatio={aspectRatio}
-        setAspectRatio={setAspectRatio}
-        canvasSize={canvasSize}
-        setCanvasSize={setCanvasSize}
+        setAspectRatio={handleAspectRatioUpdate}
+        documentSize={documentSize}
+        setDocumentSize={setDocumentSize}
       />
       <FillImageModal
         isOpen={isFillModalOpen}

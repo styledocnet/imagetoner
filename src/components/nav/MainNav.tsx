@@ -1,11 +1,6 @@
 import React, { useState, useEffect } from "react";
 import { Link, useRouter } from "../../context/CustomRouter";
-import {
-  Bars3Icon,
-  PhotoIcon,
-  RectangleGroupIcon,
-  SquaresPlusIcon,
-} from "@heroicons/react/24/outline";
+import { Bars3Icon, PhotoIcon, RectangleGroupIcon, SquaresPlusIcon, DivideIcon } from "@heroicons/react/24/outline";
 
 type NavItem = {
   name: string;
@@ -17,6 +12,7 @@ const navItems: NavItem[] = [
   { name: "Dashboard", value: "dashboard", icon: RectangleGroupIcon },
   { name: "Photos", value: "photos", icon: PhotoIcon },
   // { name: "Filter", value: "image_filter" },
+  // { name: "StyleTransfer", value: "image_styletransfer", icon: DivideIcon },
   { name: "ImageEdit", value: "image_edit", icon: SquaresPlusIcon },
 ];
 
@@ -34,10 +30,7 @@ const MainNav: React.FC = () => {
 
   return (
     <div className="relative">
-      <button
-        className="group focus:outline-none p-2 rounded-full bg-gray-700 text-white dark:bg-gray-200 dark:text-black"
-        onClick={toggleNav}
-      >
+      <button className="group focus:outline-none p-2 rounded-full bg-gray-700 text-white dark:bg-gray-200 dark:text-black" onClick={toggleNav}>
         <Bars3Icon className="h-6 w-6 group-hover:animate-bounce" />
       </button>
       <nav
