@@ -7,11 +7,14 @@ import PhotosPage from "./pages/PhotosPage";
 // import ImageFilterPage from "./pages/ImageFilterPage";
 import ImageEditPage from "./pages/ImageEditPage";
 // import ImageStyleTransferPage from "./pages/ImageStyleTransferPage";
+import { LayerProvider } from "./context/LayerContext";
 
 const App: React.FC = () => {
   return (
     <RouterProvider>
-      <AppContent />
+      <LayerProvider>
+        <AppContent />
+      </LayerProvider>
     </RouterProvider>
   );
 };

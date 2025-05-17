@@ -9,18 +9,15 @@ interface WebCamInputModalProps {
   canvasSize: { width: number; height: number };
 }
 
-const WebCamInputModal: React.FC<WebCamInputModalProps> = ({
-  isOpen,
-  onClose,
-  onCapture,
-  canvasSize,
-}) => {
+const WebCamInputModal: React.FC<WebCamInputModalProps> = ({ isOpen, onClose, onCapture, canvasSize }) => {
   const webcamRef = useRef<any>(null);
 
   const handleCapture = () => {
     if (webcamRef.current) {
       const imageSrc = webcamRef.current.getScreenshot();
       onCapture(imageSrc);
+      console.log("Stopping webcam after capture...");
+      webcamRef.current.stopWebcam();
       onClose();
     }
   };
@@ -30,29 +27,20 @@ const WebCamInputModal: React.FC<WebCamInputModalProps> = ({
       isOpen={isOpen}
       title="Capture Image"
       onClose={() => {
+        console.log("Closing modal, stopping webcam...");
         if (webcamRef.current) {
-          webcamRef.current.stopWebcam(); // Stop the webcam when closing the modal
+          console.log("Stopping webcam on modal close...");
+          webcamRef.current.stopWebcam();
         }
         onClose();
       }}
       footer={
-        <button
-          onClick={handleCapture}
-          className="bg-blue-500 text-white py-2 px-4 rounded-md hover:bg-blue-600 transition"
-        >
+        <button onClick={handleCapture} className="bg-blue-500 text-white py-2 px-4 rounded-md hover:bg-blue-600 transition">
           Capture
         </button>
       }
     >
-      {isOpen && (
-        <Webcam
-          audio={false}
-          ref={webcamRef}
-          screenshotFormat="image/jpeg"
-          width={canvasSize.width}
-          height={canvasSize.height}
-        />
-      )}
+      <Webcam isOpen={isOpen} audio={false} ref={webcamRef} screenshotFormat="image/jpeg" width={canvasSize.width} height={canvasSize.height} />
     </Modal>
   );
 };

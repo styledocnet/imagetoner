@@ -1,5 +1,6 @@
 import React, { useState } from "react";
 import Modal from "./Modal";
+import { useLayerContext } from "../context/LayerContext";
 
 interface FillImageModalProps {
   isOpen: boolean;
@@ -8,12 +9,7 @@ interface FillImageModalProps {
   onFill: (image: string) => void;
 }
 
-const FillImageModal: React.FC<FillImageModalProps> = ({
-  isOpen,
-  onClose,
-  canvasSize,
-  onFill,
-}) => {
+const FillImageModal: React.FC<FillImageModalProps> = ({ isOpen, onClose, canvasSize, onFill }) => {
   const [fillType, setFillType] = useState("solid");
   const [color, setColor] = useState("#ffffff");
   const [startColor, setStartColor] = useState("#ff0000");
@@ -63,7 +59,6 @@ const FillImageModal: React.FC<FillImageModalProps> = ({
         ctx.fillRect(0, 0, canvas.width, canvas.height);
       }
     }
-
     onFill(canvas.toDataURL("image/png"));
     onClose();
   };
@@ -74,18 +69,13 @@ const FillImageModal: React.FC<FillImageModalProps> = ({
       title="Fill Background"
       onClose={onClose}
       footer={
-        <button
-          onClick={createImage}
-          className="bg-blue-500 text-white py-2 px-4 rounded-md hover:bg-blue-600 transition"
-        >
+        <button onClick={createImage} className="bg-blue-500 text-white py-2 px-4 rounded-md hover:bg-blue-600 transition">
           Apply
         </button>
       }
     >
       <div className="mb-4">
-        <label className="block text-sm font-medium text-gray-700 dark:text-gray-300">
-          Fill Type:
-        </label>
+        <label className="block text-sm font-medium text-gray-700 dark:text-gray-300">Fill Type:</label>
         <select
           value={fillType}
           onChange={(e) => setFillType(e.target.value)}
@@ -97,45 +87,22 @@ const FillImageModal: React.FC<FillImageModalProps> = ({
       </div>
       {fillType === "solid" && (
         <div className="mb-4">
-          <label className="block text-sm font-medium text-gray-700 dark:text-gray-300">
-            Color:
-          </label>
-          <input
-            type="color"
-            value={color}
-            onChange={(e) => setColor(e.target.value)}
-            className="w-full rounded-md"
-          />
+          <label className="block text-sm font-medium text-gray-700 dark:text-gray-300">Color:</label>
+          <input type="color" value={color} onChange={(e) => setColor(e.target.value)} className="w-full rounded-md" />
         </div>
       )}
       {fillType === "gradient" && (
         <>
           <div className="mb-4">
-            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300">
-              Start Color:
-            </label>
-            <input
-              type="color"
-              value={startColor}
-              onChange={(e) => setStartColor(e.target.value)}
-              className="w-full rounded-md"
-            />
+            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300">Start Color:</label>
+            <input type="color" value={startColor} onChange={(e) => setStartColor(e.target.value)} className="w-full rounded-md" />
           </div>
           <div className="mb-4">
-            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300">
-              End Color:
-            </label>
-            <input
-              type="color"
-              value={endColor}
-              onChange={(e) => setEndColor(e.target.value)}
-              className="w-full rounded-md"
-            />
+            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300">End Color:</label>
+            <input type="color" value={endColor} onChange={(e) => setEndColor(e.target.value)} className="w-full rounded-md" />
           </div>
           <div className="mb-4">
-            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300">
-              Direction:
-            </label>
+            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300">Direction:</label>
             <select
               value={direction}
               onChange={(e) => setDirection(e.target.value)}

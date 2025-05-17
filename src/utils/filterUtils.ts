@@ -10,12 +10,7 @@ import {
 } from "./filters";
 import { FilterParams } from "../types";
 
-export const applyFilterToCanvas = (
-  filter: string,
-  ctx: CanvasRenderingContext2D,
-  canvas: HTMLCanvasElement,
-  params: FilterParams,
-) => {
+export const applyFilterToCanvas = async (filter: string, ctx: CanvasRenderingContext2D, canvas: HTMLCanvasElement, params: FilterParams) => {
   switch (filter) {
     case "vignette":
       applyVignetteFilter(ctx, canvas, params);
@@ -42,6 +37,7 @@ export const applyFilterToCanvas = (
       applyBlurFilter(ctx, canvas, params);
       break;
     default:
+      console.warn(`Filter ${filter} is not implemented.`);
       break;
   }
 };
