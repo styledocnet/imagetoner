@@ -6,14 +6,23 @@ const PhotosWidget: React.FC = () => {
   const [documents, setDocuments] = useState<Document[]>([]);
   const { navigate } = useRouter();
 
-  const onEditDocument = (documentId: number) => {
+  const onEditDocument = (documentId?: number) => {
+    if (!documentId) {
+      console.error("Document ID is missing or invalid.");
+      return;
+    }
     navigate(`image_edit?id=${documentId}`);
   };
 
   useEffect(() => {
     const fetchDocuments = async () => {
-      const docs = await storageService.getDocuments();
-      setDocuments(docs);
+      try {
+        const docs = await storageService.getDocuments();
+        console.log("Fetched Documents:", docs); // Debugging log
+        setDocuments(docs || []);
+      } catch (error) {
+        console.error("Error fetching documents:", error);
+      }
     };
     fetchDocuments();
   }, []);
@@ -27,16 +36,16 @@ const PhotosWidget: React.FC = () => {
             <div
               key={doc.id}
               className="mb-4 break-inside-avoid border rounded-md p-4 bg-white dark:bg-gray-800"
-              onClick={() => onEditDocument(doc.id!)}
+              onClick={() => doc.id && onEditDocument(doc.id)}
               style={{ cursor: "pointer" }}
             >
               <div className="mb-4">
-                <h2 className="font-semibold text-center">{doc.name}</h2>
-                <img
-                  src={`data:image/png;base64,${doc.layers[0]?.image}`}
-                  alt="Document Preview"
-                  className="w-full h-auto rounded-md shadow-md"
-                />
+                <h2 className="font-semibold text-center">{doc.name || "Untitled Document"}</h2>
+                {doc.layers && doc.layers[0]?.image ? (
+                  <img src={`data:image/png;base64,${doc.layers[0]?.image}`} alt="Document Preview" className="w-full h-auto rounded-md shadow-md" />
+                ) : (
+                  <p className="text-center text-gray-500">No Preview Available</p>
+                )}
               </div>
             </div>
           ))}

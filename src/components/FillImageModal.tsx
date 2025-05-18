@@ -1,6 +1,5 @@
 import React, { useState } from "react";
 import Modal from "./Modal";
-import { useLayerContext } from "../context/LayerContext";
 
 interface FillImageModalProps {
   isOpen: boolean;

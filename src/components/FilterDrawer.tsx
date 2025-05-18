@@ -4,19 +4,77 @@ import { useLayerContext } from "../context/LayerContext";
 
 const shaderFilterParams = {
   shader_vignette: { strength: 0.5, sizeFactor: 1, color: "#FFFFFF" },
+  shader_posterize: { levels: 4, fade: 0.5 },
+  shader_solarize: { threshold: 0.5, fade: 0.5 },
+  shader_mirror: { flipX: false, flipY: false, fade: 0.5 },
+  shader_blur: { radius: 0.01, fade: 0.5 },
+  shader_tilt_blur: { radius: 0.01, fade: 0.5 },
+  shader_dof: { focusDepth: 0.5, threshold: 0.1, blurRadius: 0.02 },
+  shader_grayscale: { intensity: 0.5 },
+  shader_tritone: {
+    shadowColor: "#000000",
+    midColor: "#888888",
+    highColor: "#FFFFFF",
+    fade: 0.5,
+  },
+  shader_quadtone: {
+    shadowColor: "#000000",
+    midShadowColor: "#444444",
+    midHighlightColor: "#888888",
+    highColor: "#FFFFFF",
+    fade: 0.5,
+  },
   shader_triangulate: {
     points: 300,
+    // desc_points: "Base number of points (density of triangles)",
     variation: 0.3,
+    // desc_variation: "Randomization of triangle placement",
     cutoff: 5,
-    edgeThreshold: 0.5,
+    // desc_cutoff: "Color matching precision",
+    edgeThreshold: 0.5, // Sensitivity to edges
+    // desc_edgeThreshold: "Sensitivity to edges",
     blendAmount: 0.5,
+    // desc_blendAmount: "Mixing original and stylized color",
     triangleSizeScaling: 1.0,
+    // desc_triangleSizeScaling: "Scale factor for triangle sizes",
+  },
+  shader_polygonate: {
+    points: 300,
+    mutations: 2,
+    variation: 0.3,
+    population: 400,
+    cutoff: 5,
+    block: 5,
+  },
+  shader_hexanate: {
+    points: 300,
+    mutations: 2,
+    variation: 0.3,
+    population: 400,
+    cutoff: 5,
+    block: 5,
   },
 };
 
 const canvasFilterParams = {
+  vignette: { colors: 128, fade: 0.5 },
+  mono: { colors: 128, fade: 0.5 },
+  duotone: { color1: "#ffeeaa", color2: "aaeeff" },
+  tritone: { color1: "#ffeeaa", color2: "aaeeff", color3: "aaffee" },
+  quadtone: { color1: "#ffeeaa", color2: "aaee00", color3: "aaffee", color4: "ff22ee" },
+  grayscale: { fade: 0.5 },
+  sepia: { fade: 0.5 },
+  blur: { fade: 0.5 },
+  // todo unimplement
   quantize: { colors: 128, fade: 0.5 },
   rotate: { degrees: 45, fade: 0.5 },
+  autocontrast: { cutoff: 0, fade: 0.5 },
+  equalize: { fade: 0.5 },
+  brightness: { factor: 50, fade: 0.5 },
+  contrast: { factor: 50, fade: 0.5 },
+  sharpness: { factor: 50, fade: 0.5 },
+  gaussian_blur: { radius: 2, fade: 0.5 },
+  unsharp_mask: { radius: 2, percent: 150, threshold: 3, fade: 0.5 },
 };
 
 interface FilterDrawerProps {
@@ -49,7 +107,8 @@ const FilterDrawer: React.FC<FilterDrawerProps> = ({ isOpen, onClose, applyFilte
     } else if (type === "number" || type === "range") {
       newVal = parseFloat(value);
     } else if (type === "color") {
-      newVal = value;
+      // Validate color input
+      newVal = /^#[0-9A-F]{6}$/i.test(value) ? value : "#000000"; // Default to black if invalid
     } else {
       newVal = value;
     }
@@ -66,7 +125,7 @@ const FilterDrawer: React.FC<FilterDrawerProps> = ({ isOpen, onClose, applyFilte
 
   return (
     <div
-      className={`fixed bottom-0 left-0 z-50 bg-white dark:bg-gray-900 border-t border-gray-300 dark:border-gray-700 transition-transform duration-300 shadow-lg ${
+      className={`dark:text-white fixed bottom-0 left-0 z-50 bg-white dark:bg-gray-900 border-t border-gray-300 dark:border-gray-700 transition-transform duration-300 shadow-lg ${
         isOpen ? "translate-y-0" : "translate-y-full"
       }`}
       style={{

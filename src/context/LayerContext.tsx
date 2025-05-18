@@ -20,8 +20,16 @@ export const LayerProvider: React.FC = ({ children }) => {
   const [layers, setLayers] = useState<Layer[]>([]);
   const [currentLayer, setCurrentLayer] = useState<number | null>(null);
 
-  const addNewLayer = (newLayer: Layer) => {
-    setLayers((prev) => [...prev, { ...newLayer, index: prev.length }]);
+  const addNewLayer = (layer: Layer) => {
+    // setLayers((prev) => [...prev, { ...newLayer, index: prev.length }]);
+    const validatedLayer = {
+      ...layer,
+      offsetX: isFinite(layer.offsetX) ? layer.offsetX : 0,
+      offsetY: isFinite(layer.offsetY) ? layer.offsetY : 0,
+      scale: isFinite(layer.scale) && layer.scale > 0 ? layer.scale : 1,
+    };
+
+    setLayers([...layers, validatedLayer]);
   };
 
   const removeLayer = (index: number) => {

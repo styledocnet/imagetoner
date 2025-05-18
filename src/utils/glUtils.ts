@@ -1,4 +1,4 @@
-const shaderAllowList = [
+export const shaderAllowList = [
   "duotone",
   "vignette",
   "spread",

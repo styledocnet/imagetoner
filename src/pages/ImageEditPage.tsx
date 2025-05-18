@@ -4,7 +4,7 @@ import { ArrowDownIcon } from "@heroicons/react/24/outline";
 import { useGesture } from "@use-gesture/react";
 import FillImageModal from "../components/FillImageModal";
 import AspectRatioModal from "../components/AspectRatioModal";
-import FilterModal from "../components/FilterModal";
+// import FilterModal from "../components/FilterModal";
 import LayerSidebar from "../components/LayerSidebar";
 import AddLayerModal from "../components/AddLayerModal";
 import WebCamInputModal from "../components/WebCamInputModal";
@@ -15,6 +15,7 @@ import { useRouter } from "../context/CustomRouter";
 import Toolbar from "../components/Toolbar";
 import { useLayerContext } from "../context/LayerContext";
 import FilterDrawer from "../components/FilterDrawer";
+import { applyShaderFilter, loadShaderSource } from "../utils/glUtils";
 
 const ImageEditPage: React.FC = () => {
   const { layers, setLayers, currentLayer, setCurrentLayer, restoreOriginalLayer, updateLayerProp, addNewLayer, removeLayer, moveLayerUp, moveLayerDown } =
@@ -64,6 +65,13 @@ const ImageEditPage: React.FC = () => {
   useEffect(() => {
     renderCanvas();
   }, [layers, documentSize]);
+
+  useEffect(() => {
+    // ensure currentLayer is valid whenever layers are updated
+    if (currentLayer === null || currentLayer >= layers.length) {
+      setCurrentLayer(layers.length > 0 ? layers.length - 1 : null);
+    }
+  }, [layers, currentLayer]);
 
   const loadDocument = async (id: number) => {
     const document = await storageService.getDocument(id);
@@ -167,27 +175,57 @@ const ImageEditPage: React.FC = () => {
 
   const renderCanvas = () => {
     const canvas = canvasRef.current;
-    if (canvas) {
-      const ctx = canvas.getContext("2d");
-      if (ctx) {
-        ctx.clearRect(0, 0, documentSize.width, documentSize.height);
-        renderLayers(ctx, layers, documentSize.width, documentSize.height);
-      }
+    if (!canvas) {
+      console.error("Canvas not found.");
+      return;
     }
+
+    const ctx = canvas.getContext("2d");
+    if (!ctx) {
+      console.error("Canvas context not found.");
+      return;
+    }
+
+    if (currentLayer === null || currentLayer < 0 || currentLayer >= layers.length) {
+      console.error("Invalid currentLayer index:", currentLayer);
+      return;
+    }
+
+    const layer = layers[currentLayer];
+    if (!layer || !layer.image) {
+      console.error("Invalid or missing layer data:", layer);
+      return;
+    }
+
+    canvas.width = documentSize.width;
+    canvas.height = documentSize.height;
+
+    ctx.clearRect(0, 0, canvas.width, canvas.height);
+    renderLayers(ctx, layers, documentSize.width, documentSize.height);
   };
+
   const applyFilter = async (filter: string, params: any, option: string, isPreview = false) => {
     console.log(`Applying filter: ${filter}, params:`, params, `option: ${option}`);
 
     const canvas = canvasRef.current;
-    const ctx = canvas?.getContext("2d");
-    const layer = layers.find((layer) => layer.index === currentLayer);
-
-    if (!ctx || !layer || !layer.image) {
-      console.error("Canvas context, current layer, or layer image not found.");
+    if (!canvas) {
+      console.error("Canvas not found.");
       return;
     }
 
-    // Create an image element and set its source
+    if (currentLayer === null || currentLayer >= layers.length) {
+      console.error("Current layer index is invalid or not found:", currentLayer);
+      return;
+    }
+
+    const layer = layers[currentLayer];
+    if (!layer || !layer.image) {
+      console.error("Layer image not found. Current Layer:", layer);
+      return;
+    }
+
+    console.log("Current layer found:", layer);
+
     const img = new Image();
     img.src = layer.image;
 
@@ -198,37 +236,91 @@ const ImageEditPage: React.FC = () => {
       canvas.width = img.width;
       canvas.height = img.height;
 
-      // Draw the image onto the resized canvas
-      ctx.clearRect(0, 0, canvas.width, canvas.height);
-      ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
+      if (filter.startsWith("shader_")) {
+        console.log(`Applying WebGL shader filter: ${filter}`);
 
-      // Apply the filter to the canvas
-      await applyFilterToCanvas(filter, ctx, canvas, params);
-
-      if (!isPreview) {
-        const imageUrl = canvas.toDataURL("image/png");
-
-        if (option === "applyCurrent") {
-          updateLayerProp(currentLayer!, "image", imageUrl);
-        } else if (option === "createNew") {
-          addNewLayer({
-            name: `${filter} Layer`,
-            index: layers.length,
-            image: imageUrl,
-            offsetX: 0,
-            offsetY: 0,
-            scale: 1,
-            type: "image",
-            visible: true,
-          });
+        const gl = canvas.getContext("webgl");
+        if (!gl) {
+          console.error("WebGL not supported or failed to initialize.");
+          return;
         }
 
-        renderCanvas();
+        try {
+          // Ensure shader name is extracted correctly
+          const shaderName = filter.replace("shader_", ""); // Remove the prefix
+          const shaderSource = await loadShaderSource(shaderName);
+
+          applyShaderFilter(gl, img, shaderSource, params);
+
+          // Ensure canvas is still available after applying the filter
+          if (!canvasRef.current) {
+            console.error("Canvas reference is null after applying shader filter.");
+            return;
+          }
+
+          // Generate the filtered image immediately
+          const filteredImage = canvasRef.current.toDataURL("image/png");
+          console.log("Filtered image generated:", filteredImage);
+
+          if (!isPreview) {
+            if (option === "applyCurrent") {
+              updateLayerProp(currentLayer, "image", filteredImage);
+            } else if (option === "createNew") {
+              addNewLayer({
+                name: `${filter} Layer`,
+                index: layers.length,
+                image: filteredImage,
+                offsetX: 0,
+                offsetY: 0,
+                scale: 1,
+                type: "image",
+                visible: true,
+              });
+            }
+
+            renderCanvas();
+          }
+        } catch (error) {
+          console.error("Error applying WebGL shader filter:", error);
+        }
+      } else {
+        console.log(`Applying Canvas filter: ${filter}`);
+
+        const ctx = canvas.getContext("2d");
+        if (!ctx) {
+          console.error("Canvas 2D context not found.");
+          return;
+        }
+
+        ctx.clearRect(0, 0, canvas.width, canvas.height);
+        ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
+        await applyFilterToCanvas(filter, ctx, canvas, params);
+
+        if (!isPreview) {
+          const imageUrl = canvas.toDataURL("image/png");
+
+          if (option === "applyCurrent") {
+            updateLayerProp(currentLayer, "image", imageUrl);
+          } else if (option === "createNew") {
+            addNewLayer({
+              name: `${filter} Layer`,
+              index: layers.length,
+              image: imageUrl,
+              offsetX: 0,
+              offsetY: 0,
+              scale: 1,
+              type: "image",
+              visible: true,
+            });
+          }
+
+          renderCanvas();
+        }
       }
     };
 
-    img.onerror = (error) => {
-      console.error("Error loading image for filtering:", error);
+    img.onerror = () => {
+      console.error("Failed to load the image.");
     };
   };
   return (
@@ -301,6 +393,10 @@ const ImageEditPage: React.FC = () => {
         onClose={() => setIsFillModalOpen(false)}
         canvasSize={documentSize}
         onFill={(image) => {
+          if (!image) {
+            console.error("Invalid image data for Fill Layer.");
+            return;
+          }
           addNewLayer({
             name: "Fill Layer",
             index: layers.length,
@@ -311,6 +407,7 @@ const ImageEditPage: React.FC = () => {
             type: "image",
             visible: true,
           });
+          setCurrentLayer(layers.length);
         }}
       />
       <FilterDrawer
