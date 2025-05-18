@@ -186,16 +186,17 @@ const ImageEditPage: React.FC = () => {
       return;
     }
 
-    if (currentLayer === null || currentLayer < 0 || currentLayer >= layers.length) {
-      console.error("Invalid currentLayer index:", currentLayer);
-      return;
-    }
+    // this was a current layer check
+    // if (currentLayer === null || currentLayer < 0 || currentLayer >= layers.length) {
+    //   console.error("Invalid currentLayer index:", currentLayer);
+    //   return;
+    // }
 
-    const layer = layers[currentLayer];
-    if (!layer || !layer.image) {
-      console.error("Invalid or missing layer data:", layer);
-      return;
-    }
+    // const layer = layers[currentLayer];
+    // if (!layer || !layer.image) {
+    //   console.error("Invalid or missing layer data:", layer);
+    //   return;
+    // }
 
     canvas.width = documentSize.width;
     canvas.height = documentSize.height;

@@ -90,11 +90,13 @@ const FilterDrawer: React.FC<FilterDrawerProps> = ({ isOpen, onClose, applyFilte
   const { restoreOriginalLayer } = useLayerContext();
 
   useEffect(() => {
-    const paramSet = shaderFilterParams[filter] || canvasFilterParams[filter] || {};
-    setParams(paramSet);
+    if (isOpen) {
+      const paramSet = shaderFilterParams[filter] || canvasFilterParams[filter] || {};
+      setParams(paramSet);
 
-    if (imageSrc) {
-      applyFilter(filter, paramSet, "applyPreview", true);
+      if (imageSrc) {
+        applyFilter(filter, paramSet, "applyPreview", true);
+      }
     }
   }, [filter, imageSrc]);
 
@@ -129,8 +131,8 @@ const FilterDrawer: React.FC<FilterDrawerProps> = ({ isOpen, onClose, applyFilte
         isOpen ? "translate-y-0" : "translate-y-full"
       }`}
       style={{
-        width: "33%", // One-third of the screen
-        minWidth: "300px", // Ensure a minimum width for smaller screens
+        width: "33%",
+        minWidth: "300px",
         minHeight: "300px",
       }}
     >
@@ -146,43 +148,46 @@ const FilterDrawer: React.FC<FilterDrawerProps> = ({ isOpen, onClose, applyFilte
         </button>
       </div>
 
-      <div className="p-4 overflow-y-auto max-h-[calc(100vh-320px)]">
-        <label className="block mb-2 font-semibold">Select Filter:</label>
-        <select className="w-full p-2 border rounded-md mb-4 dark:bg-gray-800 dark:text-white" value={filter} onChange={(e) => setFilter(e.target.value)}>
-          <optgroup label="Shader Filters">
-            {Object.keys(shaderFilterParams).map((key) => (
-              <option key={key} value={key}>
-                {key.replace(/_/g, " ")}
-              </option>
-            ))}
-          </optgroup>
-          <optgroup label="Canvas Filters">
-            {Object.keys(canvasFilterParams).map((key) => (
-              <option key={key} value={key}>
-                {key.replace(/_/g, " ")}
-              </option>
-            ))}
-          </optgroup>
-        </select>
+      {isOpen && (
+        <div className="p-4 overflow-y-auto max-h-[calc(100vh-320px)]">
+          <label className="block mb-2 font-semibold">Select Filter:</label>
+          <select className="w-full p-2 border rounded-md mb-4 dark:bg-gray-800 dark:text-white" value={filter} onChange={(e) => setFilter(e.target.value)}>
+            <optgroup label="Shader Filters">
+              {Object.keys(shaderFilterParams).map((key) => (
+                <option key={key} value={key}>
+                  {key.replace(/_/g, " ")}
+                </option>
+              ))}
+            </optgroup>
+            <optgroup label="Canvas Filters">
+              {Object.keys(canvasFilterParams).map((key) => (
+                <option key={key} value={key}>
+                  {key.replace(/_/g, " ")}
+                </option>
+              ))}
+            </optgroup>
+          </select>
 
-        {Object.keys(params).map((param) => (
-          <div key={param} className="mb-3">
-            <label className="block font-medium text-sm mb-1 capitalize">{param}</label>
-            <input
-              type={typeof params[param] === "boolean" ? "checkbox" : typeof params[param] === "number" ? "range" : param.includes("color") ? "color" : "text"}
-              name={param}
-              min={typeof params[param] === "number" ? "0" : undefined}
-              max={typeof params[param] === "number" ? "1" : undefined}
-              step={typeof params[param] === "number" ? "0.01" : undefined}
-              value={typeof params[param] === "number" || typeof params[param] === "string" ? params[param] : undefined}
-              checked={typeof params[param] === "boolean" ? params[param] : undefined}
-              onChange={handleParamChange}
-              className="w-full"
-            />
-          </div>
-        ))}
-      </div>
-
+          {Object.keys(params).map((param) => (
+            <div key={param} className="mb-3">
+              <label className="block font-medium text-sm mb-1 capitalize">{param}</label>
+              <input
+                type={
+                  typeof params[param] === "boolean" ? "checkbox" : typeof params[param] === "number" ? "range" : param.includes("color") ? "color" : "text"
+                }
+                name={param}
+                min={typeof params[param] === "number" ? "0" : undefined}
+                max={typeof params[param] === "number" ? "1" : undefined}
+                step={typeof params[param] === "number" ? "0.01" : undefined}
+                value={typeof params[param] === "number" || typeof params[param] === "string" ? params[param] : undefined}
+                checked={typeof params[param] === "boolean" ? params[param] : undefined}
+                onChange={handleParamChange}
+                className="w-full"
+              />
+            </div>
+          ))}
+        </div>
+      )}
       <div className="p-4 flex gap-2 justify-end border-t dark:border-gray-700">
         <button onClick={() => handleApply("applyCurrent")} className="bg-blue-500 text-white px-4 py-2 rounded-md">
           Apply to Layer
