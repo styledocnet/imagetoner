@@ -1,6 +1,8 @@
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useState, useRef } from "react";
 import { XMarkIcon } from "@heroicons/react/24/outline";
 import { useLayerContext } from "../context/LayerContext";
+import WebGLFilterRenderer from "./WebGLFilterRenderer";
+import { applyFilterToCanvas } from "../utils/filterUtils";
 
 const shaderFilterParams = {
   shader_vignette: { strength: 0.5, sizeFactor: 1, color: "#FFFFFF" },
@@ -80,120 +82,224 @@ const canvasFilterParams = {
 interface FilterDrawerProps {
   isOpen: boolean;
   onClose: () => void;
-  applyFilter: (filter: string, params: any, option: string, isPreview?: boolean) => void;
+  onApply: (filteredImage: string, mode: "applyCurrent" | "createNew") => void;
   imageSrc: string;
+  documentSize: { width: number; height: number };
+  mainCanvasRef: React.RefObject<HTMLCanvasElement>;
 }
 
-const FilterDrawer: React.FC<FilterDrawerProps> = ({ isOpen, onClose, applyFilter, imageSrc }) => {
+const FilterDrawer: React.FC<FilterDrawerProps> = ({ isOpen, onClose, onApply, imageSrc, documentSize, mainCanvasRef }) => {
   const [filter, setFilter] = useState("shader_vignette");
   const [params, setParams] = useState<any>(shaderFilterParams[filter]);
-  const { restoreOriginalLayer } = useLayerContext();
+  const [filteredImage, setFilteredImage] = useState<string | null>(null);
+
+  const { updateLayerProp, restoreOriginalLayer, currentLayer } = useLayerContext();
+
+  // Ref for the 2D canvas (used for non-shader filters)
+  const canvasRef = useRef<HTMLCanvasElement>(null);
+
+  // Update filter parameters when the filter changes
+  useEffect(() => {
+    if (shaderFilterParams[filter]) {
+      setParams({ ...shaderFilterParams[filter] }); // Reset to default shader params
+    } else if (canvasFilterParams[filter]) {
+      setParams({ ...canvasFilterParams[filter] }); // Reset to default canvas params
+    }
+  }, [filter]);
+
+  // Render the preview
+  const renderPreview = () => {
+    if (filter.startsWith("shader_")) {
+      // Shader filters are handled by WebGLFilterRenderer, so no need to render here
+      return;
+    }
+
+    if (!canvasRef.current || !imageSrc) return;
+
+    const previewCanvas = canvasRef.current;
+    const previewCtx = previewCanvas.getContext("2d");
+
+    if (!previewCtx) {
+      console.error("Preview canvas 2D context not found.");
+      return;
+    }
+
+    const img = new Image();
+    img.src = imageSrc;
+
+    img.onload = () => {
+      previewCanvas.width = img.width;
+      previewCanvas.height = img.height;
+
+      previewCtx.clearRect(0, 0, previewCanvas.width, previewCanvas.height);
+      previewCtx.drawImage(img, 0, 0, previewCanvas.width, previewCanvas.height);
+
+      // Apply the Canvas 2D filter
+      applyFilterToCanvas(filter, previewCtx, previewCanvas, params);
+
+      // Capture the filtered output as a data URL
+      const filtered = previewCanvas.toDataURL("image/png");
+      setFilteredImage(filtered);
+    };
+  };
+
+  // Apply the filter to the main canvas and save the result
+  const handleApply = (mode: "applyCurrent" | "createNew") => {
+    if (!filteredImage || currentLayer === null) return;
+
+    const mainCanvas = mainCanvasRef.current;
+    if (!mainCanvas) {
+      console.error("Main canvas not found.");
+      return;
+    }
+
+    const mainCtx = mainCanvas.getContext("2d");
+    if (!mainCtx) {
+      console.error("Main Canvas 2D context not found.");
+      return;
+    }
+
+    // Render the filtered image to the main canvas
+    const img = new Image();
+    img.src = filteredImage;
+
+    img.onload = () => {
+      mainCanvas.width = img.width;
+      mainCanvas.height = img.height;
+
+      mainCtx.clearRect(0, 0, mainCanvas.width, mainCanvas.height);
+      mainCtx.drawImage(img, 0, 0, mainCanvas.width, mainCanvas.height);
+
+      // Update the layer with the filtered image
+      if (mode === "applyCurrent") {
+        updateLayerProp(currentLayer, "image", filteredImage);
+      } else if (mode === "createNew") {
+        updateLayerProp({
+          name: `${filter} Layer`,
+          index: layers.length,
+          image: filteredImage,
+          offsetX: 0,
+          offsetY: 0,
+          scale: 1,
+          type: "image",
+          visible: true,
+        });
+      }
+
+      onApply(filteredImage, mode);
+      onClose();
+    };
+  };
 
   useEffect(() => {
     if (isOpen) {
-      const paramSet = shaderFilterParams[filter] || canvasFilterParams[filter] || {};
-      setParams(paramSet);
-
-      if (imageSrc) {
-        applyFilter(filter, paramSet, "applyPreview", true);
-      }
+      renderPreview(); // Render preview when the drawer is open
     }
-  }, [filter, imageSrc]);
+  }, [filter, params, imageSrc, isOpen]);
 
   const handleParamChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const { name, value, type, checked } = e.target;
-
-    let newVal;
-    if (type === "checkbox") {
-      newVal = checked;
-    } else if (type === "number" || type === "range") {
-      newVal = parseFloat(value);
-    } else if (type === "color") {
-      // Validate color input
-      newVal = /^#[0-9A-F]{6}$/i.test(value) ? value : "#000000"; // Default to black if invalid
-    } else {
-      newVal = value;
-    }
-
-    const updatedParams = { ...params, [name]: newVal };
-    setParams(updatedParams);
-    applyFilter(filter, updatedParams, "applyPreview", true);
-  };
-
-  const handleApply = (mode: string) => {
-    applyFilter(filter, params, mode);
-    onClose();
+    const newValue = type === "checkbox" ? checked : type === "number" ? parseFloat(value) : value;
+    setParams({ ...params, [name]: newValue });
   };
 
   return (
     <div
-      className={`dark:text-white fixed bottom-0 left-0 z-50 bg-white dark:bg-gray-900 border-t border-gray-300 dark:border-gray-700 transition-transform duration-300 shadow-lg ${
+      className={`fixed bottom-0 left-0 z-50 bg-white dark:bg-gray-900 border-t border-gray-300 dark:border-gray-700 transition-transform ${
         isOpen ? "translate-y-0" : "translate-y-full"
       }`}
-      style={{
-        width: "33%",
-        minWidth: "300px",
-        minHeight: "300px",
-      }}
+      style={{ width: "33%", minWidth: "300px", minHeight: "300px" }}
     >
-      <div className="flex justify-between items-center p-3 border-b border-gray-200 dark:border-gray-700">
+      <div className="p-3 border-b border-gray-200 dark:border-gray-700 flex justify-between items-center">
         <h3 className="font-bold text-lg">Filter Settings</h3>
         <button
           onClick={() => {
-            restoreOriginalLayer();
+            restoreOriginalLayer(); // Restore the layer on cancel
             onClose();
           }}
         >
           <XMarkIcon className="w-6 h-6" />
         </button>
       </div>
-
-      {isOpen && (
-        <div className="p-4 overflow-y-auto max-h-[calc(100vh-320px)]">
-          <label className="block mb-2 font-semibold">Select Filter:</label>
-          <select className="w-full p-2 border rounded-md mb-4 dark:bg-gray-800 dark:text-white" value={filter} onChange={(e) => setFilter(e.target.value)}>
-            <optgroup label="Shader Filters">
-              {Object.keys(shaderFilterParams).map((key) => (
-                <option key={key} value={key}>
-                  {key.replace(/_/g, " ")}
-                </option>
-              ))}
-            </optgroup>
-            <optgroup label="Canvas Filters">
-              {Object.keys(canvasFilterParams).map((key) => (
-                <option key={key} value={key}>
-                  {key.replace(/_/g, " ")}
-                </option>
-              ))}
-            </optgroup>
-          </select>
-
-          {Object.keys(params).map((param) => (
-            <div key={param} className="mb-3">
-              <label className="block font-medium text-sm mb-1 capitalize">{param}</label>
-              <input
-                type={
-                  typeof params[param] === "boolean" ? "checkbox" : typeof params[param] === "number" ? "range" : param.includes("color") ? "color" : "text"
-                }
-                name={param}
-                min={typeof params[param] === "number" ? "0" : undefined}
-                max={typeof params[param] === "number" ? "1" : undefined}
-                step={typeof params[param] === "number" ? "0.01" : undefined}
-                value={typeof params[param] === "number" || typeof params[param] === "string" ? params[param] : undefined}
-                checked={typeof params[param] === "boolean" ? params[param] : undefined}
-                onChange={handleParamChange}
-                className="w-full"
+      <div className="p-4">
+        <label className="block mb-2 font-semibold">Select Filter:</label>
+        <select value={filter} onChange={(e) => setFilter(e.target.value)} className="w-full p-2 border rounded-md dark:bg-gray-800 dark:text-white">
+          <optgroup label="Shader Filters">
+            {Object.keys(shaderFilterParams).map((key) => (
+              <option key={key} value={key}>
+                {key.replace("shader_", "").toUpperCase()}
+              </option>
+            ))}
+          </optgroup>
+          <optgroup label="Canvas Filters">
+            {Object.keys(canvasFilterParams).map((key) => (
+              <option key={key} value={key}>
+                {key.toUpperCase()}
+              </option>
+            ))}
+          </optgroup>
+        </select>
+        {Object.keys(params).map((param) => (
+          <div key={param} className="mb-3">
+            <label className="block font-medium text-sm mb-1 capitalize text-gray-500">{param}</label>
+            <input
+              type={typeof params[param] === "boolean" ? "checkbox" : typeof params[param] === "number" ? "range" : param.includes("color") ? "color" : "text"}
+              name={param}
+              min={typeof params[param] === "number" ? "0" : undefined}
+              max={typeof params[param] === "number" ? "1" : undefined}
+              step={typeof params[param] === "number" ? "0.01" : undefined}
+              value={typeof params[param] === "number" || typeof params[param] === "string" ? params[param] : undefined}
+              checked={typeof params[param] === "boolean" ? params[param] : undefined}
+              onChange={handleParamChange}
+              className="w-full"
+            />
+          </div>
+        ))}
+        <div className="mt-4">
+          <div
+            style={{
+              width: "100%",
+              height: "150px",
+              overflow: "hidden",
+              display: "flex",
+              justifyContent: "center",
+              alignItems: "center",
+              border: "1px solid #ccc",
+              borderRadius: "4px",
+            }}
+          >
+            {" "}
+            {/* Scaled Preview */}
+            {filter.startsWith("shader_") ? (
+              <WebGLFilterRenderer
+                image={imageSrc}
+                filter={filter}
+                params={params}
+                width={documentSize.width}
+                height={documentSize.height}
+                onRenderComplete={(filteredImage) => setFilteredImage(filteredImage)}
               />
-            </div>
-          ))}
+            ) : (
+              <canvas
+                ref={canvasRef}
+                style={{
+                  display: "block",
+                  maxWidth: "100%",
+                  maxHeight: "200px",
+                  border: "1px solid #ccc",
+                  borderRadius: "4px",
+                }}
+              />
+            )}
+          </div>
         </div>
-      )}
-      <div className="p-4 flex gap-2 justify-end border-t dark:border-gray-700">
+      </div>
+      <div className="p-4 border-t dark:border-gray-700 flex justify-end gap-2">
         <button onClick={() => handleApply("applyCurrent")} className="bg-blue-500 text-white px-4 py-2 rounded-md">
           Apply to Layer
         </button>
         <button onClick={() => handleApply("createNew")} className="bg-green-500 text-white px-4 py-2 rounded-md">
-          New Layer
+          Create New Layer
         </button>
       </div>
     </div>

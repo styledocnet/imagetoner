@@ -15,7 +15,7 @@ const AddLayerModal: React.FC<{
 
   const handleAddLayer = () => {
     const newLayer = {
-      name: layerName,
+      name: layerName || "New Layer",
       type: layerType,
       text: layerType === "text" ? text : "",
       fontFamily: layerType === "text" ? fontFamily : "",
@@ -37,19 +37,14 @@ const AddLayerModal: React.FC<{
       title="Add New Layer"
       onClose={onClose}
       footer={
-        <button
-          onClick={handleAddLayer}
-          className="bg-blue-500 text-white py-2 px-4 rounded-md hover:bg-blue-700 transition"
-        >
+        <button onClick={handleAddLayer} className="bg-blue-500 text-white py-2 px-4 rounded-md hover:bg-blue-700 transition">
           Add Layer
         </button>
       }
     >
       <div className="space-y-4">
         <div>
-          <label className="block mb-1 font-semibold text-gray-700 dark:text-gray-300">
-            Layer Name:
-          </label>
+          <label className="block mb-1 font-semibold text-gray-700 dark:text-gray-300">Layer Name:</label>
           <input
             type="text"
             value={layerName}
@@ -59,9 +54,7 @@ const AddLayerModal: React.FC<{
         </div>
 
         <div>
-          <label className="block mb-1 font-semibold text-gray-700 dark:text-gray-300">
-            Layer Type:
-          </label>
+          <label className="block mb-1 font-semibold text-gray-700 dark:text-gray-300">Layer Type:</label>
           <select
             value={layerType}
             onChange={(e) => setLayerType(e.target.value)}
@@ -75,9 +68,7 @@ const AddLayerModal: React.FC<{
         {layerType === "text" && (
           <>
             <div>
-              <label className="block mb-1 font-semibold text-gray-700 dark:text-gray-300">
-                Text:
-              </label>
+              <label className="block mb-1 font-semibold text-gray-700 dark:text-gray-300">Text:</label>
               <input
                 type="text"
                 value={text}
@@ -87,9 +78,7 @@ const AddLayerModal: React.FC<{
             </div>
 
             <div>
-              <label className="block mb-1 font-semibold text-gray-700 dark:text-gray-300">
-                Font Family:
-              </label>
+              <label className="block mb-1 font-semibold text-gray-700 dark:text-gray-300">Font Family:</label>
               <select
                 value={fontFamily}
                 onChange={(e) => setFontFamily(e.target.value)}
@@ -103,9 +92,7 @@ const AddLayerModal: React.FC<{
             </div>
 
             <div>
-              <label className="block mb-1 font-semibold text-gray-700 dark:text-gray-300">
-                Font Size:
-              </label>
+              <label className="block mb-1 font-semibold text-gray-700 dark:text-gray-300">Font Size:</label>
               <input
                 type="number"
                 value={fontSize}
@@ -115,9 +102,7 @@ const AddLayerModal: React.FC<{
             </div>
 
             <div>
-              <label className="block mb-1 font-semibold text-gray-700 dark:text-gray-300">
-                Color:
-              </label>
+              <label className="block mb-1 font-semibold text-gray-700 dark:text-gray-300">Color:</label>
               <input
                 type="color"
                 value={color}

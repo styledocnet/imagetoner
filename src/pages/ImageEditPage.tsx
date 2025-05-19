@@ -16,6 +16,7 @@ import Toolbar from "../components/Toolbar";
 import { useLayerContext } from "../context/LayerContext";
 import FilterDrawer from "../components/FilterDrawer";
 import { applyShaderFilter, loadShaderSource } from "../utils/glUtils";
+import WebGLFilterRenderer from "../components/WebGLFilterRenderer";
 
 const ImageEditPage: React.FC = () => {
   const { layers, setLayers, currentLayer, setCurrentLayer, restoreOriginalLayer, updateLayerProp, addNewLayer, removeLayer, moveLayerUp, moveLayerDown } =
@@ -66,9 +67,9 @@ const ImageEditPage: React.FC = () => {
     renderCanvas();
   }, [layers, documentSize]);
 
+  // ensure currentLayer is valid whenever layers are updated
   useEffect(() => {
-    // ensure currentLayer is valid whenever layers are updated
-    if (currentLayer === null || currentLayer >= layers.length) {
+    if (currentLayer === null || currentLayer < 0 || currentLayer >= layers.length) {
       setCurrentLayer(layers.length > 0 ? layers.length - 1 : null);
     }
   }, [layers, currentLayer]);
@@ -205,6 +206,20 @@ const ImageEditPage: React.FC = () => {
     renderLayers(ctx, layers, documentSize.width, documentSize.height);
   };
 
+  const handleWebGLRenderComplete = (filteredImage: string) => {
+    if (mainCanvasRef.current) {
+      const ctx = mainCanvasRef.current.getContext("2d");
+      if (ctx) {
+        const img = new Image();
+        img.src = filteredImage;
+        img.onload = () => {
+          ctx.clearRect(0, 0, mainCanvasRef.current!.width, mainCanvasRef.current!.height);
+          ctx.drawImage(img, 0, 0);
+        };
+      }
+    }
+  };
+
   const applyFilter = async (filter: string, params: any, option: string, isPreview = false) => {
     console.log(`Applying filter: ${filter}, params:`, params, `option: ${option}`);
 
@@ -239,13 +254,6 @@ const ImageEditPage: React.FC = () => {
 
       if (filter.startsWith("shader_")) {
         console.log(`Applying WebGL shader filter: ${filter}`);
-
-        const gl = canvas.getContext("webgl");
-        if (!gl) {
-          console.error("WebGL not supported or failed to initialize.");
-          return;
-        }
-
         try {
           // Ensure shader name is extracted correctly
           const shaderName = filter.replace("shader_", ""); // Remove the prefix
@@ -333,7 +341,7 @@ const ImageEditPage: React.FC = () => {
         onExport={handleExport}
         onOpenAspectRatioModal={() => setIsAspectRatioModalOpen(true)}
         onOpenWebcamModal={() => setIsWebcamOpen(true)}
-        currentLayerType={currentLayer !== null ? layers[currentLayer].type : null}
+        currentLayerType={currentLayer !== null && currentLayer >= 0 && currentLayer < layers.length ? layers[currentLayer].type : null}
       />
       <div className="flex-grow flex flex-col sm:flex-row-reverse sm:flex-wrap-reverse">
         <div className="flex-grow flex overflow-hidden">
@@ -412,13 +420,33 @@ const ImageEditPage: React.FC = () => {
         }}
       />
       <FilterDrawer
+        mainCanvasRef={canvasRef}
         isOpen={isFilterModalOpen}
         onClose={() => {
           restoreOriginalLayer();
           setIsFilterModalOpen(false);
         }}
-        applyFilter={applyFilter}
-        imageSrc={currentLayer !== null ? layers[currentLayer].image : ""}
+        onApply={(filteredImage, mode) => {
+          if (filteredImage) {
+            if (mode === "applyCurrent" && currentLayer !== null) {
+              updateLayerProp(currentLayer, "image", filteredImage);
+            } else if (mode === "createNew") {
+              addNewLayer({
+                name: "Filtered Layer",
+                index: layers.length,
+                image: filteredImage,
+                offsetX: 0,
+                offsetY: 0,
+                scale: 1,
+                type: "image",
+                visible: true,
+              });
+            }
+            renderCanvas();
+          }
+        }}
+        imageSrc={currentLayer !== null ? layers[currentLayer]?.image || "" : ""}
+        documentSize={documentSize}
       />
 
       {/* <FilterModal
