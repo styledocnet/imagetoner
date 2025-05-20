@@ -1,33 +1,55 @@
 import React, { useEffect, useImperativeHandle, forwardRef, useRef } from "react";
 import { applyShaderFilter } from "../utils/glUtils";
 
-interface WebGLFilterRendererProps {
-  image: string;
-  filter: string;
-  params: any;
-  onRenderComplete: (filteredImage: string) => void;
-  width: number;
-  height: number;
-}
-
-const WebGLFilterRenderer = forwardRef(({ image, filter, params, onRenderComplete, width, height }: WebGLFilterRendererProps, ref) => {
+const WebGLFilterRenderer = forwardRef(({ image, filter, params, onRenderComplete, width, height }, ref) => {
   const canvasRef = useRef<HTMLCanvasElement>(null);
 
   useImperativeHandle(ref, () => ({
-    exportImage: () => canvasRef.current?.toDataURL("image/png") || "",
-    getCanvas: () => canvasRef.current,
+    exportImage: () => {
+      return new Promise<string>((resolve) => {
+        if (!canvasRef.current) {
+          console.error("Canvas reference is null. Cannot export image.");
+          resolve("");
+          return;
+        }
+
+        const dataURL = canvasRef.current.toDataURL("image/png");
+        console.log("Exported Image Data URL:", dataURL); // Debugging log
+        resolve(dataURL);
+      });
+    },
   }));
 
   useEffect(() => {
-    if (!image || !canvasRef.current) return;
+    if (!image || !canvasRef.current) {
+      console.error("Image or canvasRef is not initialized.");
+      return;
+    }
+
     const gl = canvasRef.current.getContext("webgl");
-    if (!gl) return;
+    if (!gl) {
+      console.error("Failed to initialize WebGL context.");
+      return;
+    }
 
     const img = new Image();
+    img.crossOrigin = "anonymous"; // Ensures CORS compatibility
     img.src = image;
+
     img.onload = () => {
-      applyShaderFilter(gl, img, filter, params);
-      onRenderComplete(canvasRef.current!.toDataURL("image/png"));
+      console.log("Image loaded successfully. Applying shader filter...");
+      try {
+        applyShaderFilter(gl, img, filter, params);
+        const dataURL = canvasRef.current!.toDataURL("image/png");
+        console.log("Filtered Image Data URL:", dataURL); // Debugging log
+        onRenderComplete(dataURL);
+      } catch (error) {
+        console.error("Error applying shader filter:", error);
+      }
+    };
+
+    img.onerror = () => {
+      console.error("Failed to load the image for WebGL rendering.");
     };
   }, [image, filter, params]);
 

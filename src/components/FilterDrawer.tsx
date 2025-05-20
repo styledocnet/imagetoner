@@ -22,7 +22,7 @@ const FilterDrawer: React.FC<FilterDrawerProps> = ({ isOpen, onClose, onApply, i
   const { layers, updateLayerProp, addNewLayer, restoreOriginalLayer, currentLayer } = useLayerContext();
 
   const canvasRef = useRef<HTMLCanvasElement>(null);
-  const shaderCanvasRef = useRef<HTMLCanvasElement>(null);
+  const shaderCanvasRef = useRef<any>(null);
 
   useEffect(() => {
     if (shaderFilterParams[filter]) {
@@ -88,55 +88,66 @@ const FilterDrawer: React.FC<FilterDrawerProps> = ({ isOpen, onClose, onApply, i
     }
 
     if (filter.startsWith("shader_")) {
-      // Export the image from the WebGLFilterRenderer
-      const exportedImage = shaderCanvasRef.current?.exportImage();
-      if (!exportedImage) {
-        console.error("Failed to export image from WebGLFilterRenderer.");
-        return;
-      }
-
-      const img = new Image();
-      img.src = exportedImage;
-
-      img.onload = () => {
-        mainCanvas.width = img.width;
-        mainCanvas.height = img.height;
-
-        const ctx = mainCanvas.getContext("2d");
-        if (!ctx) {
-          console.error("2D context not found for main canvas.");
+      try {
+        // Wait for the exported image from WebGLFilterRenderer
+        const exportedImage = await shaderCanvasRef.current.exportImage();
+        if (!exportedImage) {
+          console.error("Failed to export image from WebGLFilterRenderer.");
           return;
         }
 
-        ctx.clearRect(0, 0, mainCanvas.width, mainCanvas.height);
-        ctx.drawImage(img, 0, 0);
+        const img = new Image();
+        img.crossOrigin = "anonymous"; // Required for drawing cross-origin images
+        img.src = exportedImage;
 
-        const finalImage = mainCanvas.toDataURL("image/png");
+        img.onload = () => {
+          const ctx = mainCanvas.getContext("2d");
+          if (!ctx) {
+            console.error("2D context not found for main canvas.");
+            return;
+          }
 
-        if (mode === "applyCurrent") {
-          // Update the current layer with the exported image
-          updateLayerProp(currentLayer, "image", finalImage);
-        } else if (mode === "createNew") {
-          // Add a new layer with the exported image
-          addNewLayer({
-            name: `${filter} Layer`,
-            index: layers.length,
-            image: finalImage,
-            offsetX: 0,
-            offsetY: 0,
-            scale: 1,
-            type: "image",
-            visible: true,
-          });
-        }
+          // Resize and clear the main canvas
+          mainCanvas.width = img.width;
+          mainCanvas.height = img.height;
+          ctx.clearRect(0, 0, mainCanvas.width, mainCanvas.height);
 
-        onApply(finalImage, mode);
-        onClose();
-      };
+          // Draw the exported image onto the main canvas
+          ctx.drawImage(img, 0, 0);
 
-      img.onerror = () => {
-        console.error("Failed to load exported image for shader filter.");
-      };
+          // Export the final image from the main canvas
+          const finalImage = mainCanvas.toDataURL("image/png");
+          console.log("Final Image Data URL:", finalImage); // Debugging log
+
+          // Update the layer only after the image is fully drawn
+          if (mode === "applyCurrent") {
+            console.log("Updating the current layer with the final image.");
+            updateLayerProp(currentLayer, "image", finalImage);
+          } else if (mode === "createNew") {
+            console.log("Adding a new layer with the final image.");
+            addNewLayer({
+              name: `${filter} Layer`,
+              index: layers.length,
+              image: finalImage,
+              offsetX: 0,
+              offsetY: 0,
+              scale: 1,
+              type: "image",
+              visible: true,
+            });
+          }
+
+          // Notify parent and close the drawer
+          onApply(finalImage, mode);
+          onClose();
+        };
+
+        img.onerror = () => {
+          console.error("Failed to load exported image for shader filter.");
+        };
+      } catch (error) {
+        console.error("Error during shader filter application:", error);
+      }
     } else {
       // Handle canvas filters
       const mainCtx = mainCanvas.getContext("2d");
