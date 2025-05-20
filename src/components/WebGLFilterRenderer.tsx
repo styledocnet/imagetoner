@@ -47,7 +47,7 @@ const WebGLFilterRenderer: React.FC<WebGLFilterRendererProps> = ({ image, filter
       // Immediate update after applying filter
       const filteredImage = canvasRef.current.toDataURL("image/png");
       console.log("Filtered image generated:", filteredImage);
-      onRenderComplete(filteredImage);
+      onRenderComplete(filteredImage); // Pass the filtered image to the parent component
     };
 
     texture.onerror = () => {
