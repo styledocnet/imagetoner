@@ -1,4 +1,4 @@
-import React, { useRef, useEffect } from "react";
+import React, { useRef, useEffect, forwardRef, useImperativeHandle } from "react";
 import { applyShaderFilter } from "../utils/glUtils";
 
 interface WebGLFilterRendererProps {
@@ -10,8 +10,10 @@ interface WebGLFilterRendererProps {
   height: number;
 }
 
-const WebGLFilterRenderer: React.FC<WebGLFilterRendererProps> = ({ image, filter, params, onRenderComplete, width, height }) => {
+const WebGLFilterRenderer = forwardRef<HTMLCanvasElement, WebGLFilterRendererProps>(({ image, filter, params, onRenderComplete, width, height }, ref) => {
   const canvasRef = useRef<HTMLCanvasElement>(null);
+
+  useImperativeHandle(ref, () => canvasRef.current as HTMLCanvasElement);
 
   useEffect(() => {
     if (!image) {
@@ -44,10 +46,10 @@ const WebGLFilterRenderer: React.FC<WebGLFilterRendererProps> = ({ image, filter
         return;
       }
 
-      // Immediate update after applying filter
+      // Generate the filtered image as a data URL
       const filteredImage = canvasRef.current.toDataURL("image/png");
-      console.log("Filtered image generated:", filteredImage);
-      onRenderComplete(filteredImage); // Pass the filtered image to the parent component
+      console.log("onRenderComplete: Filtered image generated");
+      onRenderComplete(filteredImage);
     };
 
     texture.onerror = () => {
@@ -55,7 +57,20 @@ const WebGLFilterRenderer: React.FC<WebGLFilterRendererProps> = ({ image, filter
     };
   }, [image, filter, params, onRenderComplete]);
 
-  return <canvas ref={canvasRef} width={width} height={height} />;
-};
+  return (
+    <canvas
+      ref={canvasRef}
+      width={width}
+      height={height}
+      style={{
+        display: "block",
+        maxWidth: "100%",
+        maxHeight: "200px",
+        border: "1px solid #ccc",
+        borderRadius: "4px",
+      }}
+    />
+  );
+});
 
 export default WebGLFilterRenderer;
