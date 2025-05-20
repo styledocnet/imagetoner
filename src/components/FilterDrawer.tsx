@@ -88,45 +88,55 @@ const FilterDrawer: React.FC<FilterDrawerProps> = ({ isOpen, onClose, onApply, i
     }
 
     if (filter.startsWith("shader_")) {
-      // Access the WebGL canvas from WebGLFilterRenderer
-      const shaderCanvas = shaderCanvasRef.current;
-      if (!shaderCanvas) {
-        console.error("Shader canvas not found.");
+      // Export the image from the WebGLFilterRenderer
+      const exportedImage = shaderCanvasRef.current?.exportImage();
+      if (!exportedImage) {
+        console.error("Failed to export image from WebGLFilterRenderer.");
         return;
       }
 
-      const mainCtx = mainCanvas.getContext("2d");
-      if (!mainCtx) {
-        console.error("2D context not found for the main canvas.");
-        return;
-      }
+      const img = new Image();
+      img.src = exportedImage;
 
-      // Draw the WebGL canvas output onto the mainCanvas
-      mainCanvas.width = shaderCanvas.width;
-      mainCanvas.height = shaderCanvas.height;
+      img.onload = () => {
+        mainCanvas.width = img.width;
+        mainCanvas.height = img.height;
 
-      mainCtx.clearRect(0, 0, mainCanvas.width, mainCanvas.height);
-      mainCtx.drawImage(shaderCanvas, 0, 0);
+        const ctx = mainCanvas.getContext("2d");
+        if (!ctx) {
+          console.error("2D context not found for main canvas.");
+          return;
+        }
 
-      const appliedImage = mainCanvas.toDataURL("image/png");
+        ctx.clearRect(0, 0, mainCanvas.width, mainCanvas.height);
+        ctx.drawImage(img, 0, 0);
 
-      if (mode === "applyCurrent") {
-        updateLayerProp(currentLayer, "image", appliedImage);
-      } else if (mode === "createNew") {
-        addNewLayer({
-          name: `${filter} Layer`,
-          index: layers.length,
-          image: appliedImage,
-          offsetX: 0,
-          offsetY: 0,
-          scale: 1,
-          type: "image",
-          visible: true,
-        });
-      }
+        const finalImage = mainCanvas.toDataURL("image/png");
 
-      onApply(appliedImage, mode);
-      onClose();
+        if (mode === "applyCurrent") {
+          // Update the current layer with the exported image
+          updateLayerProp(currentLayer, "image", finalImage);
+        } else if (mode === "createNew") {
+          // Add a new layer with the exported image
+          addNewLayer({
+            name: `${filter} Layer`,
+            index: layers.length,
+            image: finalImage,
+            offsetX: 0,
+            offsetY: 0,
+            scale: 1,
+            type: "image",
+            visible: true,
+          });
+        }
+
+        onApply(finalImage, mode);
+        onClose();
+      };
+
+      img.onerror = () => {
+        console.error("Failed to load exported image for shader filter.");
+      };
     } else {
       // Handle canvas filters
       const mainCtx = mainCanvas.getContext("2d");
