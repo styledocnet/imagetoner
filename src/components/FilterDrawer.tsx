@@ -91,6 +91,8 @@ const FilterDrawer: React.FC<FilterDrawerProps> = ({ isOpen, onClose, onApply, i
       try {
         // Wait for the exported image from WebGLFilterRenderer
         const exportedImage = await shaderCanvasRef.current.exportImage();
+        console.log("Exported Image Data URL:", exportedImage); // Debugging
+
         if (!exportedImage) {
           console.error("Failed to export image from WebGLFilterRenderer.");
           return;
@@ -101,30 +103,28 @@ const FilterDrawer: React.FC<FilterDrawerProps> = ({ isOpen, onClose, onApply, i
         img.src = exportedImage;
 
         img.onload = () => {
+          console.log("Image loaded successfully. Drawing on main canvas..."); // Debugging
+
           const ctx = mainCanvas.getContext("2d");
           if (!ctx) {
             console.error("2D context not found for main canvas.");
             return;
           }
 
-          // Resize and clear the main canvas
           mainCanvas.width = img.width;
           mainCanvas.height = img.height;
           ctx.clearRect(0, 0, mainCanvas.width, mainCanvas.height);
 
-          // Draw the exported image onto the main canvas
           ctx.drawImage(img, 0, 0);
 
-          // Export the final image from the main canvas
           const finalImage = mainCanvas.toDataURL("image/png");
-          console.log("Final Image Data URL:", finalImage); // Debugging log
+          console.log("Final Image Data URL:", finalImage); // Debugging
 
-          // Update the layer only after the image is fully drawn
           if (mode === "applyCurrent") {
-            console.log("Updating the current layer with the final image.");
+            console.log("Updating the current layer with the final image."); // Debugging
             updateLayerProp(currentLayer, "image", finalImage);
           } else if (mode === "createNew") {
-            console.log("Adding a new layer with the final image.");
+            console.log("Adding a new layer with the final image."); // Debugging
             addNewLayer({
               name: `${filter} Layer`,
               index: layers.length,
@@ -136,8 +136,6 @@ const FilterDrawer: React.FC<FilterDrawerProps> = ({ isOpen, onClose, onApply, i
               visible: true,
             });
           }
-
-          // Notify parent and close the drawer
           onApply(finalImage, mode);
           onClose();
         };
@@ -149,7 +147,7 @@ const FilterDrawer: React.FC<FilterDrawerProps> = ({ isOpen, onClose, onApply, i
         console.error("Error during shader filter application:", error);
       }
     } else {
-      // Handle canvas filters
+      // canvas filters
       const mainCtx = mainCanvas.getContext("2d");
       if (!mainCtx) {
         console.error("2D context not found for main canvas.");

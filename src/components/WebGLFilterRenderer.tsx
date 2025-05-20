@@ -6,17 +6,9 @@ const WebGLFilterRenderer = forwardRef(({ image, filter, params, onRenderComplet
 
   useImperativeHandle(ref, () => ({
     exportImage: () => {
-      return new Promise<string>((resolve) => {
-        if (!canvasRef.current) {
-          console.error("Canvas reference is null. Cannot export image.");
-          resolve("");
-          return;
-        }
-
-        const dataURL = canvasRef.current.toDataURL("image/png");
-        console.log("Exported Image Data URL:", dataURL); // Debugging log
-        resolve(dataURL);
-      });
+      const dataURL = canvasRef.current?.toDataURL("image/png") || "";
+      console.log("exportImage() called:", !!dataURL);
+      return dataURL;
     },
   }));
 
