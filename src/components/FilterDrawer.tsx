@@ -3,81 +3,7 @@ import { XMarkIcon } from "@heroicons/react/24/outline";
 import { useLayerContext } from "../context/LayerContext";
 import WebGLFilterRenderer from "./WebGLFilterRenderer";
 import { applyFilterToCanvas } from "../utils/filterUtils";
-
-const shaderFilterParams = {
-  shader_vignette: { strength: 0.5, sizeFactor: 1, color: "#FFFFFF" },
-  shader_posterize: { levels: 4, fade: 0.5 },
-  shader_solarize: { threshold: 0.5, fade: 0.5 },
-  shader_mirror: { flipX: false, flipY: false, fade: 0.5 },
-  shader_blur: { radius: 0.01, fade: 0.5 },
-  shader_tilt_blur: { radius: 0.01, fade: 0.5 },
-  shader_dof: { focusDepth: 0.5, threshold: 0.1, blurRadius: 0.02 },
-  shader_grayscale: { intensity: 0.5 },
-  shader_tritone: {
-    shadowColor: "#000000",
-    midColor: "#888888",
-    highColor: "#FFFFFF",
-    fade: 0.5,
-  },
-  shader_quadtone: {
-    shadowColor: "#000000",
-    midShadowColor: "#444444",
-    midHighlightColor: "#888888",
-    highColor: "#FFFFFF",
-    fade: 0.5,
-  },
-  shader_triangulate: {
-    points: 300,
-    // desc_points: "Base number of points (density of triangles)",
-    variation: 0.3,
-    // desc_variation: "Randomization of triangle placement",
-    cutoff: 5,
-    // desc_cutoff: "Color matching precision",
-    edgeThreshold: 0.5, // Sensitivity to edges
-    // desc_edgeThreshold: "Sensitivity to edges",
-    blendAmount: 0.5,
-    // desc_blendAmount: "Mixing original and stylized color",
-    triangleSizeScaling: 1.0,
-    // desc_triangleSizeScaling: "Scale factor for triangle sizes",
-  },
-  shader_polygonate: {
-    points: 300,
-    mutations: 2,
-    variation: 0.3,
-    population: 400,
-    cutoff: 5,
-    block: 5,
-  },
-  shader_hexanate: {
-    points: 300,
-    mutations: 2,
-    variation: 0.3,
-    population: 400,
-    cutoff: 5,
-    block: 5,
-  },
-};
-
-const canvasFilterParams = {
-  vignette: { colors: 128, fade: 0.5 },
-  mono: { colors: 128, fade: 0.5 },
-  duotone: { color1: "#ffeeaa", color2: "aaeeff" },
-  tritone: { color1: "#ffeeaa", color2: "aaeeff", color3: "aaffee" },
-  quadtone: { color1: "#ffeeaa", color2: "aaee00", color3: "aaffee", color4: "ff22ee" },
-  grayscale: { fade: 0.5 },
-  sepia: { fade: 0.5 },
-  blur: { fade: 0.5 },
-  // todo unimplement
-  quantize: { colors: 128, fade: 0.5 },
-  rotate: { degrees: 45, fade: 0.5 },
-  autocontrast: { cutoff: 0, fade: 0.5 },
-  equalize: { fade: 0.5 },
-  brightness: { factor: 50, fade: 0.5 },
-  contrast: { factor: 50, fade: 0.5 },
-  sharpness: { factor: 50, fade: 0.5 },
-  gaussian_blur: { radius: 2, fade: 0.5 },
-  unsharp_mask: { radius: 2, percent: 150, threshold: 3, fade: 0.5 },
-};
+import { canvasFilterParams, shaderFilterParams } from "../utils/filterParams";
 
 interface FilterDrawerProps {
   isOpen: boolean;
@@ -93,7 +19,7 @@ const FilterDrawer: React.FC<FilterDrawerProps> = ({ isOpen, onClose, onApply, i
   const [params, setParams] = useState<any>(shaderFilterParams[filter]);
   const [filteredImage, setFilteredImage] = useState<string | null>(null);
 
-  const { updateLayerProp, restoreOriginalLayer, currentLayer } = useLayerContext();
+  const { layers, updateLayerProp, addNewLayer, restoreOriginalLayer, currentLayer } = useLayerContext();
 
   // Ref for the 2D canvas (used for non-shader filters)
   const canvasRef = useRef<HTMLCanvasElement>(null);
@@ -174,9 +100,9 @@ const FilterDrawer: React.FC<FilterDrawerProps> = ({ isOpen, onClose, onApply, i
       if (mode === "applyCurrent") {
         updateLayerProp(currentLayer, "image", filteredImage);
       } else if (mode === "createNew") {
-        updateLayerProp({
+        addNewLayer({
           name: `${filter} Layer`,
-          index: layers.length,
+          index: layers.length, // Fix: use layers from context
           image: filteredImage,
           offsetX: 0,
           offsetY: 0,
@@ -197,11 +123,38 @@ const FilterDrawer: React.FC<FilterDrawerProps> = ({ isOpen, onClose, onApply, i
     }
   }, [filter, params, imageSrc, isOpen]);
 
-  const handleParamChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const { name, value, type, checked } = e.target;
-    const newValue = type === "checkbox" ? checked : type === "number" ? parseFloat(value) : value;
-    setParams({ ...params, [name]: newValue });
+  const handleParamChange = (paramName: string, value: any) => {
+    setParams((prevParams: any) => ({
+      ...prevParams,
+      [paramName]: value,
+    }));
   };
+
+  const renderInput = (paramName: string, param: FilterParameter) => {
+    switch (param.type) {
+      case "number":
+        return (
+          <input
+            type="range"
+            name={paramName}
+            min={param.min}
+            max={param.max}
+            step={param.step}
+            value={params[paramName]}
+            onChange={(e) => handleParamChange(paramName, parseFloat(e.target.value))}
+            className="w-full"
+          />
+        );
+      case "boolean":
+        return <input type="checkbox" name={paramName} checked={params[paramName]} onChange={(e) => handleParamChange(paramName, e.target.checked)} />;
+      case "color":
+        return <input type="color" name={paramName} value={params[paramName]} onChange={(e) => handleParamChange(paramName, e.target.value)} />;
+      default:
+        return null;
+    }
+  };
+
+  const currentParams = shaderFilterParams[filter] || canvasFilterParams[filter] || {};
 
   return (
     <div
@@ -239,59 +192,50 @@ const FilterDrawer: React.FC<FilterDrawerProps> = ({ isOpen, onClose, onApply, i
             ))}
           </optgroup>
         </select>
-        {Object.keys(params).map((param) => (
-          <div key={param} className="mb-3">
-            <label className="block font-medium text-sm mb-1 capitalize text-gray-500">{param}</label>
-            <input
-              type={typeof params[param] === "boolean" ? "checkbox" : typeof params[param] === "number" ? "range" : param.includes("color") ? "color" : "text"}
-              name={param}
-              min={typeof params[param] === "number" ? "0" : undefined}
-              max={typeof params[param] === "number" ? "1" : undefined}
-              step={typeof params[param] === "number" ? "0.01" : undefined}
-              value={typeof params[param] === "number" || typeof params[param] === "string" ? params[param] : undefined}
-              checked={typeof params[param] === "boolean" ? params[param] : undefined}
-              onChange={handleParamChange}
-              className="w-full"
-            />
+        {Object.entries(currentParams).map(([paramName, param]) => (
+          <div key={paramName} className="mb-3">
+            <label className="block font-medium text-sm mb-1 capitalize text-gray-500">{param.desc}</label>
+            {renderInput(paramName, param)}
           </div>
         ))}
-        <div className="mt-4">
-          <div
-            style={{
-              width: "100%",
-              height: "150px",
-              overflow: "hidden",
-              display: "flex",
-              justifyContent: "center",
-              alignItems: "center",
-              border: "1px solid #ccc",
-              borderRadius: "4px",
-            }}
-          >
-            {" "}
-            {/* Scaled Preview */}
-            {filter.startsWith("shader_") ? (
-              <WebGLFilterRenderer
-                image={imageSrc}
-                filter={filter}
-                params={params}
-                width={documentSize.width}
-                height={documentSize.height}
-                onRenderComplete={(filteredImage) => setFilteredImage(filteredImage)}
-              />
-            ) : (
-              <canvas
-                ref={canvasRef}
-                style={{
-                  display: "block",
-                  maxWidth: "100%",
-                  maxHeight: "200px",
-                  border: "1px solid #ccc",
-                  borderRadius: "4px",
-                }}
-              />
-            )}
-          </div>
+      </div>
+
+      <div className="mt-4">
+        <div
+          style={{
+            width: "100%",
+            height: "150px",
+            overflow: "hidden",
+            display: "flex",
+            justifyContent: "center",
+            alignItems: "center",
+            border: "1px solid #ccc",
+            borderRadius: "4px",
+          }}
+        >
+          {" "}
+          {/* Scaled Preview */}
+          {filter.startsWith("shader_") ? (
+            <WebGLFilterRenderer
+              image={imageSrc}
+              filter={filter}
+              params={params}
+              width={documentSize.width}
+              height={documentSize.height}
+              onRenderComplete={(filteredImage) => setFilteredImage(filteredImage)}
+            />
+          ) : (
+            <canvas
+              ref={canvasRef}
+              style={{
+                display: "block",
+                maxWidth: "100%",
+                maxHeight: "200px",
+                border: "1px solid #ccc",
+                borderRadius: "4px",
+              }}
+            />
+          )}
         </div>
       </div>
       <div className="p-4 border-t dark:border-gray-700 flex justify-end gap-2">
