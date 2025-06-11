@@ -1,10 +1,4 @@
-import React, {
-  createContext,
-  useContext,
-  useState,
-  useEffect,
-  ReactNode,
-} from "react";
+import React, { createContext, useContext, useState, useEffect, ReactNode } from "react";
 
 interface RouterContextType {
   currentRoute: string;
@@ -14,9 +8,7 @@ interface RouterContextType {
 const RouterContext = createContext<RouterContextType | undefined>(undefined);
 
 const RouterProvider: React.FC<{ children: ReactNode }> = ({ children }) => {
-  const [currentRoute, setCurrentRoute] = useState(
-    window.location.pathname + window.location.search || "/dashboard",
-  );
+  const [currentRoute, setCurrentRoute] = useState(window.location.pathname + window.location.search || "/dashboard");
 
   const navigate = (route: string) => {
     window.history.pushState({}, "", route);
@@ -29,9 +21,7 @@ const RouterProvider: React.FC<{ children: ReactNode }> = ({ children }) => {
       console.log("popstate");
       console.log("window.location.pathname: " + window.location.pathname);
       console.log(window.location);
-      setCurrentRoute(
-        window.location.pathname + window.location.search || "/dashboard",
-      );
+      setCurrentRoute(window.location.pathname + window.location.search || "/dashboard");
     };
 
     window.addEventListener("popstate", onPopState);
@@ -41,11 +31,7 @@ const RouterProvider: React.FC<{ children: ReactNode }> = ({ children }) => {
     };
   }, []);
 
-  return (
-    <RouterContext.Provider value={{ currentRoute, navigate }}>
-      {children}
-    </RouterContext.Provider>
-  );
+  return <RouterContext.Provider value={{ currentRoute, navigate }}>{children}</RouterContext.Provider>;
 };
 
 // hook to use the router context
@@ -57,24 +43,20 @@ const useRouter = () => {
   return context;
 };
 
-// Route component
-const Route: React.FC<{ path: string; component: ReactNode }> = ({
-  path,
-  component,
-}) => {
+const Route: React.FC<{ path: string; component: ReactNode }> = ({ path, component }) => {
   const { currentRoute } = useRouter();
   // TODO mount component and give queryString as kv props if they matched the typed interface
   const routeWithoutSearch = currentRoute.split("?")[0];
   return routeWithoutSearch === path ? <>{component}</> : null;
 };
 
-// Create the Link component
-const Link: React.FC<{ to: string; children: ReactNode }> = ({
-  to,
-  children,
-}) => {
+const Link: React.FC<{ to: string } & React.ButtonHTMLAttributes<HTMLButtonElement>> = ({ to, children, className = "", ...rest }) => {
   const { navigate } = useRouter();
-  return <button onClick={() => navigate(to)}>{children}</button>;
+  return (
+    <button onClick={() => navigate(to)} className={className} {...rest}>
+      {children}
+    </button>
+  );
 };
 
 export { RouterProvider, Route, Link, useRouter };
