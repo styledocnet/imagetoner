@@ -1,3 +1,27 @@
+export type BrandColorRole = "primary" | "secondary" | "accent" | "other";
+
+export interface BrandColor {
+  hex: string;
+  role: BrandColorRole;
+  name?: string;
+}
+
+export interface BrandLogo {
+  url: string; // File URL or base64 string
+  description?: string;
+}
+
+export interface BrandStyle {
+  id: number;
+  name: string;
+  description?: string;
+  teaser?: string;
+  colors: BrandColor[];
+  logos: BrandLogo[];
+  createdAt?: string;
+  updatedAt?: string;
+}
+
 export interface Layer {
   name: string;
   index: number;
@@ -30,6 +54,8 @@ export interface ImageDocument {
   id?: number;
   name: string;
   layers: Layer[];
+  createdAt?: string;
+  updatedAt?: string;
 }
 
 export type FilterType =

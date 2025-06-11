@@ -120,6 +120,12 @@ export const applyShaderFilter = async (gl: WebGLRenderingContext, image: HTMLIm
     } else if (Array.isArray(value) && value.length === 3) {
       gl.uniform3fv(location, new Float32Array(value));
     }
+
+    if (typeof value === "boolean") {
+      gl.uniform1i(location, value ? 1 : 0);
+    } else if (typeof value === "number") {
+      gl.uniform1f(location, value);
+    }
   }
 
   // Draw the full-screen quad

@@ -6,6 +6,7 @@ import MainNav from "./components/nav/MainNav";
 import PhotosPage from "./pages/PhotosPage";
 // import ImageFilterPage from "./pages/ImageFilterPage";
 import ImageEditPage from "./pages/ImageEditPage";
+import StylePage from "./pages/StylePage";
 // import ImageStyleTransferPage from "./pages/ImageStyleTransferPage";
 import { LayerProvider } from "./context/LayerContext";
 
@@ -34,6 +35,7 @@ const AppContent: React.FC = () => {
         <Route path="image_edit" component={<ImageEditPage />} />
         <Route path="/image-edit/:id" component={<ImageEditPage />} />
         {/* <Route path="image_styletransfer" component={<ImageStyleTransferPage />} /> */}
+        <Route path="style_page" component={<StylePage />} />
         <Route path="photos" component={<PhotosPage />} />
         <Route path="not_found" component={<NotFound />} />
       </main>
