@@ -1,6 +1,6 @@
 import { Layer } from "../types";
 
-export const renderLayers = (ctx: CanvasRenderingContext2D, layers: Layer[], width: number, height: number) => {
+export const renderLayers = async (ctx: CanvasRenderingContext2D, layers: Layer[], width: number, height: number): Promise<void> => {
   // const sortedLayers = [...layers].sort((a, b) => a.index - b.index);
 
   const drawLayer = (layer: Layer) => {
@@ -17,6 +17,8 @@ export const renderLayers = (ctx: CanvasRenderingContext2D, layers: Layer[], wid
             ctx.drawImage(img, xPos, yPos, imgWidth, imgHeight);
             resolve();
           };
+          // Also handle img.onerror to resolve (optional, for robustness)
+          img.onerror = () => resolve();
         });
       } else if (layer.type === "text") {
         ctx.font = `${layer.fontSize}px ${layer.fontFamily}`;
@@ -28,11 +30,7 @@ export const renderLayers = (ctx: CanvasRenderingContext2D, layers: Layer[], wid
     return Promise.resolve();
   };
 
-  const drawLayersSequentially = async () => {
-    for (const layer of layers) {
-      await drawLayer(layer);
-    }
-  };
-
-  drawLayersSequentially();
+  for (const layer of layers) {
+    await drawLayer(layer);
+  }
 };

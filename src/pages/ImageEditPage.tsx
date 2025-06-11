@@ -142,13 +142,13 @@ const ImageEditPage: React.FC = () => {
   //   }
   // };
 
-  const handleExport = () => {
+  const handleExport = async () => {
     const originalCanvas = document.createElement("canvas");
     const originalCtx = originalCanvas.getContext("2d");
     if (originalCtx) {
       originalCanvas.width = documentSize.width;
       originalCanvas.height = documentSize.height;
-      renderLayers(originalCtx, layers, originalCanvas.width, originalCanvas.height);
+      await renderLayers(originalCtx, layers, originalCanvas.width, originalCanvas.height);
       const link = document.createElement("a");
       link.href = originalCanvas.toDataURL("image/png");
       link.download = "exported-image.png";
