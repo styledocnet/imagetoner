@@ -11,8 +11,6 @@ type NavItem = {
 const navItems: NavItem[] = [
   { name: "Dashboard", value: "dashboard", icon: RectangleGroupIcon },
   { name: "Photos", value: "photos", icon: PhotoIcon },
-  // { name: "Filter", value: "image_filter" },
-  // { name: "StyleTransfer", value: "image_styletransfer", icon: DivideIcon },
   { name: "ImageEdit", value: "image_edit", icon: SquaresPlusIcon },
 ];
 
@@ -31,7 +29,7 @@ const MainNav: React.FC = () => {
   return (
     <div className="relative">
       <button className="group focus:outline-none p-2 rounded-full bg-gray-700 text-white dark:bg-gray-200 dark:text-black" onClick={toggleNav}>
-        <Bars3Icon className="h-6 w-6 group-hover:animate-bounce" />
+        <Bars3Icon className="h-6 w-6 group-active:animate-bounce" />
       </button>
       <nav
         className={`absolute top-12 -left-1 w-48 p-4 rounded-lg bg-white dark:bg-gray-800 shadow-lg transition-transform transform ${
@@ -40,18 +38,18 @@ const MainNav: React.FC = () => {
         onClick={toggleNav}
       >
         {navItems.map((item) => (
-          <div>
-            <Link key={item.value} to={item.value}>
-              <button
-                className={`block w-full text-left px-4 py-2 rounded-md text-sm font-medium mb-2 ${
+          <div key={item.value}>
+            <Link
+              to={item.value}
+              className={`inline-flex items-center gap-2 px-3 py-2 rounded transition
+                ${
                   currentRoute === item.value
                     ? "bg-gray-500 text-red-300 dark:bg-gray-400 dark:text-gray-100"
                     : "bg-gray-200 text-gray-800 dark:bg-gray-700 dark:text-gray-200 hover:bg-gray-300 dark:hover:bg-gray-600"
                 }`}
-              >
-                <item.icon className="h-5 w-5 mr-2" />
-                {item.name}
-              </button>
+            >
+              <item.icon className="h-5 w-5 mr-2 inline-flex" />
+              {item.name}
             </Link>
           </div>
         ))}
