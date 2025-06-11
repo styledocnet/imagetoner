@@ -132,53 +132,36 @@ const FilterDrawer: React.FC<FilterDrawerProps> = ({ isOpen, onClose, onApply, i
 
     if (filter.startsWith("shader_")) {
       try {
-        // Export a full-size filtered image on demand
-        const exportedDataUrl = await exportShaderFilteredImage();
-        if (!exportedDataUrl || !exportedDataUrl.startsWith("data:image/png")) {
-          console.error("[DEBUG] Exported data URL is invalid or empty.", exportedDataUrl?.slice(0, 128));
+        const canvas = previewShaderCanvasRef.current?.getCanvas?.();
+        if (!canvas) {
+          console.error("[DEBUG] Shader preview canvas not available!");
+          return;
         }
-        const img = new Image();
-        img.crossOrigin = "anonymous";
-        img.src = exportedDataUrl;
-        img.onload = () => {
-          console.log("[DEBUG] Exported shader image loaded for main canvas:", img.width, img.height);
-          const ctx = mainCanvas.getContext("2d");
-          if (!ctx) {
-            console.error("[DEBUG] 2D context not found for main canvas.");
-            return;
-          }
-          mainCanvas.width = img.width;
-          mainCanvas.height = img.height;
-          ctx.clearRect(0, 0, mainCanvas.width, mainCanvas.height);
-          ctx.drawImage(img, 0, 0);
+        // Optionally force a synchronous re-render here if needed
+        // const ctx = canvas.getContext("webgl"); ctx.flush(); ctx.finish && ctx.finish();
+        const imageDataUrl = await canvas.toDataURL("image/png");
+        if (!imageDataUrl || !imageDataUrl.startsWith("data:image/png")) {
+          console.error("[DEBUG] Shader canvas export failed or empty.");
+          return;
+        }
 
-          // Wait for the next animation frame to ensure the draw is flushed
-          requestAnimationFrame(() => {
-            const finalImageURL = mainCanvas.toDataURL("image/png");
-            console.log("[DEBUG] Final imageURL to update layer:", finalImageURL.slice(0, 128));
-            if (mode === "applyCurrent") {
-              updateLayerProp(currentLayer, "image", finalImageURL);
-              console.log("[DEBUG] Updated current layer with shader filter image.");
-            } else if (mode === "createNew") {
-              addNewLayer({
-                name: `${filter} Layer`,
-                index: layers.length,
-                image: finalImageURL,
-                offsetX: 0,
-                offsetY: 0,
-                scale: 1,
-                type: "image",
-                visible: true,
-              });
-              console.log("[DEBUG] Added new layer with shader filter image.");
-            }
-            onApply(finalImageURL, mode);
-            onClose();
+        if (mode === "applyCurrent") {
+          updateLayerProp(currentLayer, "image", imageDataUrl);
+        } else if (mode === "createNew") {
+          addNewLayer({
+            name: `${filter} Layer`,
+            index: layers.length,
+            image: imageDataUrl,
+            offsetX: 0,
+            offsetY: 0,
+            scale: 1,
+            type: "image",
+            visible: true,
           });
-        };
-        img.onerror = () => {
-          console.error("[DEBUG] Failed to load exported image for shader filter.", exportedDataUrl?.slice(0, 128));
-        };
+        }
+        onApply(imageDataUrl, mode);
+        onClose();
+        return;
       } catch (error) {
         console.error("[DEBUG] Error during shader filter application:", error);
       }
