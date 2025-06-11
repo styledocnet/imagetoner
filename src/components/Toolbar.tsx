@@ -15,6 +15,7 @@ const Toolbar: React.FC<ToolbarProps> = ({
   onImportImage,
   onFillBackground,
   onApplyFilter,
+  onApplyRemBg,
   onExport,
   onOpenAspectRatioModal,
   onOpenWebcamModal,
@@ -37,6 +38,9 @@ const Toolbar: React.FC<ToolbarProps> = ({
             </button>
             <button className="bg-purple-500 hover:bg-purple-600 py-2 px-4 rounded-md transition" onClick={onApplyFilter}>
               Filter
+            </button>
+            <button className="bg-purple-500 hover:bg-purple-600 py-2 px-4 rounded-md transition" onClick={onApplyRemBg}>
+              Remove BG
             </button>
           </>
         )}

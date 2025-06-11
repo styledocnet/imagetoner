@@ -4,7 +4,6 @@ import { ArrowDownIcon } from "@heroicons/react/24/outline";
 import { useGesture } from "@use-gesture/react";
 import FillImageModal from "../components/FillImageModal";
 import AspectRatioModal from "../components/AspectRatioModal";
-// import FilterModal from "../components/FilterModal";
 import LayerSidebar from "../components/LayerSidebar";
 import AddLayerModal from "../components/AddLayerModal";
 import WebCamInputModal from "../components/WebCamInputModal";
@@ -16,7 +15,7 @@ import Toolbar from "../components/Toolbar";
 import { useLayerContext } from "../context/LayerContext";
 import FilterDrawer from "../components/FilterDrawer";
 import { applyShaderFilter, loadShaderSource } from "../utils/glUtils";
-import WebGLFilterRenderer from "../components/WebGLFilterRenderer";
+import { removeBackground } from "../utils/removeBackground";
 
 const ImageEditPage: React.FC = () => {
   const { layers, setLayers, currentLayer, setCurrentLayer, restoreOriginalLayer, updateLayerProp, addNewLayer, removeLayer, moveLayerUp, moveLayerDown } =
@@ -25,6 +24,8 @@ const ImageEditPage: React.FC = () => {
   const [isFillModalOpen, setIsFillModalOpen] = useState(false);
   const [isAspectRatioModalOpen, setIsAspectRatioModalOpen] = useState(false);
   const [isFilterModalOpen, setIsFilterModalOpen] = useState(false);
+  const [isRemBgModalOpen, setIsRemBgModalOpen] = useState(false);
+  const [isProcessing, setIsProcessing] = useState(false);
   const [isAddLayerModalOpen, setIsAddLayerModalOpen] = useState(false);
   const [isSidebarOpen, setSidebarOpen] = useState(true);
   const [isWebcamOpen, setIsWebcamOpen] = useState(false);
@@ -118,6 +119,27 @@ const ImageEditPage: React.FC = () => {
     setAspectRatio(newAspectRatio);
     if (newAspectRatio) {
       setDocumentSize(updateDocumentSizeWithAspectRatio(documentSize.width));
+    }
+  };
+
+  const handleRemoveBackground = async () => {
+    if (currentLayer === null || !layers[currentLayer]?.image) {
+      alert("Please select a layer with an image.");
+      return;
+    }
+
+    setIsProcessing(true);
+
+    try {
+      const newImage = await removeBackground(layers[currentLayer].image!);
+      updateLayerProp(currentLayer, "image", newImage);
+      alert("Background removed successfully!");
+    } catch (error) {
+      console.error("Failed to remove background:", error);
+      alert("An error occurred while removing the background.");
+    } finally {
+      setIsProcessing(false);
+      setIsRemBgModalOpen(false);
     }
   };
 
@@ -338,6 +360,7 @@ const ImageEditPage: React.FC = () => {
         onImportImage={handleFileChange}
         onFillBackground={() => setIsFillModalOpen(true)}
         onApplyFilter={() => setIsFilterModalOpen(true)}
+        onApplyRemBg={() => setIsRemBgModalOpen(true)}
         onExport={handleExport}
         onOpenAspectRatioModal={() => setIsAspectRatioModalOpen(true)}
         onOpenWebcamModal={() => setIsWebcamOpen(true)}

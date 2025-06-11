@@ -26,6 +26,9 @@ const Webcam = forwardRef(({ isOpen, audio, screenshotFormat, width, height }: W
     },
     stopWebcam: () => {
       console.log("stopWebcam()");
+      if (MediaRecorder.state === "recording") {
+        mediaRecorder.pause();
+      }
       if (streamRef.current) {
         streamRef.current.getTracks().forEach((track) => track.stop());
         streamRef.current = null;
@@ -33,12 +36,18 @@ const Webcam = forwardRef(({ isOpen, audio, screenshotFormat, width, height }: W
       if (videoRef.current) {
         videoRef.current.srcObject = null;
       }
+      // mediaRecorder.pause();
     },
   }));
 
   useEffect(() => {
     const startWebcam = async () => {
       try {
+        if (MediaRecorder.state === "paused") {
+          mediaRecorder.resume();
+          // resume recording
+        }
+
         const stream = await navigator.mediaDevices.getUserMedia({
           video: true,
           audio: audio,

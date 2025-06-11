@@ -6,9 +6,25 @@ const WebGLFilterRenderer = forwardRef(({ image, filter, params, onRenderComplet
 
   useImperativeHandle(ref, () => ({
     exportImage: () => {
-      const dataURL = canvasRef.current?.toDataURL("image/png") || "";
-      console.log("exportImage() called:", !!dataURL);
-      return dataURL;
+      return new Promise<string>((resolve) => {
+        if (!canvasRef.current) {
+          console.error("Canvas reference is null. Cannot export image.");
+          resolve("");
+          return;
+        }
+
+        canvasRef.current.toBlob((blob) => {
+          if (!blob) {
+            console.error("Failed to create Blob from canvas.");
+            resolve("");
+            return;
+          }
+
+          const blobURL = URL.createObjectURL(blob);
+          console.log("Exported Image Blob URL:", blobURL); // Debugging log
+          resolve(blobURL);
+        }, "image/png");
+      });
     },
   }));
 
@@ -32,9 +48,14 @@ const WebGLFilterRenderer = forwardRef(({ image, filter, params, onRenderComplet
       console.log("Image loaded successfully. Applying shader filter...");
       try {
         applyShaderFilter(gl, img, filter, params);
-        const dataURL = canvasRef.current!.toDataURL("image/png");
-        console.log("Filtered Image Data URL:", dataURL); // Debugging log
-        onRenderComplete(dataURL);
+
+        // Notify parent that rendering is complete (optional)
+        canvasRef.current.toBlob((blob) => {
+          if (blob) {
+            const blobURL = URL.createObjectURL(blob);
+            onRenderComplete(blobURL);
+          }
+        }, "image/png");
       } catch (error) {
         console.error("Error applying shader filter:", error);
       }

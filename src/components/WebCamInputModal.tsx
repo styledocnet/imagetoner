@@ -22,6 +22,10 @@ const WebCamInputModal: React.FC<WebCamInputModalProps> = ({ isOpen, onClose, on
     }
   };
 
+  // if (!isOpen) {
+  //   return <></>;
+  // }
+
   return (
     <Modal
       isOpen={isOpen}

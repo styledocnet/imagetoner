@@ -89,18 +89,18 @@ const FilterDrawer: React.FC<FilterDrawerProps> = ({ isOpen, onClose, onApply, i
 
     if (filter.startsWith("shader_")) {
       try {
-        // Wait for the exported image from WebGLFilterRenderer
-        const exportedImage = await shaderCanvasRef.current.exportImage();
-        console.log("Exported Image Data URL:", exportedImage); // Debugging
+        // Wait for the exported Blob URL from WebGLFilterRenderer
+        const exportedImageURL = await shaderCanvasRef.current.exportImage();
+        console.log("Exported Image Blob URL:", exportedImageURL); // Debugging
 
-        if (!exportedImage) {
+        if (!exportedImageURL) {
           console.error("Failed to export image from WebGLFilterRenderer.");
           return;
         }
 
         const img = new Image();
         img.crossOrigin = "anonymous"; // Required for drawing cross-origin images
-        img.src = exportedImage;
+        img.src = exportedImageURL;
 
         img.onload = () => {
           console.log("Image loaded successfully. Drawing on main canvas..."); // Debugging
@@ -111,33 +111,46 @@ const FilterDrawer: React.FC<FilterDrawerProps> = ({ isOpen, onClose, onApply, i
             return;
           }
 
+          // Resize and clear the main canvas
           mainCanvas.width = img.width;
           mainCanvas.height = img.height;
           ctx.clearRect(0, 0, mainCanvas.width, mainCanvas.height);
 
+          // Draw the exported image onto the main canvas
           ctx.drawImage(img, 0, 0);
 
-          const finalImage = mainCanvas.toDataURL("image/png");
-          console.log("Final Image Data URL:", finalImage); // Debugging
+          // Export the final image from the main canvas
+          mainCanvas.toBlob((blob) => {
+            if (!blob) {
+              console.error("Failed to create Blob from main canvas.");
+              return;
+            }
 
-          if (mode === "applyCurrent") {
-            console.log("Updating the current layer with the final image."); // Debugging
-            updateLayerProp(currentLayer, "image", finalImage);
-          } else if (mode === "createNew") {
-            console.log("Adding a new layer with the final image."); // Debugging
-            addNewLayer({
-              name: `${filter} Layer`,
-              index: layers.length,
-              image: finalImage,
-              offsetX: 0,
-              offsetY: 0,
-              scale: 1,
-              type: "image",
-              visible: true,
-            });
-          }
-          onApply(finalImage, mode);
-          onClose();
+            const finalImageURL = URL.createObjectURL(blob);
+            console.log("Final Image Blob URL:", finalImageURL); // Debugging
+
+            // Update the layer only after the image is fully drawn
+            if (mode === "applyCurrent") {
+              console.log("Updating the current layer with the final image."); // Debugging
+              updateLayerProp(currentLayer, "image", finalImageURL);
+            } else if (mode === "createNew") {
+              console.log("Adding a new layer with the final image."); // Debugging
+              addNewLayer({
+                name: `${filter} Layer`,
+                index: layers.length,
+                image: finalImageURL,
+                offsetX: 0,
+                offsetY: 0,
+                scale: 1,
+                type: "image",
+                visible: true,
+              });
+            }
+
+            // Notify parent and close the drawer
+            onApply(finalImageURL, mode);
+            onClose();
+          }, "image/png");
         };
 
         img.onerror = () => {

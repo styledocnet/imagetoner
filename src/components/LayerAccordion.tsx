@@ -23,7 +23,7 @@ const LayerAccordion: React.FC<LayerAccordionProps> = ({ layers, currentLayer, s
   return (
     <div className="space-y-4">
       {layers.map((layer, idx) => (
-        <div key={layer.index} className="border-none rounded-md shadow-sm bg-white dark:bg-gray-800">
+        <div key={layer.index} className="border-none rounded-md shadow-sm bg-white dark:bg-gray-800 min-w-80">
           <div
             className={`flex justify-between items-center px-4 py-2 cursor-pointer ${
               currentLayer === layer.index ? "bg-auto-500 text-white" : "bg-gray-200 dark:bg-gray-700 dark:text-gray-300"
@@ -92,20 +92,20 @@ const LayerAccordion: React.FC<LayerAccordionProps> = ({ layers, currentLayer, s
             </div>
           </div>
           {currentLayer === layer.index && (
-            <div className="p-4 bg-gray-50 dark:bg-gray-900 dark:text-gray-100">
+            <div className="p-4 bg-gray-50 dark:bg-gray-900 dark:text-gray-100 min-w-80 max-w-80">
               {layer.image && layer.type === "image" && (
                 <div className="relative mb-4">
                   <img src={layer.image} alt={layer.name} className="w-full h-auto rounded-md shadow-sm" />
                 </div>
               )}
               {layer.type === "text" && (
-                <div className="relative mb-4">
+                <div className="relative mb-4 max-w-72">
                   <div
                     className="max-h-60 overflow-auto border rounded bg-white dark:bg-gray-900 p-4 flex items-center justify-start"
                     style={{
                       maxWidth: "100%",
                       fontFamily: layer.fontFamily,
-                      fontSize: layer.fontSize,
+                      fontSize: layer.fontSize / 2,
                       color: layer.color,
                       lineHeight: 1.2,
                       // whiteSpace: "pre-wrap",
