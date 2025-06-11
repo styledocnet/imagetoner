@@ -3,6 +3,7 @@ import { XMarkIcon } from "@heroicons/react/24/outline";
 import { useLayerContext } from "../context/LayerContext";
 import WebGLFilterRenderer from "./WebGLFilterRenderer";
 import { applyFilterToCanvas } from "../utils/filterUtils";
+import { applyShaderFilter } from "../utils/glUtils";
 import { canvasFilterParams, shaderFilterParams } from "../utils/filterParams";
 
 interface FilterDrawerProps {
@@ -18,11 +19,14 @@ const FilterDrawer: React.FC<FilterDrawerProps> = ({ isOpen, onClose, onApply, i
   const [filter, setFilter] = useState("shader_vignette");
   const [params, setParams] = useState<any>(shaderFilterParams[filter]);
   const [filteredImage, setFilteredImage] = useState<string | null>(null);
-
   const { layers, updateLayerProp, addNewLayer, restoreOriginalLayer, currentLayer } = useLayerContext();
-
+  const previewShaderCanvasRef = useRef<any>(null);
   const canvasRef = useRef<HTMLCanvasElement>(null);
-  const shaderCanvasRef = useRef<any>(null);
+
+  const [originalImageSize, setOriginalImageSize] = useState<{ width: number; height: number }>({
+    width: documentSize.width,
+    height: documentSize.height,
+  });
 
   useEffect(() => {
     if (shaderFilterParams[filter]) {
@@ -32,109 +36,130 @@ const FilterDrawer: React.FC<FilterDrawerProps> = ({ isOpen, onClose, onApply, i
     }
   }, [filter]);
 
+  useEffect(() => {
+    if (!imageSrc) return;
+    const img = new window.Image();
+    img.onload = () => {
+      setOriginalImageSize({ width: img.width, height: img.height });
+      console.log("[DEBUG] Original image loaded:", img.width, img.height, imageSrc);
+    };
+    img.src = imageSrc;
+  }, [imageSrc]);
+
+  // Preview rendering (small, visible canvas)
   const renderPreview = () => {
     if (filter.startsWith("shader_")) {
-      const previewCanvas = canvasRef.current;
-      if (!previewCanvas) return;
-
-      const gl = previewCanvas.getContext("webgl");
-      if (!gl) {
-        console.error("WebGL context not supported in preview canvas.");
-        return;
-      }
-
-      WebGLFilterRenderer.applyShaderFilter(gl, imageSrc, filter, params, () => {
-        const filtered = previewCanvas.toDataURL("image/png");
-        setFilteredImage(filtered);
-      });
+      // Use WebGLFilterRenderer as preview
+      // The renderer itself calls setFilteredImage via onRenderComplete
     } else {
-      if (!canvasRef.current || !imageSrc) return;
-
+      // Canvas 2D preview
       const previewCanvas = canvasRef.current;
+      if (!previewCanvas || !imageSrc) return;
       const previewCtx = previewCanvas.getContext("2d");
-
       if (!previewCtx) {
         console.error("Preview canvas 2D context not found.");
         return;
       }
-
       const img = new Image();
       img.src = imageSrc;
-
       img.onload = () => {
         previewCanvas.width = img.width;
         previewCanvas.height = img.height;
-
         previewCtx.clearRect(0, 0, previewCanvas.width, previewCanvas.height);
         previewCtx.drawImage(img, 0, 0, previewCanvas.width, previewCanvas.height);
-
-        // Apply the Canvas 2D filter
         applyFilterToCanvas(filter, previewCtx, previewCanvas, params);
-
-        // Capture the filtered output as a data URL
         const filtered = previewCanvas.toDataURL("image/png");
         setFilteredImage(filtered);
+        console.log("[DEBUG] Canvas filter preview generated.", filtered.slice(0, 64));
+      };
+      img.onerror = () => {
+        console.error("[DEBUG] Failed to load preview image for 2D canvas filter.", imageSrc);
       };
     }
   };
 
+  // Always update preview when settings change
+  useEffect(() => {
+    if (isOpen) renderPreview();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [filter, params, imageSrc, isOpen]);
+
+  // Shader filter export: always generate/export from a fresh, off-DOM canvas at the original image size
+  const exportShaderFilteredImage = async (): Promise<string> => {
+    return new Promise((resolve, reject) => {
+      const { width, height } = originalImageSize;
+      console.log(`[DEBUG] Exporting shader filter image at size: ${width}x${height}`);
+      const canvas = document.createElement("canvas");
+      canvas.width = width;
+      canvas.height = height;
+      const gl = canvas.getContext("webgl");
+      if (!gl) {
+        reject("WebGL context not supported");
+        return;
+      }
+      const img = new Image();
+      img.crossOrigin = "anonymous";
+      img.src = imageSrc;
+      img.onload = () => {
+        try {
+          console.log("[DEBUG] Source image for shader loaded:", img.width, img.height);
+          applyShaderFilter(gl, img, filter, params);
+          gl.flush();
+          if (gl.finish) gl.finish();
+          // Use dataURL for reliability
+          const dataUrl = canvas.toDataURL("image/png");
+          console.log("[DEBUG] Shader filter export dataURL generated, length:", dataUrl.length);
+          resolve(dataUrl);
+        } catch (e) {
+          console.error("[DEBUG] Error during applyShaderFilter:", e);
+          reject(e);
+        }
+      };
+      img.onerror = () => {
+        console.error("[DEBUG] Failed to load image for shader export.", imageSrc);
+        reject("Failed to load image for shader export");
+      };
+    });
+  };
+
   const handleApply = async (mode: "applyCurrent" | "createNew") => {
     if (currentLayer === null) return;
-
     const mainCanvas = mainCanvasRef.current;
     if (!mainCanvas) {
-      console.error("Main canvas not found.");
+      console.error("[DEBUG] Main canvas not found.");
       return;
     }
 
     if (filter.startsWith("shader_")) {
       try {
-        // Wait for the exported Blob URL from WebGLFilterRenderer
-        const exportedImageURL = await shaderCanvasRef.current.exportImage();
-        console.log("Exported Image Blob URL:", exportedImageURL); // Debugging
-
-        if (!exportedImageURL) {
-          console.error("Failed to export image from WebGLFilterRenderer.");
-          return;
+        // Export a full-size filtered image on demand
+        const exportedDataUrl = await exportShaderFilteredImage();
+        if (!exportedDataUrl || !exportedDataUrl.startsWith("data:image/png")) {
+          console.error("[DEBUG] Exported data URL is invalid or empty.", exportedDataUrl?.slice(0, 128));
         }
-
         const img = new Image();
-        img.crossOrigin = "anonymous"; // Required for drawing cross-origin images
-        img.src = exportedImageURL;
-
+        img.crossOrigin = "anonymous";
+        img.src = exportedDataUrl;
         img.onload = () => {
-          console.log("Image loaded successfully. Drawing on main canvas..."); // Debugging
-
+          console.log("[DEBUG] Exported shader image loaded for main canvas:", img.width, img.height);
           const ctx = mainCanvas.getContext("2d");
           if (!ctx) {
-            console.error("2D context not found for main canvas.");
+            console.error("[DEBUG] 2D context not found for main canvas.");
             return;
           }
-
-          // Resize and clear the main canvas
           mainCanvas.width = img.width;
           mainCanvas.height = img.height;
           ctx.clearRect(0, 0, mainCanvas.width, mainCanvas.height);
-
-          // Draw the exported image onto the main canvas
           ctx.drawImage(img, 0, 0);
 
-          // Export the final image from the main canvas
-          mainCanvas.toBlob((blob) => {
-            if (!blob) {
-              console.error("Failed to create Blob from main canvas.");
-              return;
-            }
-
-            const finalImageURL = URL.createObjectURL(blob);
-            console.log("Final Image Blob URL:", finalImageURL); // Debugging
-
-            // Update the layer only after the image is fully drawn
+          // Wait for the next animation frame to ensure the draw is flushed
+          requestAnimationFrame(() => {
+            const finalImageURL = mainCanvas.toDataURL("image/png");
+            console.log("[DEBUG] Final imageURL to update layer:", finalImageURL.slice(0, 128));
             if (mode === "applyCurrent") {
-              console.log("Updating the current layer with the final image."); // Debugging
               updateLayerProp(currentLayer, "image", finalImageURL);
+              console.log("[DEBUG] Updated current layer with shader filter image.");
             } else if (mode === "createNew") {
-              console.log("Adding a new layer with the final image."); // Debugging
               addNewLayer({
                 name: `${filter} Layer`,
                 index: layers.length,
@@ -145,70 +170,61 @@ const FilterDrawer: React.FC<FilterDrawerProps> = ({ isOpen, onClose, onApply, i
                 type: "image",
                 visible: true,
               });
+              console.log("[DEBUG] Added new layer with shader filter image.");
             }
-
-            // Notify parent and close the drawer
             onApply(finalImageURL, mode);
             onClose();
-          }, "image/png");
+          });
         };
-
         img.onerror = () => {
-          console.error("Failed to load exported image for shader filter.");
+          console.error("[DEBUG] Failed to load exported image for shader filter.", exportedDataUrl?.slice(0, 128));
         };
       } catch (error) {
-        console.error("Error during shader filter application:", error);
+        console.error("[DEBUG] Error during shader filter application:", error);
       }
     } else {
-      // canvas filters
+      // Canvas filters
       const mainCtx = mainCanvas.getContext("2d");
       if (!mainCtx) {
-        console.error("2D context not found for main canvas.");
+        console.error("[DEBUG] 2D context not found for main canvas.");
         return;
       }
-
       const img = new Image();
       img.src = filteredImage || imageSrc;
-
       img.onload = () => {
         mainCanvas.width = img.width;
         mainCanvas.height = img.height;
-
         mainCtx.clearRect(0, 0, mainCanvas.width, mainCanvas.height);
         mainCtx.drawImage(img, 0, 0, mainCanvas.width, mainCanvas.height);
-
-        const appliedImage = mainCanvas.toDataURL("image/png");
-
-        if (mode === "applyCurrent") {
-          updateLayerProp(currentLayer, "image", appliedImage);
-        } else if (mode === "createNew") {
-          addNewLayer({
-            name: `${filter} Layer`,
-            index: layers.length,
-            image: appliedImage,
-            offsetX: 0,
-            offsetY: 0,
-            scale: 1,
-            type: "image",
-            visible: true,
-          });
-        }
-
-        onApply(appliedImage, mode);
-        onClose();
+        // Wait for the next animation frame to ensure the draw is flushed
+        requestAnimationFrame(() => {
+          const appliedImage = mainCanvas.toDataURL("image/png");
+          console.log("[DEBUG] Final canvas filter dataURL for layer:", appliedImage.slice(0, 128));
+          if (mode === "applyCurrent") {
+            updateLayerProp(currentLayer, "image", appliedImage);
+            console.log("[DEBUG] Updated current layer with canvas filter image.");
+          } else if (mode === "createNew") {
+            addNewLayer({
+              name: `${filter} Layer`,
+              index: layers.length,
+              image: appliedImage,
+              offsetX: 0,
+              offsetY: 0,
+              scale: 1,
+              type: "image",
+              visible: true,
+            });
+            console.log("[DEBUG] Added new layer with canvas filter image.");
+          }
+          onApply(appliedImage, mode);
+          onClose();
+        });
       };
-
       img.onerror = () => {
-        console.error("Failed to load filtered image for canvas filter.");
+        console.error("[DEBUG] Failed to load filtered image for canvas filter.", filteredImage?.slice(0, 128));
       };
     }
   };
-
-  useEffect(() => {
-    if (isOpen) {
-      renderPreview();
-    }
-  }, [filter, params, imageSrc, isOpen]);
 
   const handleParamChange = (paramName: string, value: any) => {
     setParams((prevParams: any) => ({
@@ -217,7 +233,7 @@ const FilterDrawer: React.FC<FilterDrawerProps> = ({ isOpen, onClose, onApply, i
     }));
   };
 
-  const renderInput = (paramName: string, param: FilterParameter) => {
+  const renderInput = (paramName: string, param: any) => {
     switch (param.type) {
       case "number":
         return (
@@ -300,17 +316,16 @@ const FilterDrawer: React.FC<FilterDrawerProps> = ({ isOpen, onClose, onApply, i
               borderRadius: "4px",
             }}
           >
-            {" "}
             {/* Scaled Preview */}
             {filter.startsWith("shader_") ? (
               <WebGLFilterRenderer
-                ref={shaderCanvasRef}
+                ref={previewShaderCanvasRef}
                 image={imageSrc}
                 filter={filter}
                 params={params}
                 width={documentSize.width}
                 height={documentSize.height}
-                onRenderComplete={(filteredImage) => setFilteredImage(filteredImage)}
+                onRenderComplete={setFilteredImage}
               />
             ) : (
               <canvas

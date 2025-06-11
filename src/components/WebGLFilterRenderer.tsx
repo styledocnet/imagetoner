@@ -1,9 +1,11 @@
-import React, { useEffect, useImperativeHandle, forwardRef, useRef } from "react";
+import React, { useEffect, useImperativeHandle, forwardRef, useRef, useState } from "react";
 import { applyShaderFilter } from "../utils/glUtils";
 
 const WebGLFilterRenderer = forwardRef(({ image, filter, params, onRenderComplete, width, height }, ref) => {
   const canvasRef = useRef<HTMLCanvasElement>(null);
+  const [ready, setReady] = useState(false);
 
+  // Export as DataURL
   useImperativeHandle(ref, () => ({
     exportImage: () => {
       return new Promise<string>((resolve) => {
@@ -12,23 +14,14 @@ const WebGLFilterRenderer = forwardRef(({ image, filter, params, onRenderComplet
           resolve("");
           return;
         }
-
-        canvasRef.current.toBlob((blob) => {
-          if (!blob) {
-            console.error("Failed to create Blob from canvas.");
-            resolve("");
-            return;
-          }
-
-          const blobURL = URL.createObjectURL(blob);
-          console.log("Exported Image Blob URL:", blobURL); // Debugging log
-          resolve(blobURL);
-        }, "image/png");
+        resolve(canvasRef.current.toDataURL("image/png"));
       });
     },
   }));
 
   useEffect(() => {
+    setReady(false);
+
     if (!image || !canvasRef.current) {
       console.error("Image or canvasRef is not initialized.");
       return;
@@ -40,22 +33,22 @@ const WebGLFilterRenderer = forwardRef(({ image, filter, params, onRenderComplet
       return;
     }
 
-    const img = new Image();
-    img.crossOrigin = "anonymous"; // Ensures CORS compatibility
+    const img = new window.Image();
+    img.crossOrigin = "anonymous";
     img.src = image;
 
     img.onload = () => {
-      console.log("Image loaded successfully. Applying shader filter...");
       try {
         applyShaderFilter(gl, img, filter, params);
+        gl.flush();
+        if (gl.finish) gl.finish();
 
-        // Notify parent that rendering is complete (optional)
-        canvasRef.current.toBlob((blob) => {
-          if (blob) {
-            const blobURL = URL.createObjectURL(blob);
-            onRenderComplete(blobURL);
-          }
-        }, "image/png");
+        setReady(true);
+
+        // For preview: notify parent immediately
+        if (onRenderComplete) {
+          onRenderComplete(canvasRef.current.toDataURL("image/png"));
+        }
       } catch (error) {
         console.error("Error applying shader filter:", error);
       }
@@ -64,7 +57,7 @@ const WebGLFilterRenderer = forwardRef(({ image, filter, params, onRenderComplet
     img.onerror = () => {
       console.error("Failed to load the image for WebGL rendering.");
     };
-  }, [image, filter, params]);
+  }, [image, filter, params, width, height, onRenderComplete]);
 
   return <canvas ref={canvasRef} width={width} height={height} style={{ display: "block", maxWidth: "100%", maxHeight: "200px" }} />;
 });
