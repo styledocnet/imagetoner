@@ -1,6 +1,6 @@
-import React, { forwardRef, useImperativeHandle, useRef, useEffect } from "react";
+import { forwardRef, useImperativeHandle, useRef, useEffect } from "react";
 
-interface WebcamProps {
+interface WebCamProps {
   isOpen: boolean;
   audio: boolean;
   screenshotFormat: string;
@@ -8,7 +8,7 @@ interface WebcamProps {
   height: number;
 }
 
-const Webcam = forwardRef(({ isOpen, audio, screenshotFormat, width, height }: WebcamProps, ref) => {
+const WebCam = forwardRef(({ isOpen, audio, screenshotFormat, width, height }: WebCamProps, ref) => {
   const videoRef = useRef<HTMLVideoElement>(null);
   const streamRef = useRef<MediaStream | null>(null);
 
@@ -26,9 +26,9 @@ const Webcam = forwardRef(({ isOpen, audio, screenshotFormat, width, height }: W
     },
     stopWebcam: () => {
       console.log("stopWebcam()");
-      if (MediaRecorder.state === "recording") {
-        mediaRecorder.pause();
-      }
+      // if (mediaRecorder && mediaRecorder.state === "recording") {
+      //   mediaRecorder.pause();
+      // }
       if (streamRef.current) {
         streamRef.current.getTracks().forEach((track) => track.stop());
         streamRef.current = null;
@@ -43,10 +43,10 @@ const Webcam = forwardRef(({ isOpen, audio, screenshotFormat, width, height }: W
   useEffect(() => {
     const startWebcam = async () => {
       try {
-        if (MediaRecorder.state === "paused") {
-          mediaRecorder.resume();
-          // resume recording
-        }
+        // if (MediaRecorder.state === "paused") {
+        //   mediaRecorder.resume();
+        //   // resume recording
+        // }
 
         const stream = await navigator.mediaDevices.getUserMedia({
           video: true,
@@ -78,4 +78,4 @@ const Webcam = forwardRef(({ isOpen, audio, screenshotFormat, width, height }: W
   return isOpen ? <video ref={videoRef} autoPlay width={width} height={height} /> : null;
 });
 
-export default Webcam;
+export default WebCam;

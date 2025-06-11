@@ -6,8 +6,8 @@ interface LayerSidebarProps {
   onToggle: () => void;
   layers: any[];
   currentLayer: number | null;
-  setCurrentLayer: (idx: number) => void;
-  setLayerProp: (idx: number, key: string, value: any) => void;
+  setCurrentLayer: (idx: number | null) => void;
+  setLayerProp: (idx: number, prop: string, value: any) => void;
   removeLayer: (idx: number) => void;
   moveLayerUp: (idx: number) => void;
   moveLayerDown: (idx: number) => void;

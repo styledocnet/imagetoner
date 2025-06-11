@@ -1,5 +1,5 @@
 import React, { useRef } from "react";
-import { ArrowDownIcon, FolderOpenIcon, Cog6ToothIcon, CameraIcon } from "@heroicons/react/24/outline";
+import { FolderOpenIcon, Cog6ToothIcon, CameraIcon } from "@heroicons/react/24/outline";
 
 interface ToolbarProps {
   onImportImage: (e: React.ChangeEvent<HTMLInputElement>) => void;
@@ -9,6 +9,7 @@ interface ToolbarProps {
   onOpenAspectRatioModal: () => void;
   onOpenWebcamModal: () => void;
   currentLayerType: string | null;
+  onApplyRemBg?: () => void;
 }
 
 const Toolbar: React.FC<ToolbarProps> = ({
@@ -39,8 +40,11 @@ const Toolbar: React.FC<ToolbarProps> = ({
             <button className="bg-purple-500 hover:bg-purple-600 py-2 px-4 rounded-md transition" onClick={onApplyFilter}>
               Filter
             </button>
-            <button className="bg-purple-500 hover:bg-purple-600 py-2 px-4 rounded-md transition" onClick={onApplyRemBg}>
+            <button className="hidden bg-purple-500 hover:bg-purple-600 py-2 px-4 rounded-md transition" onClick={onApplyRemBg}>
               Remove BG
+            </button>
+            <button className="hidden bg-purple-500 hover:bg-purple-600 py-2 px-4 rounded-md transition" onClick={onExport}>
+              export
             </button>
           </>
         )}

@@ -1,30 +1,10 @@
 import { openDB, DBSchema } from "idb";
-
-interface Layer {
-  name: string;
-  index: number;
-  image: string | null;
-  offsetX: number;
-  offsetY: number;
-  scale: number;
-  type: "image" | "text";
-  text?: string;
-  fontFamily?: string;
-  fontSize?: number;
-  color?: string;
-  visible: boolean;
-}
-
-interface Document {
-  id?: number;
-  name: string;
-  layers: Layer[];
-}
+import { ImageDocument } from "../types";
 
 interface MyDB extends DBSchema {
   documents: {
     key: number;
-    value: Document;
+    value: ImageDocument;
     indexes: { "by-name": string };
   };
 }
@@ -40,7 +20,7 @@ const dbPromise = openDB<MyDB>("my-database", 1, {
 });
 
 export const storageService = {
-  async addDocument(document: Document) {
+  async addDocument(document: ImageDocument) {
     const db = await dbPromise;
     return db.add("documents", document);
   },
@@ -52,7 +32,7 @@ export const storageService = {
     const db = await dbPromise;
     return db.get("documents", id);
   },
-  async updateDocument(document: Document) {
+  async updateDocument(document: ImageDocument) {
     const db = await dbPromise;
     return db.put("documents", document);
   },

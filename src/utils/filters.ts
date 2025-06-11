@@ -134,6 +134,7 @@ export const applyQuadtoneFilter = (ctx: CanvasRenderingContext2D, canvas: HTMLC
 };
 
 export const applyGrayscaleFilter = (ctx: CanvasRenderingContext2D, canvas: HTMLCanvasElement, params: FilterParams) => {
+  params;
   const imageData = ctx.getImageData(0, 0, canvas.width, canvas.height);
   const data = imageData.data;
   for (let i = 0; i < data.length; i += 4) {
@@ -146,6 +147,7 @@ export const applyGrayscaleFilter = (ctx: CanvasRenderingContext2D, canvas: HTML
 };
 
 export const applySepiaFilter = (ctx: CanvasRenderingContext2D, canvas: HTMLCanvasElement, params: FilterParams) => {
+  params;
   const imageData = ctx.getImageData(0, 0, canvas.width, canvas.height);
   const data = imageData.data;
   for (let i = 0; i < data.length; i += 4) {

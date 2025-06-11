@@ -3,7 +3,6 @@ import { XMarkIcon } from "@heroicons/react/24/outline";
 import { useLayerContext } from "../context/LayerContext";
 import WebGLFilterRenderer from "./WebGLFilterRenderer";
 import { applyFilterToCanvas } from "../utils/filterUtils";
-import { applyShaderFilter } from "../utils/glUtils";
 import { canvasFilterParams, shaderFilterParams } from "../utils/filterParams";
 
 interface FilterDrawerProps {
@@ -27,6 +26,7 @@ const FilterDrawer: React.FC<FilterDrawerProps> = ({ isOpen, onClose, onApply, i
     width: documentSize.width,
     height: documentSize.height,
   });
+  originalImageSize;
 
   useEffect(() => {
     if (shaderFilterParams[filter]) {
@@ -83,44 +83,6 @@ const FilterDrawer: React.FC<FilterDrawerProps> = ({ isOpen, onClose, onApply, i
     if (isOpen) renderPreview();
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [filter, params, imageSrc, isOpen]);
-
-  // Shader filter export: always generate/export from a fresh, off-DOM canvas at the original image size
-  const exportShaderFilteredImage = async (): Promise<string> => {
-    return new Promise((resolve, reject) => {
-      const { width, height } = originalImageSize;
-      console.log(`[DEBUG] Exporting shader filter image at size: ${width}x${height}`);
-      const canvas = document.createElement("canvas");
-      canvas.width = width;
-      canvas.height = height;
-      const gl = canvas.getContext("webgl");
-      if (!gl) {
-        reject("WebGL context not supported");
-        return;
-      }
-      const img = new Image();
-      img.crossOrigin = "anonymous";
-      img.src = imageSrc;
-      img.onload = () => {
-        try {
-          console.log("[DEBUG] Source image for shader loaded:", img.width, img.height);
-          applyShaderFilter(gl, img, filter, params);
-          gl.flush();
-          if (gl.finish) gl.finish();
-          // Use dataURL for reliability
-          const dataUrl = canvas.toDataURL("image/png");
-          console.log("[DEBUG] Shader filter export dataURL generated, length:", dataUrl.length);
-          resolve(dataUrl);
-        } catch (e) {
-          console.error("[DEBUG] Error during applyShaderFilter:", e);
-          reject(e);
-        }
-      };
-      img.onerror = () => {
-        console.error("[DEBUG] Failed to load image for shader export.", imageSrc);
-        reject("Failed to load image for shader export");
-      };
-    });
-  };
 
   const handleApply = async (mode: "applyCurrent" | "createNew") => {
     if (currentLayer === null) return;

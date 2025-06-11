@@ -1,6 +1,6 @@
 import React, { useRef } from "react";
 import Modal from "./Modal";
-import Webcam from "./Webcam";
+import WebCam from "./WebCam";
 
 interface WebCamInputModalProps {
   isOpen: boolean;
@@ -44,7 +44,7 @@ const WebCamInputModal: React.FC<WebCamInputModalProps> = ({ isOpen, onClose, on
         </button>
       }
     >
-      <Webcam isOpen={isOpen} audio={false} ref={webcamRef} screenshotFormat="image/jpeg" width={canvasSize.width} height={canvasSize.height} />
+      <WebCam isOpen={isOpen} audio={false} ref={webcamRef} screenshotFormat="image/jpeg" width={canvasSize.width} height={canvasSize.height} />
     </Modal>
   );
 };

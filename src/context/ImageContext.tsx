@@ -1,16 +1,8 @@
-import React, { createContext, useContext, useState, useEffect } from "react";
+import React, { createContext, useContext, useState } from "react";
 import { signal } from "@preact/signals-react";
 import apiService from "../services/apiService";
 import { storageService } from "../services/storageService";
-
-interface Layer {
-  name: string;
-  index: number;
-  image: string | null;
-  offsetX: number;
-  offsetY: number;
-  scale: number;
-}
+import { Layer } from "../types";
 
 interface ImageContextProps {
   layers: Layer[];
@@ -33,25 +25,27 @@ interface ImageContextProps {
 
 const ImageContext = createContext<ImageContextProps | null>(null);
 
-export const ImageProvider: React.FC<{ children: React.ReactNode }> = ({
-  children,
-}) => {
+export const ImageProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const [layers, setLayers] = useState<Layer[]>([
     {
       name: "Background",
+      type: "image",
       index: 0,
       image: null,
       offsetX: 0,
       offsetY: 0,
       scale: 1,
+      visible: true,
     },
     {
       name: "Foreground",
+      type: "image",
       index: 1,
       image: null,
       offsetX: 0,
       offsetY: 0,
       scale: 1,
+      visible: true,
     },
   ]);
   const [currentLayer, setCurrentLayer] = useState(1);
@@ -79,13 +73,7 @@ export const ImageProvider: React.FC<{ children: React.ReactNode }> = ({
       const file = new File([blob], "uploaded-image.png", { type: blob.type });
 
       const bgRemovedImage = await apiService.removeBackground(file);
-      setLayers((prev) =>
-        prev.map((layer) =>
-          layer.index === currentLayer
-            ? { ...layer, image: bgRemovedImage }
-            : layer,
-        ),
-      );
+      setLayers((prev) => prev.map((layer) => (layer.index === currentLayer ? { ...layer, image: bgRemovedImage } : layer)));
     } catch (error) {
       alert("Error removing background");
     } finally {

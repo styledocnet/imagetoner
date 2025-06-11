@@ -22,7 +22,7 @@ const LayerAccordion: React.FC<LayerAccordionProps> = ({ layers, currentLayer, s
 
   return (
     <div className="space-y-4">
-      {layers.map((layer, idx) => (
+      {layers.map((layer) => (
         <div key={layer.index} className="border-none rounded-md shadow-sm bg-white dark:bg-gray-800 min-w-80">
           <div
             className={`flex justify-between items-center px-4 py-2 cursor-pointer ${
@@ -105,7 +105,7 @@ const LayerAccordion: React.FC<LayerAccordionProps> = ({ layers, currentLayer, s
                     style={{
                       maxWidth: "100%",
                       fontFamily: layer.fontFamily,
-                      fontSize: layer.fontSize / 2,
+                      fontSize: layer.fontSize && layer.fontSize / 2,
                       color: layer.color,
                       lineHeight: 1.2,
                       // whiteSpace: "pre-wrap",

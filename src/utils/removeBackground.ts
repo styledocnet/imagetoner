@@ -1,11 +1,11 @@
-import { pipeline } from "@xenova/transformers";
+// import { pipeline } from "@xenova/transformers";
 
-const loadSegmentationModel = async () => {
-  return await pipeline("image-segmentation", "Xenova/deeplabv3");
-};
+// const loadSegmentationModel = async () => {
+//   return await pipeline("image-segmentation", "Xenova/deeplabv3");
+// };
 
 export const removeBackground = async (imageSrc: string): Promise<string> => {
-  const model = await loadSegmentationModel();
+  // const model = await loadSegmentationModel();
 
   const img = new Image();
   img.crossOrigin = "anonymous";
@@ -24,18 +24,19 @@ export const removeBackground = async (imageSrc: string): Promise<string> => {
       canvas.height = img.height;
       ctx.drawImage(img, 0, 0, img.width, img.height);
 
-      const segmentation = await model(img);
+      // ImagePipelineInputs RawImage
+      // const segmentation = await model(img);
 
       const imageData = ctx.getImageData(0, 0, canvas.width, canvas.height);
-      const { data } = imageData;
+      // const { data } = imageData;
 
-      segmentation.forEach((segment) => {
-        const mask = segment.mask; // Binary mask for the segment
-        for (let i = 0; i < data.length; i += 4) {
-          const alpha = mask[i / 4]; // Use the mask value to set alpha
-          data[i + 3] = alpha ? 255 : 0; // Set alpha to 0 for background
-        }
-      });
+      // segmentation.forEach((segment) => {
+      //   const mask = segment.mask; // Binary mask for the segment
+      //   for (let i = 0; i < data.length; i += 4) {
+      //     const alpha = mask[i / 4]; // Use the mask value to set alpha
+      //     data[i + 3] = alpha ? 255 : 0; // Set alpha to 0 for background
+      //   }
+      // });
 
       ctx.putImageData(imageData, 0, 0);
 

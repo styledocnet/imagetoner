@@ -1,11 +1,6 @@
 import { Layer } from "../types";
 
-export const renderLayers = (
-  ctx: CanvasRenderingContext2D,
-  layers: Layer[],
-  width: number,
-  height: number,
-) => {
+export const renderLayers = (ctx: CanvasRenderingContext2D, layers: Layer[], width: number, height: number) => {
   // const sortedLayers = [...layers].sort((a, b) => a.index - b.index);
 
   const drawLayer = (layer: Layer) => {
@@ -13,7 +8,7 @@ export const renderLayers = (
       if (layer.type === "image" && layer.image) {
         return new Promise<void>((resolve) => {
           const img = new Image();
-          img.src = layer.image;
+          img.src = layer.image || "";
           img.onload = () => {
             const imgWidth = img.width * layer.scale;
             const imgHeight = img.height * layer.scale;
@@ -25,7 +20,7 @@ export const renderLayers = (
         });
       } else if (layer.type === "text") {
         ctx.font = `${layer.fontSize}px ${layer.fontFamily}`;
-        ctx.fillStyle = layer.color;
+        ctx.fillStyle = layer.color || "tomato";
         ctx.fillText(layer.text || "", layer.offsetX, layer.offsetY);
         return Promise.resolve();
       }

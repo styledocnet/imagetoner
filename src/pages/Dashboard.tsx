@@ -1,4 +1,3 @@
-import React from "react";
 import PhotosWidget from "../components/dashboard/PhotosWidget";
 
 const Dashboard = () => {

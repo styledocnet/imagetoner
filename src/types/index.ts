@@ -10,7 +10,10 @@ export interface Layer {
   fontFamily?: string;
   fontSize?: number;
   color?: string;
-  visible: boolean;
+  visible?: boolean;
+  width?: number;
+  height?: number;
+  originalImage?: string | null;
 }
 
 export interface FilterParams {
@@ -23,7 +26,7 @@ export interface FilteredLayer {
   params: any;
 }
 
-export interface Document {
+export interface ImageDocument {
   id?: number;
   name: string;
   layers: Layer[];

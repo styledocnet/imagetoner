@@ -1,9 +1,10 @@
 import React, { useState, useEffect } from "react";
 import { storageService } from "../../services/storageService";
 import { useRouter } from "../../context/CustomRouter";
+import { ImageDocument } from "../../types";
 
 const PhotosWidget: React.FC = () => {
-  const [documents, setDocuments] = useState<Document[]>([]);
+  const [documents, setDocuments] = useState<ImageDocument[]>([]);
   const { navigate } = useRouter();
 
   const onEditDocument = (documentId?: number) => {

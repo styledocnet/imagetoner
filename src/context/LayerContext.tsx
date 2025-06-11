@@ -1,4 +1,4 @@
-import React, { createContext, useContext, useState } from "react";
+import React, { createContext, useContext, useState, ReactNode } from "react";
 import { Layer } from "../types";
 
 interface LayerContextProps {
@@ -11,12 +11,13 @@ interface LayerContextProps {
   moveLayerUp: (index: number) => void;
   moveLayerDown: (index: number) => void;
   restoreOriginalLayer: () => void;
-  updateLayerProp: (index: number, prop: keyof Layer, value: any) => void;
+  updateLayerProp: (index: number, prop: string, value: any) => void;
+  originalImage?: string | null;
 }
 
 const LayerContext = createContext<LayerContextProps | undefined>(undefined);
 
-export const LayerProvider: React.FC = ({ children }) => {
+export const LayerProvider: React.FC<{ children: ReactNode }> = ({ children }) => {
   const [layers, setLayers] = useState<Layer[]>([]);
   const [currentLayer, setCurrentLayer] = useState<number | null>(null);
 
@@ -71,12 +72,12 @@ export const LayerProvider: React.FC = ({ children }) => {
     if (currentLayer !== null) {
       const layer = layers[currentLayer];
       if (layer.originalImage) {
-        setLayers((prev) => prev.map((l, index) => (index === currentLayer ? { ...l, image: l.originalImage, originalImage: null } : l)));
+        setLayers((prev) => prev.map((l, index) => (index === currentLayer ? { ...l, image: l.originalImage ?? null, originalImage: null } : l)));
       }
     }
   };
 
-  const updateLayerProp = (index: number, prop: keyof Layer, value: any) => {
+  const updateLayerProp = (index: number, prop: string, value: any) => {
     setLayers((prev) => prev.map((layer, i) => (i === index ? { ...layer, [prop]: value } : layer)));
   };
 
