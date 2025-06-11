@@ -1,5 +1,6 @@
 import { ChevronLeftIcon, ChevronRightIcon, PlusIcon, EllipsisVerticalIcon, PlusCircleIcon } from "@heroicons/react/24/outline";
 import LayerAccordion from "./LayerAccordion";
+import { Layer } from "../types";
 
 interface LayerSidebarProps {
   expanded: boolean;
@@ -53,14 +54,15 @@ const LayerSidebar = ({
         </div>
       ) : (
         <div className="flex flex-col items-center p-2 gap-2">
-          {layers.map((layer: any) => (
+          {layers.map((layer: Layer, idx: number) => (
             <div
               key={layer.index}
               className={
                 "w-8 h-8 bg-gray-400 rounded-full cursor-pointer hover:ring-2 ring-blue-500" + (currentLayer === layer.index && "ring-2 ring-blue-600")
               }
               title={layer.name}
-              onClick={() => setCurrentLayer(layer.index)}
+              // onClick={() => setCurrentLayer(layer.index)}
+              onClick={() => setCurrentLayer(idx)}
             />
           ))}
         </div>

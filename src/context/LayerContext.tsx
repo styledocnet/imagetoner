@@ -28,9 +28,15 @@ export const LayerProvider: React.FC<{ children: ReactNode }> = ({ children }) =
       offsetX: isFinite(layer.offsetX) ? layer.offsetX : 0,
       offsetY: isFinite(layer.offsetY) ? layer.offsetY : 0,
       scale: isFinite(layer.scale) && layer.scale > 0 ? layer.scale : 1,
+      index: layers.length,
+      type: layer?.type ?? "image",
+      image: layer?.image ?? null,
+      name: layer?.name ?? `Image Layer ${layers.length + 1}`,
+      visible: true,
     };
 
     setLayers([...layers, validatedLayer]);
+    setCurrentLayer(layers.length);
   };
 
   const removeLayer = (index: number) => {

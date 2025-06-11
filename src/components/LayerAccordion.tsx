@@ -22,15 +22,15 @@ const LayerAccordion: React.FC<LayerAccordionProps> = ({ layers, currentLayer, s
 
   return (
     <div className="space-y-4">
-      {layers.map((layer) => (
-        <div key={layer.index} className="border-none rounded-md shadow-sm bg-white dark:bg-gray-800 min-w-80">
+      {layers.map((layer: Layer, idx: number) => (
+        <div key={"layeraccitem" + idx} className="border-none rounded-md shadow-sm bg-white dark:bg-gray-800 min-w-80">
           <div
             className={`flex justify-between items-center px-4 py-2 cursor-pointer ${
-              currentLayer === layer.index ? "bg-auto-500 text-white" : "bg-gray-200 dark:bg-gray-700 dark:text-gray-300"
+              currentLayer === idx ? "bg-auto-500 text-white" : "bg-gray-200 dark:bg-gray-700 dark:text-gray-300"
             }`}
-            onClick={() => setCurrentLayer(layer.index)}
+            onClick={() => setCurrentLayer(idx)}
           >
-            {editLayerName === layer.index ? (
+            {editLayerName === idx ? (
               <input
                 value={layer.name}
                 onChange={(e) => handleNameChange(layer.index, e.target.value)}
@@ -85,13 +85,13 @@ const LayerAccordion: React.FC<LayerAccordionProps> = ({ layers, currentLayer, s
                 onClick={(e) => {
                   e.stopPropagation();
                   if (confirm("Are you sure you want to delete this layer?")) {
-                    removeLayer(layer.index);
+                    removeLayer(idx);
                   }
                 }}
               />
             </div>
           </div>
-          {currentLayer === layer.index && (
+          {currentLayer === idx && (
             <div className="p-4 bg-gray-50 dark:bg-gray-900 dark:text-gray-100 min-w-80 max-w-80">
               {layer.image && layer.type === "image" && (
                 <div className="relative mb-4">

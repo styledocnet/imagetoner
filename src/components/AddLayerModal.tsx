@@ -6,7 +6,7 @@ const AddLayerModal: React.FC<{
   onClose: () => void;
   onAddLayer: (layer: any) => void;
 }> = ({ isOpen, onClose, onAddLayer }) => {
-  const [layerName, setLayerName] = useState("new layer");
+  const [layerName, setLayerName] = useState("New Layer");
   const [layerType, setLayerType] = useState("image");
   const [text, setText] = useState("");
   const [fontFamily, setFontFamily] = useState("Arial");
