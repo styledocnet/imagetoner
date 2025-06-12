@@ -1,19 +1,61 @@
 import React, { useState } from "react";
 import Modal from "./Modal";
+import { BrandStyle } from "../types";
 
 interface FillImageModalProps {
   isOpen: boolean;
   onClose: () => void;
   canvasSize: { width: number; height: number };
   onFill: (image: string) => void;
+  brandStyle?: BrandStyle | null;
 }
 
-const FillImageModal: React.FC<FillImageModalProps> = ({ isOpen, onClose, canvasSize, onFill }) => {
+const getThemeColors = (brandStyle?: BrandStyle | null) =>
+  brandStyle?.colors?.length
+    ? brandStyle.colors
+    : [
+        { hex: "#ffffff", role: "default", name: "White" },
+        { hex: "#000000", role: "default", name: "Black" },
+      ];
+
+const ColorSwatch: React.FC<{
+  color: string;
+  selected: boolean;
+  onClick: () => void;
+  label: string;
+}> = ({ color, selected, onClick, label }) => (
+  <button
+    type="button"
+    title={label}
+    onClick={onClick}
+    className={`w-8 h-8 rounded-full border-2 m-1 ${selected ? "border-blue-500" : "border-gray-300"}`}
+    style={{ backgroundColor: color }}
+  />
+);
+
+const FillImageModal: React.FC<FillImageModalProps> = ({ isOpen, onClose, canvasSize, onFill, brandStyle }) => {
   const [fillType, setFillType] = useState("solid");
   const [color, setColor] = useState("#ffffff");
   const [startColor, setStartColor] = useState("#ff0000");
   const [endColor, setEndColor] = useState("#0000ff");
   const [direction, setDirection] = useState("to bottom");
+
+  const themeColors = getThemeColors(brandStyle);
+
+  // Render color swatches for quick selection
+  const renderColorSwatches = (current: string, setCurrent: (v: string) => void) => (
+    <div className="flex flex-wrap gap-1 mb-2">
+      {themeColors.map((c) => (
+        <ColorSwatch
+          key={c.hex + c.role}
+          color={c.hex}
+          label={c.name || c.role}
+          selected={current.toLowerCase() === c.hex.toLowerCase()}
+          onClick={() => setCurrent(c.hex)}
+        />
+      ))}
+    </div>
+  );
 
   const createImage = () => {
     const canvas = document.createElement("canvas");
@@ -84,20 +126,25 @@ const FillImageModal: React.FC<FillImageModalProps> = ({ isOpen, onClose, canvas
           <option value="gradient">Gradient</option>
         </select>
       </div>
+
       {fillType === "solid" && (
         <div className="mb-4">
           <label className="block text-sm font-medium text-gray-700 dark:text-gray-300">Color:</label>
+          {renderColorSwatches(color, setColor)}
           <input type="color" value={color} onChange={(e) => setColor(e.target.value)} className="w-full rounded-md" />
         </div>
       )}
+
       {fillType === "gradient" && (
         <>
           <div className="mb-4">
             <label className="block text-sm font-medium text-gray-700 dark:text-gray-300">Start Color:</label>
+            {renderColorSwatches(startColor, setStartColor)}
             <input type="color" value={startColor} onChange={(e) => setStartColor(e.target.value)} className="w-full rounded-md" />
           </div>
           <div className="mb-4">
             <label className="block text-sm font-medium text-gray-700 dark:text-gray-300">End Color:</label>
+            {renderColorSwatches(endColor, setEndColor)}
             <input type="color" value={endColor} onChange={(e) => setEndColor(e.target.value)} className="w-full rounded-md" />
           </div>
           <div className="mb-4">

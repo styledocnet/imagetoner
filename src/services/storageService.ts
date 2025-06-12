@@ -80,6 +80,10 @@ export const storageService = {
     const db = await dbPromise;
     return db.getAll("styles");
   },
+  async getStyle(id: number): Promise<BrandStyle | undefined> {
+    const db = await dbPromise;
+    return db.get("styles", id);
+  },
   async updateStyle(style: BrandStyle) {
     const now = new Date().toISOString();
     const toSave: BrandStyle = {

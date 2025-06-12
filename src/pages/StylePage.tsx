@@ -2,6 +2,7 @@ import React, { useEffect, useRef, useState } from "react";
 import { BrandStyle, BrandColorRole } from "../types";
 import { storageService, saveCurrentStyleId, loadCurrentStyleId } from "../services/storageService";
 import { TrashIcon, PencilIcon, PlusIcon } from "@heroicons/react/24/outline";
+import SelectBox from "../components/SelectBox";
 
 const defaultColorRoles: BrandColorRole[] = ["primary", "secondary", "accent", "other"];
 
@@ -143,14 +144,14 @@ const StylePage: React.FC = () => {
     <div className="max-w-xl mx-auto bg-white dark:bg-gray-900 text-black dark:text-white p-6 rounded-lg shadow-md">
       <h2 className="text-2xl font-bold mb-4">Brand Styles</h2>
       <div className="mb-6 flex items-center gap-2">
-        <select className={fieldBase} value={selectedStyleId || ""} onChange={(e) => handleSelectStyle(Number(e.target.value))}>
-          <option value="">Select a style…</option>
-          {styles.map((style) => (
-            <option key={style.id} value={style.id}>
-              {style.name}
-            </option>
-          ))}
-        </select>
+        <SelectBox
+          options={styles.map((style) => ({
+            value: style.id,
+            label: style.name,
+          }))}
+          value={selectedStyleId || ""}
+          onChange={(v) => handleSelectStyle(Number(v))}
+        />
         <button className={buttonBase + " bg-green-500 text-white flex items-center gap-1"} onClick={handleAddNew} title="Add new style">
           <PlusIcon className="w-5 h-5" /> New
         </button>

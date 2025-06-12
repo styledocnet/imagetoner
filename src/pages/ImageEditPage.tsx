@@ -1,5 +1,5 @@
 import React, { useRef, useEffect, useState } from "react";
-import { storageService } from "../services/storageService";
+import { loadCurrentStyleId, storageService } from "../services/storageService";
 import { ArrowDownIcon } from "@heroicons/react/24/outline";
 import { useGesture } from "@use-gesture/react";
 import FillImageModal from "../components/FillImageModal";
@@ -23,6 +23,8 @@ const ImageEditPage: React.FC = () => {
   const [isAspectRatioModalOpen, setIsAspectRatioModalOpen] = useState(false);
   const [isFilterModalOpen, setIsFilterModalOpen] = useState(false);
   const [isRemBgModalOpen, setIsRemBgModalOpen] = useState(false);
+  const [currentStyle, setCurrentStyle] = useState(null);
+
   // const [isProcessing, setIsProcessing] = useState(false);
   const [isAddLayerModalOpen, setIsAddLayerModalOpen] = useState(false);
   const [isSidebarOpen, setSidebarOpen] = useState(true);
@@ -50,6 +52,16 @@ const ImageEditPage: React.FC = () => {
     }
     return { width: newWidth, height: documentSize.height };
   };
+
+  useEffect(() => {
+    // Load and set the current style once on mount (or when needed)
+    const styleId = loadCurrentStyleId();
+    if (styleId) {
+      storageService.getStyle(styleId).then((style) => {
+        setCurrentStyle(style);
+      });
+    }
+  }, []);
 
   useEffect(() => {
     const params = new URLSearchParams(window.location.search);
@@ -406,6 +418,7 @@ const ImageEditPage: React.FC = () => {
         setDocumentSize={setDocumentSize}
       />
       <FillImageModal
+        brandStyle={currentStyle}
         isOpen={isFillModalOpen}
         onClose={() => setIsFillModalOpen(false)}
         canvasSize={documentSize}
