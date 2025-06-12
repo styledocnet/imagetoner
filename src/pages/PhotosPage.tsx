@@ -12,8 +12,8 @@ const formatSize = (size?: number) => (typeof size === "number" ? `${(size / 102
 
 const formatDate = (date?: string) => (date ? new Date(date).toLocaleString() : "—");
 
-// Estimate size of a layer (text or image)
 function getLayerSize(layer: Layer): number {
+  // Estimate size of a layer (text or image)
   if (layer.type === "text" && layer.text) {
     return new Blob([layer.text]).size;
   }
@@ -26,8 +26,8 @@ function getLayerSize(layer: Layer): number {
   return 0;
 }
 
-// Sum up all layer sizes for a document
 function computeDocumentSize(doc: ImageDocument): number {
+  // Sum up all layer sizes for a document
   if (!doc.layers) return 0;
   return doc.layers.reduce((sum, layer) => sum + getLayerSize(layer), 0);
 }
@@ -42,8 +42,8 @@ const PhotosPage: React.FC = () => {
 
   const { navigate } = useRouter();
 
-  // On mount, load docs and compute sizes
   useEffect(() => {
+    // On mount, load docs and compute sizes
     const fetchDocuments = async () => {
       const docs = await storageService.getDocuments();
       // Attach computed size to each doc
@@ -57,11 +57,10 @@ const PhotosPage: React.FC = () => {
     fetchDocuments();
   }, []);
 
-  // Sorting
   const getSortFn = (key: SortKey) => {
     return (a: ImageDocument, b: ImageDocument) => {
       if (key === "name") return a.name.localeCompare(b.name);
-      if (key === "size") return (a.size || 0) - (b.size || 0);
+      if (key === "size") return computeDocumentSize(a) - computeDocumentSize(b);
       if (key === "createdAt") return new Date(a.createdAt ?? 0).getTime() - new Date(b.createdAt ?? 0).getTime();
       return 0;
     };
@@ -73,8 +72,8 @@ const PhotosPage: React.FC = () => {
     processedDocuments.reverse();
   }
 
-  // Pagination
   useEffect(() => {
+    // Pagination
     setTotalPages(Math.max(1, Math.ceil(processedDocuments.length / itemsPerPage)));
     if (page > Math.ceil(processedDocuments.length / itemsPerPage)) {
       setPage(1);
@@ -174,7 +173,9 @@ const PhotosPage: React.FC = () => {
                 </div>
               </div>
               <div className="text-xs text-gray-500 dark:text-gray-400 mt-2 flex flex-wrap gap-4 mb-3">
-                <span>Size: {formatSize(doc.size)}</span>
+                <span>
+                  Size: {"\u2248"} {formatSize(computeDocumentSize(doc))}
+                </span>
                 <span>Created: {formatDate(doc.createdAt)}</span>
                 <span>Updated: {formatDate(doc.updatedAt)}</span>
               </div>

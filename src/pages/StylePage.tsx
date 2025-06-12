@@ -1,17 +1,17 @@
 import React, { useEffect, useRef, useState } from "react";
 import { BrandStyle, BrandColorRole } from "../types";
 import { storageService, saveCurrentStyleId, loadCurrentStyleId } from "../services/storageService";
-import { ArrowDownIcon, TrashIcon, PencilIcon, PlusIcon } from "@heroicons/react/24/outline";
+import { TrashIcon, PencilIcon, PlusIcon } from "@heroicons/react/24/outline";
 
 const defaultColorRoles: BrandColorRole[] = ["primary", "secondary", "accent", "other"];
 
-const defaultStyle: Omit<BrandStyle, "id"> = {
-  name: "",
-  description: "",
-  teaser: "",
-  colors: [],
-  logos: [],
-};
+// const defaultStyle: Omit<BrandStyle, "id"> = {
+//   name: "ACME",
+//   description: "the highest peak",
+//   teaser: "ACME Inc. Wares - Wile E. Coyote",
+//   colors: [],
+//   logos: [],
+// };
 
 const StylePage: React.FC = () => {
   const [styles, setStyles] = useState<BrandStyle[]>([]);
