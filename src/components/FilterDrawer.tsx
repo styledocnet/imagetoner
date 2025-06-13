@@ -1,9 +1,10 @@
-import React, { useEffect, useState, useRef } from "react";
-import { XMarkIcon } from "@heroicons/react/24/outline";
-import { useLayerContext } from "../context/LayerContext";
+import React, { useEffect, useRef, useState } from "react";
+import ColorSwatch from "./ColorSwatch";
+import { BrandStyle } from "../types";
 import WebGLFilterRenderer from "./WebGLFilterRenderer";
 import { applyFilterToCanvas } from "../utils/filterUtils";
 import { canvasFilterParams, shaderFilterParams } from "../utils/filterParams";
+import { XMarkIcon } from "@heroicons/react/24/outline";
 
 interface FilterDrawerProps {
   isOpen: boolean;
@@ -12,22 +13,19 @@ interface FilterDrawerProps {
   imageSrc: string;
   documentSize: { width: number; height: number };
   mainCanvasRef: React.RefObject<HTMLCanvasElement>;
+  brandStyle?: BrandStyle | null;
 }
 
-const FilterDrawer: React.FC<FilterDrawerProps> = ({ isOpen, onClose, onApply, imageSrc, documentSize, mainCanvasRef }) => {
+const FilterDrawer: React.FC<FilterDrawerProps> = ({ isOpen, onClose, onApply, imageSrc, documentSize, mainCanvasRef, brandStyle }) => {
   const [filter, setFilter] = useState("shader_vignette");
   const [params, setParams] = useState<any>(shaderFilterParams[filter]);
   const [filteredImage, setFilteredImage] = useState<string | null>(null);
-  const { layers, updateLayerProp, addNewLayer, restoreOriginalLayer, currentLayer } = useLayerContext();
   const previewShaderCanvasRef = useRef<any>(null);
   const canvasRef = useRef<HTMLCanvasElement>(null);
 
-  const [originalImageSize, setOriginalImageSize] = useState<{ width: number; height: number }>({
-    width: documentSize.width,
-    height: documentSize.height,
-  });
-  originalImageSize;
+  const themeColors = brandStyle?.colors ?? [];
 
+  // Ensure params are reset on filter change
   useEffect(() => {
     if (shaderFilterParams[filter]) {
       setParams({ ...shaderFilterParams[filter] });
@@ -36,30 +34,20 @@ const FilterDrawer: React.FC<FilterDrawerProps> = ({ isOpen, onClose, onApply, i
     }
   }, [filter]);
 
+  // Always update preview when settings change
   useEffect(() => {
-    if (!imageSrc) return;
-    const img = new window.Image();
-    img.onload = () => {
-      setOriginalImageSize({ width: img.width, height: img.height });
-      console.log("[DEBUG] Original image loaded:", img.width, img.height, imageSrc);
-    };
-    img.src = imageSrc;
-  }, [imageSrc]);
+    if (isOpen) renderPreview();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [filter, params, imageSrc, isOpen]);
 
-  // Preview rendering (small, visible canvas)
   const renderPreview = () => {
     if (filter.startsWith("shader_")) {
-      // Use WebGLFilterRenderer as preview
-      // The renderer itself calls setFilteredImage via onRenderComplete
+      // WebGLFilterRenderer handles preview
     } else {
-      // Canvas 2D preview
       const previewCanvas = canvasRef.current;
       if (!previewCanvas || !imageSrc) return;
       const previewCtx = previewCanvas.getContext("2d");
-      if (!previewCtx) {
-        console.error("Preview canvas 2D context not found.");
-        return;
-      }
+      if (!previewCtx) return;
       const img = new Image();
       img.src = imageSrc;
       img.onload = () => {
@@ -70,70 +58,28 @@ const FilterDrawer: React.FC<FilterDrawerProps> = ({ isOpen, onClose, onApply, i
         applyFilterToCanvas(filter, previewCtx, previewCanvas, params);
         const filtered = previewCanvas.toDataURL("image/png");
         setFilteredImage(filtered);
-        console.log("[DEBUG] Canvas filter preview generated.", filtered.slice(0, 64));
-      };
-      img.onerror = () => {
-        console.error("[DEBUG] Failed to load preview image for 2D canvas filter.", imageSrc);
       };
     }
   };
 
-  // Always update preview when settings change
-  useEffect(() => {
-    if (isOpen) renderPreview();
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [filter, params, imageSrc, isOpen]);
-
   const handleApply = async (mode: "applyCurrent" | "createNew") => {
-    if (currentLayer === null) return;
     const mainCanvas = mainCanvasRef.current;
-    if (!mainCanvas) {
-      console.error("[DEBUG] Main canvas not found.");
-      return;
-    }
+    if (!mainCanvas) return;
 
     if (filter.startsWith("shader_")) {
       try {
         const canvas = previewShaderCanvasRef.current?.getCanvas?.();
-        if (!canvas) {
-          console.error("[DEBUG] Shader preview canvas not available!");
-          return;
-        }
-        // Optionally force a synchronous re-render here if needed
-        // const ctx = canvas.getContext("webgl"); ctx.flush(); ctx.finish && ctx.finish();
+        if (!canvas) return;
         const imageDataUrl = await canvas.toDataURL("image/png");
-        if (!imageDataUrl || !imageDataUrl.startsWith("data:image/png")) {
-          console.error("[DEBUG] Shader canvas export failed or empty.");
-          return;
-        }
-
-        if (mode === "applyCurrent") {
-          updateLayerProp(currentLayer, "image", imageDataUrl);
-        } else if (mode === "createNew") {
-          addNewLayer({
-            name: `${filter} Layer`,
-            index: layers.length,
-            image: imageDataUrl,
-            offsetX: 0,
-            offsetY: 0,
-            scale: 1,
-            type: "image",
-            visible: true,
-          });
-        }
         onApply(imageDataUrl, mode);
         onClose();
         return;
       } catch (error) {
-        console.error("[DEBUG] Error during shader filter application:", error);
+        // handle error
       }
     } else {
-      // Canvas filters
       const mainCtx = mainCanvas.getContext("2d");
-      if (!mainCtx) {
-        console.error("[DEBUG] 2D context not found for main canvas.");
-        return;
-      }
+      if (!mainCtx) return;
       const img = new Image();
       img.src = filteredImage || imageSrc;
       img.onload = () => {
@@ -141,32 +87,11 @@ const FilterDrawer: React.FC<FilterDrawerProps> = ({ isOpen, onClose, onApply, i
         mainCanvas.height = img.height;
         mainCtx.clearRect(0, 0, mainCanvas.width, mainCanvas.height);
         mainCtx.drawImage(img, 0, 0, mainCanvas.width, mainCanvas.height);
-        // Wait for the next animation frame to ensure the draw is flushed
         requestAnimationFrame(() => {
           const appliedImage = mainCanvas.toDataURL("image/png");
-          console.log("[DEBUG] Final canvas filter dataURL for layer:", appliedImage.slice(0, 128));
-          if (mode === "applyCurrent") {
-            updateLayerProp(currentLayer, "image", appliedImage);
-            console.log("[DEBUG] Updated current layer with canvas filter image.");
-          } else if (mode === "createNew") {
-            addNewLayer({
-              name: `${filter} Layer`,
-              index: layers.length,
-              image: appliedImage,
-              offsetX: 0,
-              offsetY: 0,
-              scale: 1,
-              type: "image",
-              visible: true,
-            });
-            console.log("[DEBUG] Added new layer with canvas filter image.");
-          }
           onApply(appliedImage, mode);
           onClose();
         });
-      };
-      img.onerror = () => {
-        console.error("[DEBUG] Failed to load filtered image for canvas filter.", filteredImage?.slice(0, 128));
       };
     }
   };
@@ -176,6 +101,39 @@ const FilterDrawer: React.FC<FilterDrawerProps> = ({ isOpen, onClose, onApply, i
       ...prevParams,
       [paramName]: value,
     }));
+  };
+
+  const renderColorInput = (paramName: string, param: any) => {
+    // Only compare swatch with string value
+    // The value could be in params[paramName], or fall back to param.default or param.value
+    let val: string = "";
+    if (typeof params[paramName] === "string") {
+      val = params[paramName];
+    } else if (typeof param.value === "string") {
+      val = param.value;
+    } else if (typeof param.default === "string") {
+      val = param.default;
+    }
+    return (
+      <div className="flex items-center gap-2">
+        {themeColors.map((c) => (
+          <ColorSwatch
+            key={c.hex}
+            color={c.hex}
+            label={c.name || c.role || ""}
+            selected={val.toLowerCase() === c.hex.toLowerCase()}
+            onClick={() => handleParamChange(paramName, c.hex)}
+          />
+        ))}
+        <input
+          type="color"
+          name={paramName}
+          value={val}
+          onChange={(e) => handleParamChange(paramName, e.target.value)}
+          className="w-8 h-8 rounded border ml-2"
+        />
+      </div>
+    );
   };
 
   const renderInput = (paramName: string, param: any) => {
@@ -196,7 +154,7 @@ const FilterDrawer: React.FC<FilterDrawerProps> = ({ isOpen, onClose, onApply, i
       case "boolean":
         return <input type="checkbox" name={paramName} checked={params[paramName]} onChange={(e) => handleParamChange(paramName, e.target.checked)} />;
       case "color":
-        return <input type="color" name={paramName} value={params[paramName]} onChange={(e) => handleParamChange(paramName, e.target.value)} />;
+        return renderColorInput(paramName, param);
       default:
         return null;
     }
@@ -213,12 +171,7 @@ const FilterDrawer: React.FC<FilterDrawerProps> = ({ isOpen, onClose, onApply, i
     >
       <div className="p-3 border-b border-gray-200 dark:border-gray-700 flex justify-between items-center">
         <h3 className="font-bold text-lg">Filter Settings</h3>
-        <button
-          onClick={() => {
-            restoreOriginalLayer();
-            onClose();
-          }}
-        >
+        <button onClick={onClose}>
           <XMarkIcon className="w-6 h-6" />
         </button>
       </div>
@@ -261,7 +214,6 @@ const FilterDrawer: React.FC<FilterDrawerProps> = ({ isOpen, onClose, onApply, i
               borderRadius: "4px",
             }}
           >
-            {/* Scaled Preview */}
             {filter.startsWith("shader_") ? (
               <WebGLFilterRenderer
                 ref={previewShaderCanvasRef}

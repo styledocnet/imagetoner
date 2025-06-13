@@ -13,6 +13,7 @@ import { useRouter } from "../context/CustomRouter";
 import Toolbar from "../components/Toolbar";
 import { useLayerContext } from "../context/LayerContext";
 import FilterDrawer from "../components/FilterDrawer";
+import { BrandStyle } from "../types";
 // import { removeBackground } from "../utils/removeBackground";
 
 const ImageEditPage: React.FC = () => {
@@ -23,7 +24,7 @@ const ImageEditPage: React.FC = () => {
   const [isAspectRatioModalOpen, setIsAspectRatioModalOpen] = useState(false);
   const [isFilterModalOpen, setIsFilterModalOpen] = useState(false);
   const [isRemBgModalOpen, setIsRemBgModalOpen] = useState(false);
-  const [currentStyle, setCurrentStyle] = useState(null);
+  const [currentStyle, setCurrentStyle] = useState<BrandStyle | null>(null);
 
   // const [isProcessing, setIsProcessing] = useState(false);
   const [isAddLayerModalOpen, setIsAddLayerModalOpen] = useState(false);
@@ -58,7 +59,7 @@ const ImageEditPage: React.FC = () => {
     const styleId = loadCurrentStyleId();
     if (styleId) {
       storageService.getStyle(styleId).then((style) => {
-        setCurrentStyle(style);
+        setCurrentStyle(style ?? null);
       });
     }
   }, []);
@@ -441,6 +442,7 @@ const ImageEditPage: React.FC = () => {
         }}
       />
       <FilterDrawer
+        brandStyle={currentStyle}
         mainCanvasRef={canvasRef}
         isOpen={isFilterModalOpen}
         onClose={() => {

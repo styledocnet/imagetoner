@@ -1,5 +1,6 @@
 import React, { useState } from "react";
 import Modal from "./Modal";
+import ColorPickerWithSwatches from "./ColorPickerWithSwatches";
 import { BrandStyle } from "../types";
 
 interface FillImageModalProps {
@@ -10,29 +11,6 @@ interface FillImageModalProps {
   brandStyle?: BrandStyle | null;
 }
 
-const getThemeColors = (brandStyle?: BrandStyle | null) =>
-  brandStyle?.colors?.length
-    ? brandStyle.colors
-    : [
-        { hex: "#ffffff", role: "default", name: "White" },
-        { hex: "#000000", role: "default", name: "Black" },
-      ];
-
-const ColorSwatch: React.FC<{
-  color: string;
-  selected: boolean;
-  onClick: () => void;
-  label: string;
-}> = ({ color, selected, onClick, label }) => (
-  <button
-    type="button"
-    title={label}
-    onClick={onClick}
-    className={`w-8 h-8 rounded-full border-2 m-1 ${selected ? "border-blue-500" : "border-gray-300"}`}
-    style={{ backgroundColor: color }}
-  />
-);
-
 const FillImageModal: React.FC<FillImageModalProps> = ({ isOpen, onClose, canvasSize, onFill, brandStyle }) => {
   const [fillType, setFillType] = useState("solid");
   const [color, setColor] = useState("#ffffff");
@@ -40,22 +18,7 @@ const FillImageModal: React.FC<FillImageModalProps> = ({ isOpen, onClose, canvas
   const [endColor, setEndColor] = useState("#0000ff");
   const [direction, setDirection] = useState("to bottom");
 
-  const themeColors = getThemeColors(brandStyle);
-
-  // Render color swatches for quick selection
-  const renderColorSwatches = (current: string, setCurrent: (v: string) => void) => (
-    <div className="flex flex-wrap gap-1 mb-2">
-      {themeColors.map((c) => (
-        <ColorSwatch
-          key={c.hex + c.role}
-          color={c.hex}
-          label={c.name || c.role}
-          selected={current.toLowerCase() === c.hex.toLowerCase()}
-          onClick={() => setCurrent(c.hex)}
-        />
-      ))}
-    </div>
-  );
+  const themeColors = brandStyle?.colors ?? [];
 
   const createImage = () => {
     const canvas = document.createElement("canvas");
@@ -79,9 +42,7 @@ const FillImageModal: React.FC<FillImageModalProps> = ({ isOpen, onClose, canvas
             Math.sqrt(canvas.width ** 2 + canvas.height ** 2) / 2,
           );
         } else {
-          const gradientDirections: {
-            [key: string]: [number, number, number, number];
-          } = {
+          const gradientDirections: { [key: string]: [number, number, number, number] } = {
             "to bottom": [0, 0, 0, canvas.height],
             "to top": [0, canvas.height, 0, 0],
             "to right": [0, 0, canvas.width, 0],
@@ -127,26 +88,12 @@ const FillImageModal: React.FC<FillImageModalProps> = ({ isOpen, onClose, canvas
         </select>
       </div>
 
-      {fillType === "solid" && (
-        <div className="mb-4">
-          <label className="block text-sm font-medium text-gray-700 dark:text-gray-300">Color:</label>
-          {renderColorSwatches(color, setColor)}
-          <input type="color" value={color} onChange={(e) => setColor(e.target.value)} className="w-full rounded-md" />
-        </div>
-      )}
+      {fillType === "solid" && <ColorPickerWithSwatches label="Color" value={color} onChange={setColor} themeColors={themeColors} />}
 
       {fillType === "gradient" && (
         <>
-          <div className="mb-4">
-            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300">Start Color:</label>
-            {renderColorSwatches(startColor, setStartColor)}
-            <input type="color" value={startColor} onChange={(e) => setStartColor(e.target.value)} className="w-full rounded-md" />
-          </div>
-          <div className="mb-4">
-            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300">End Color:</label>
-            {renderColorSwatches(endColor, setEndColor)}
-            <input type="color" value={endColor} onChange={(e) => setEndColor(e.target.value)} className="w-full rounded-md" />
-          </div>
+          <ColorPickerWithSwatches label="Start Color" value={startColor} onChange={setStartColor} themeColors={themeColors} />
+          <ColorPickerWithSwatches label="End Color" value={endColor} onChange={setEndColor} themeColors={themeColors} />
           <div className="mb-4">
             <label className="block text-sm font-medium text-gray-700 dark:text-gray-300">Direction:</label>
             <select
