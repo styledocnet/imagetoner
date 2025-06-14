@@ -3,6 +3,7 @@ import { storageService } from "../services/storageService";
 import { ArrowDownIcon } from "@heroicons/react/24/outline";
 import { useRouter } from "../context/CustomRouter";
 import { ImageDocument, Layer } from "../types";
+import SelectBox from "../components/SelectBox";
 
 type SortKey = "createdAt" | "name" | "size";
 
@@ -31,6 +32,12 @@ function computeDocumentSize(doc: ImageDocument): number {
   if (!doc.layers) return 0;
   return doc.layers.reduce((sum, layer) => sum + getLayerSize(layer), 0);
 }
+
+const sortKeyOptions = [
+  { value: "createdAt", label: "Newest" },
+  { value: "name", label: "Name" },
+  { value: "size", label: "Size" },
+];
 
 const PhotosPage: React.FC = () => {
   const [documents, setDocuments] = useState<ImageDocument[]>([]);
@@ -139,15 +146,8 @@ const PhotosPage: React.FC = () => {
             className="p-2 border rounded-md flex-1 dark:bg-gray-800 dark:border-gray-700 dark:text-gray-100"
           />
           <div className="flex gap-2 items-center">
-            <select
-              className="p-2 border rounded-md dark:bg-gray-800 dark:border-gray-700 dark:text-gray-100"
-              value={sortKey}
-              onChange={(e) => setSortKey(e.target.value as SortKey)}
-            >
-              <option value="createdAt">Newest</option>
-              <option value="name">Name</option>
-              <option value="size">Size</option>
-            </select>
+            <SelectBox options={sortKeyOptions} value={sortKey} onChange={(val) => setSortKey(val as SortKey)} small />
+
             <button
               className="p-2 rounded border dark:bg-gray-800 dark:border-gray-700"
               title={`Sort ${sortDir === "asc" ? "Descending" : "Ascending"}`}
