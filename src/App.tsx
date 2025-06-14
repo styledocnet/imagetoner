@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useEffect } from "react";
 import { RouterProvider, Route, useRouter } from "./context/CustomRouter";
 import Dashboard from "./pages/Dashboard";
 import NotFound from "./pages/NotFound";
@@ -11,6 +11,14 @@ import StylePage from "./pages/StylePage";
 import { LayerProvider } from "./context/LayerContext";
 
 const App: React.FC = () => {
+  useEffect(() => {
+    if (!window.location.search.includes("cb=")) {
+      const url = new URL(window.location.href);
+      url.searchParams.set("cb", Date.now().toString());
+      window.location.replace(url.toString());
+    }
+  }, []);
+
   return (
     <RouterProvider>
       <LayerProvider>
