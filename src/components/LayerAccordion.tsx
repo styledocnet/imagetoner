@@ -1,6 +1,8 @@
 import React, { useState } from "react";
 import { EyeIcon, EyeSlashIcon, ChevronUpIcon, ChevronDownIcon, XMarkIcon } from "@heroicons/react/24/outline";
 import { Layer } from "../types";
+import FontFamilySelect from "./FontFamilySelect";
+import NumberInputWithSlider from "./NumberInputWithSlider";
 
 interface LayerAccordionProps {
   layers: Layer[];
@@ -108,8 +110,6 @@ const LayerAccordion: React.FC<LayerAccordionProps> = ({ layers, currentLayer, s
                       fontSize: layer.fontSize && layer.fontSize / 2,
                       color: layer.color,
                       lineHeight: 1.2,
-                      // whiteSpace: "pre-wrap",
-                      // wordBreak: "break-word",
                     }}
                   >
                     {layer.text}
@@ -140,6 +140,7 @@ const LayerAccordion: React.FC<LayerAccordionProps> = ({ layers, currentLayer, s
                   <input
                     type="number"
                     value={layer.scale}
+                    step={0.01}
                     onChange={(e) => setLayerProp(layer.index, "scale", Number(e.target.value))}
                     className="w-full border border-gray-300 dark:border-gray-600 p-2 rounded-md bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100"
                   />
@@ -148,22 +149,25 @@ const LayerAccordion: React.FC<LayerAccordionProps> = ({ layers, currentLayer, s
                   <>
                     <div>
                       <label className="block text-sm font-semibold text-gray-700 dark:text-gray-300">Font Family:</label>
-                      <input
-                        type="text"
-                        value={layer.fontFamily}
-                        onChange={(e) => setLayerProp(layer.index, "fontFamily", e.target.value)}
-                        className="w-full border border-gray-300 dark:border-gray-600 p-2 rounded-md bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100"
-                      />
+                      <FontFamilySelect value={layer.fontFamily || ""} onChange={(font) => setLayerProp(layer.index, "fontFamily", font)} />
+                      {layer.fontFamily === "" && (
+                        <input
+                          type="text"
+                          value={layer.fontFamily}
+                          onChange={(e) => setLayerProp(layer.index, "fontFamily", e.target.value)}
+                          className="w-full border border-gray-300 dark:border-gray-600 p-2 rounded-md bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 mt-2"
+                          placeholder="Custom font name"
+                        />
+                      )}
                     </div>
-                    <div>
-                      <label className="block text-sm font-semibold text-gray-700 dark:text-gray-300">Font Size:</label>
-                      <input
-                        type="number"
-                        value={layer.fontSize}
-                        onChange={(e) => setLayerProp(layer.index, "fontSize", Number(e.target.value))}
-                        className="w-full border border-gray-300 dark:border-gray-600 p-2 rounded-md bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100"
-                      />
-                    </div>
+                    <NumberInputWithSlider
+                      label="Font Size"
+                      value={layer.fontSize || 24}
+                      onChange={(num) => setLayerProp(layer.index, "fontSize", num)}
+                      min={1}
+                      max={500}
+                      step={1}
+                    />
                     <div>
                       <label className="block text-sm font-semibold text-gray-700 dark:text-gray-300">Color:</label>
                       <input
