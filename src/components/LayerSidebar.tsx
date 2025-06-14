@@ -28,8 +28,9 @@ const LayerSidebar = ({
   setIsAddLayerModalOpen,
 }: LayerSidebarProps) => {
   return (
-    <aside className={"transition-all duration-300 bg-gray-300 dark:bg-gray-700 h-full shadow-lg" + (expanded ? "min-w-fit w-96" : "w-14")}>
-      <div className="flex items-center justify-between p-2 border-b border-gray-300 dark:border-gray-700">
+    // <aside className={"transition-all duration-300 bg-gray-300 dark:bg-gray-700 h-full shadow-lg" + (expanded ? "min-w-fit w-96" : "w-14")}>
+    <aside className={"transition-all duration-300 h-full shadow-lg" + (expanded ? "min-w-fit w-96" : "w-14")}>
+      <div className="flex items-center justify-between p-2  border-gray-300 dark:border-gray-700">
         <button className="btn btn-ghost p-1" onClick={onToggle} title="Toggle Layers Panel">
           {expanded ? <ChevronLeftIcon className="w-5 h-5" /> : <ChevronRightIcon className="w-5 h-5" />}
         </button>
@@ -68,21 +69,25 @@ const LayerSidebar = ({
         </div>
       )}
 
-      <button
-        className="w-full mt-4 py-2 px-4 bg-gray-700 text-white rounded-md flex items-center justify-center hover:bg-gray-800 transition"
-        onClick={() => setIsAddLayerModalOpen(true)}
-      >
-        {expanded ? (
-          <>
-            <PlusIcon className="w-4 h-4 mr-2" />
-            Add Layer
-          </>
-        ) : (
-          <>
+      {expanded ? (
+        <>
+          <div className="flex flex-col items-center">
+            <button
+              className="w-6/12 mt-4 py-2 px-4 bg-gray-700 text-white rounded-md flex items-center justify-center hover:bg-gray-800 transition"
+              onClick={() => setIsAddLayerModalOpen(true)}
+            >
+              <PlusIcon className="w-4 h-4 mr-2" />
+              Add Layer
+            </button>
+          </div>
+        </>
+      ) : (
+        <>
+          <div className="flex flex-col items-center p-2 gap-2">
             <PlusCircleIcon className="w-4 h-4 mr-2" />
-          </>
-        )}
-      </button>
+          </div>
+        </>
+      )}
     </aside>
   );
 };

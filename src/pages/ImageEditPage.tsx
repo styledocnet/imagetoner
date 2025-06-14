@@ -353,7 +353,8 @@ const ImageEditPage: React.FC = () => {
   //   };
   // };
   return (
-    <div className="w-full h-screen flex flex-col bg-gray-100 dark:bg-gray-900">
+    // <div className="w-full h-screen flex flex-col bg-gray-100 dark:bg-gray-900">
+    <div className="w-full h-screen flex flex-col">
       <Toolbar
         onImportImage={handleFileChange}
         onFillBackground={() => setIsFillModalOpen(true)}
@@ -378,14 +379,15 @@ const ImageEditPage: React.FC = () => {
             moveLayerDown={moveLayerDown}
             setIsAddLayerModalOpen={setIsAddLayerModalOpen}
           />
-          <div className="flex-grow overflow-auto bg-gray-300 dark:bg-gray-700 p-4">
+          <div className="flex-grow overflow-auto">
+            {/* <div className="flex-grow overflow-auto bg-gray-300 dark:bg-gray-700 p-4"> */}
             <div className="w-full h-full max-w-[90%] max-h-[80vh] mx-auto flex items-center justify-center relative">
               <canvas
                 {...bind()}
                 ref={canvasRef}
                 width={documentSize.width}
                 height={documentSize.height}
-                className="w-full h-auto object-contain border shadow-lg"
+                className="w-full h-auto object-contain shadow-lg"
                 style={{
                   aspectRatio: `${documentSize.width} / ${documentSize.height}`,
                 }}
@@ -394,7 +396,8 @@ const ImageEditPage: React.FC = () => {
           </div>
         </div>
       </div>
-      <div className="bg-gray-800 dark:bg-gray-700 text-white p-4 flex justify-between items-center shadow-md">
+      {/* <div className="bg-gray-800 dark:bg-gray-700 text-white p-4 flex justify-between items-center shadow-md"> */}
+      <div className="text-white p-4 flex justify-between items-center shadow-md">
         <button className="bg-blue-500 hover:bg-blue-600 py-2 px-4 rounded-md transition" onClick={handleExport}>
           <ArrowDownIcon className="w-4 h-4 inline-block mr-2" />
           Download

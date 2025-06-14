@@ -148,7 +148,7 @@ const LayerAccordion: React.FC<LayerAccordionProps> = ({ layers, currentLayer, s
                 {layer.type === "text" && (
                   <>
                     <div>
-                      <label className="block text-sm font-semibold text-gray-700 dark:text-gray-300">Font Family:</label>
+                      {/* <label className="block text-sm font-semibold text-gray-700 dark:text-gray-300">Font Family:</label> */}
                       <FontFamilySelect value={layer.fontFamily || ""} onChange={(font) => setLayerProp(layer.index, "fontFamily", font)} />
                       {layer.fontFamily === "" && (
                         <input

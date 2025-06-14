@@ -146,11 +146,12 @@ const StylePage: React.FC = () => {
       <div className="mb-6 flex items-center gap-2">
         <SelectBox
           options={styles.map((style) => ({
-            value: style.id,
+            value: String(style.id),
             label: style.name,
           }))}
-          value={selectedStyleId || ""}
+          value={selectedStyleId?.toString() || ""}
           onChange={(v) => handleSelectStyle(Number(v))}
+          small={false}
         />
         <button className={buttonBase + " bg-green-500 text-white flex items-center gap-1"} onClick={handleAddNew} title="Add new style">
           <PlusIcon className="w-5 h-5" /> New

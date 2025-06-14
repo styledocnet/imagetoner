@@ -22,21 +22,46 @@ export interface BrandStyle {
   updatedAt?: string;
 }
 
+export type LayerType = "image" | "text" | "shape" | "group";
+
+export type BlendMode =
+  | "normal"
+  | "multiply"
+  | "screen"
+  | "overlay"
+  | "darken"
+  | "lighten"
+  | "color-dodge"
+  | "color-burn"
+  | "hard-light"
+  | "soft-light"
+  | "difference"
+  | "exclusion"
+  | "hue"
+  | "saturation"
+  | "color"
+  | "luminosity";
+
 export interface Layer {
   name: string;
   index: number;
-  image: string | null;
-  offsetX: number;
-  offsetY: number;
-  scale: number;
-  type: "image" | "text";
+  type: LayerType;
+  image?: string | null;
   text?: string;
   fontFamily?: string;
   fontSize?: number;
   color?: string;
-  visible?: boolean;
+  shapeType?: "rect" | "ellipse" | "polygon" | "custom";
+  shapeProps?: any; // TODO more specific
+  groupLayers?: Layer[];
+  offsetX: number;
+  offsetY: number;
+  scale: number;
   width?: number;
   height?: number;
+  opacity?: number;
+  blendMode?: BlendMode;
+  visible?: boolean;
   originalImage?: string | null;
 }
 
