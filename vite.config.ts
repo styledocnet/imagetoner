@@ -3,6 +3,16 @@ import react from "@vitejs/plugin-react-swc";
 import { VitePWA } from "vite-plugin-pwa";
 
 export default defineConfig({
+  build: {
+    chunkSizeWarningLimit: 1500,
+    rollupOptions: {
+      output: {
+        manualChunks: {
+          transformers: ["@huggingface/transformers"],
+        },
+      },
+    },
+  },
   plugins: [
     react(),
     VitePWA({
@@ -22,12 +32,19 @@ export default defineConfig({
         ],
       },
       workbox: {
+        maximumFileSizeToCacheInBytes: 30 * 1024 * 1024,
+        globPatterns: ["**/*.{js,css,html,ico,png,svg}"],
         runtimeCaching: [
           {
-            urlPattern: ({ request }) =>
-              request.destination === "document" ||
-              request.destination === "script" ||
-              request.destination === "style",
+            urlPattern: /index\..*\.js/,
+            handler: "NetworkFirst",
+          },
+          {
+            urlPattern: /.*\.html/,
+            handler: "NetworkFirst",
+          },
+          {
+            urlPattern: ({ request }) => request.destination === "document" || request.destination === "script" || request.destination === "style",
             handler: "NetworkFirst",
             options: {
               cacheName: "assets",

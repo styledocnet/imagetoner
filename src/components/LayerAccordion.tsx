@@ -43,7 +43,7 @@ const LayerAccordion: React.FC<LayerAccordionProps> = ({ layers, currentLayer, s
   };
 
   return (
-    <div className="space-y-4">
+    <div className="space-y-4 rounded-xl ">
       {layers.map((layer: Layer, idx: number) => (
         <div
           key={"layeraccitem" + idx}
@@ -51,7 +51,7 @@ const LayerAccordion: React.FC<LayerAccordionProps> = ({ layers, currentLayer, s
         >
           <div
             className={`flex justify-between items-center px-4 py-2 rounded-t-xl transition cursor-pointer
-              ${currentLayer === idx ? "bg-sky-600 text-white shadow-lg" : "bg-slate-200 dark:bg-gray-700 dark:text-gray-300"}`}
+              ${currentLayer === idx ? "bg-gradient-to-t text-white shadow-lg rounded-b-none" : "bg-slate-200 dark:bg-gray-700 dark:text-gray-300 rounded-b-xl"}`}
             onClick={() => setCurrentLayer(idx)}
           >
             {editLayerName === idx ? (

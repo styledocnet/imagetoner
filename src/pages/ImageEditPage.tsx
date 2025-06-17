@@ -14,26 +14,27 @@ import Toolbar from "../components/Toolbar";
 import { useLayerContext } from "../context/LayerContext";
 import FilterDrawer from "../components/FilterDrawer";
 import { BrandStyle } from "../types";
-// import { removeBackground } from "../utils/removeBackground";
+import RemBGModal from "../components/RemBGModal";
+import { initializeRemoveBgModel, removeBackground } from "../utils/removeBackground";
 
 const ImageEditPage: React.FC = () => {
   const { layers, setLayers, currentLayer, setCurrentLayer, restoreOriginalLayer, updateLayerProp, addNewLayer, removeLayer, moveLayerUp, moveLayerDown } =
     useLayerContext();
   const { documentSize, setDocumentSize, setCanvasSize, aspectRatio, setAspectRatio } = useDocument();
+  const [currentStyle, setCurrentStyle] = useState<BrandStyle | null>(null);
   const [isFillModalOpen, setIsFillModalOpen] = useState(false);
-  const [isAspectRatioModalOpen, setIsAspectRatioModalOpen] = useState(false);
   const [isFilterModalOpen, setIsFilterModalOpen] = useState(false);
   const [isRemBgModalOpen, setIsRemBgModalOpen] = useState(false);
-  const [currentStyle, setCurrentStyle] = useState<BrandStyle | null>(null);
-
-  // const [isProcessing, setIsProcessing] = useState(false);
+  const [isAspectRatioModalOpen, setIsAspectRatioModalOpen] = useState(false);
   const [isAddLayerModalOpen, setIsAddLayerModalOpen] = useState(false);
+
+  const [isProcessing, setIsProcessing] = useState(false);
+
   const [isSidebarOpen, setSidebarOpen] = useState(true);
   const [isWebcamOpen, setIsWebcamOpen] = useState(false);
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const { navigate, currentRoute } = useRouter();
 
-  isRemBgModalOpen;
   // Calculate canvas size from document size
   const calculateCanvasSize = (docSize: { width: number; height: number }) => {
     const scaleFactor = 0.5; // Scale down for display purposes
@@ -134,26 +135,37 @@ const ImageEditPage: React.FC = () => {
     }
   };
 
-  // const handleRemoveBackground = async () => {
-  //   if (currentLayer === null || !layers[currentLayer]?.image) {
-  //     alert("Please select a layer with an image.");
-  //     return;
-  //   }
-
-  //   setIsProcessing(true);
-
-  //   try {
-  //     const newImage = await removeBackground(layers[currentLayer].image!);
-  //     updateLayerProp(currentLayer, "image", newImage);
-  //     alert("Background removed successfully!");
-  //   } catch (error) {
-  //     console.error("Failed to remove background:", error);
-  //     alert("An error occurred while removing the background.");
-  //   } finally {
-  //     setIsProcessing(false);
-  //     setIsRemBgModalOpen(false);
-  //   }
-  // };
+  const handleRemoveBackground = async (mode: "applyCurrent" | "createNew" = "applyCurrent") => {
+    if (currentLayer == null || !layers[currentLayer]?.image) {
+      alert("Please select a layer with an image.");
+      return;
+    }
+    setIsProcessing(true);
+    try {
+      await initializeRemoveBgModel();
+      const newImage = await removeBackground(layers[currentLayer].image!);
+      if (mode === "applyCurrent") {
+        updateLayerProp(currentLayer, "image", newImage);
+      } else if (mode === "createNew") {
+        addNewLayer({
+          name: "Removed BG Layer",
+          index: layers.length,
+          image: newImage,
+          offsetX: 0,
+          offsetY: 0,
+          scale: 1,
+          type: "image",
+          visible: true,
+        });
+      }
+      setIsRemBgModalOpen(false);
+    } catch (error) {
+      console.error("Failed to remove background:", error);
+      alert("An error occurred while removing the background.");
+    } finally {
+      setIsProcessing(false);
+    }
+  };
 
   const handleExport = async () => {
     const originalCanvas = document.createElement("canvas");
@@ -240,122 +252,11 @@ const ImageEditPage: React.FC = () => {
     renderLayers(ctx, layers, documentSize.width, documentSize.height);
   };
 
-  // const applyFilter = async (filter: string, params: any, option: string, isPreview = false) => {
-  //   console.log(`Applying filter: ${filter}, params:`, params, `option: ${option}`);
-
-  //   const canvas = canvasRef.current;
-  //   if (!canvas) {
-  //     console.error("Canvas not found.");
-  //     return;
-  //   }
-
-  //   if (currentLayer === null || currentLayer >= layers.length) {
-  //     console.error("Current layer index is invalid or not found:", currentLayer);
-  //     return;
-  //   }
-
-  //   const layer = layers[currentLayer];
-  //   if (!layer || !layer.image) {
-  //     console.error("Layer image not found. Current Layer:", layer);
-  //     return;
-  //   }
-
-  //   console.log("Current layer found:", layer);
-
-  //   const img = new Image();
-  //   img.src = layer.image;
-
-  //   img.onload = async () => {
-  //     console.log("Image loaded for filtering:", img.src);
-
-  //     // Resize canvas to match image dimensions
-  //     canvas.width = img.width;
-  //     canvas.height = img.height;
-
-  //     if (filter.startsWith("shader_")) {
-  //       console.log(`Applying WebGL shader filter: ${filter}`);
-  //       try {
-  //         // Ensure shader name is extracted correctly
-  //         const shaderName = filter.replace("shader_", ""); // Remove the prefix
-  //         const shaderSource = await loadShaderSource(shaderName);
-
-  //         applyShaderFilter(gl, img, shaderSource, params);
-
-  //         // Ensure canvas is still available after applying the filter
-  //         if (!canvasRef.current) {
-  //           console.error("Canvas reference is null after applying shader filter.");
-  //           return;
-  //         }
-
-  //         // Generate the filtered image immediately
-  //         const filteredImage = canvasRef.current.toDataURL("image/png");
-  //         console.log("Filtered image generated:", filteredImage);
-
-  //         if (!isPreview) {
-  //           if (option === "applyCurrent") {
-  //             updateLayerProp(currentLayer, "image", filteredImage);
-  //           } else if (option === "createNew") {
-  //             addNewLayer({
-  //               name: `${filter} Layer`,
-  //               index: layers.length,
-  //               image: filteredImage,
-  //               offsetX: 0,
-  //               offsetY: 0,
-  //               scale: 1,
-  //               type: "image",
-  //               visible: true,
-  //             });
-  //           }
-
-  //           renderCanvas();
-  //         }
-  //       } catch (error) {
-  //         console.error("Error applying WebGL shader filter:", error);
-  //       }
-  //     } else {
-  //       console.log(`Applying Canvas filter: ${filter}`);
-
-  //       const ctx = canvas.getContext("2d");
-  //       if (!ctx) {
-  //         console.error("Canvas 2D context not found.");
-  //         return;
-  //       }
-
-  //       ctx.clearRect(0, 0, canvas.width, canvas.height);
-  //       ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
-  //       await applyFilterToCanvas(filter, ctx, canvas, params);
-
-  //       if (!isPreview) {
-  //         const imageUrl = canvas.toDataURL("image/png");
-
-  //         if (option === "applyCurrent") {
-  //           updateLayerProp(currentLayer, "image", imageUrl);
-  //         } else if (option === "createNew") {
-  //           addNewLayer({
-  //             name: `${filter} Layer`,
-  //             index: layers.length,
-  //             image: imageUrl,
-  //             offsetX: 0,
-  //             offsetY: 0,
-  //             scale: 1,
-  //             type: "image",
-  //             visible: true,
-  //           });
-  //         }
-
-  //         renderCanvas();
-  //       }
-  //     }
-  //   };
-
-  //   img.onerror = () => {
-  //     console.error("Failed to load the image.");
-  //   };
-  // };
   return (
     // <div className="w-full h-screen flex flex-col bg-gray-100 dark:bg-gray-900">
     <div className="w-full h-screen flex flex-col">
       <Toolbar
+        isProcessing={isProcessing}
         onImportImage={handleFileChange}
         onFillBackground={() => setIsFillModalOpen(true)}
         onApplyFilter={() => setIsFilterModalOpen(true)}
@@ -473,6 +374,19 @@ const ImageEditPage: React.FC = () => {
         }}
         imageSrc={currentLayer !== null ? layers[currentLayer]?.image || "" : ""}
         documentSize={documentSize}
+      />
+      <RemBGModal
+        isOpen={isRemBgModalOpen}
+        imageSrc={currentLayer !== null ? layers[currentLayer]?.image || "" : ""}
+        onClose={() => setIsRemBgModalOpen(false)}
+        onApply={async () => {
+          await handleRemoveBackground("applyCurrent");
+        }}
+        // onApply={async () => {
+        //   // setThresholds(newThresholds);
+        //   setIsRemBgModalOpen(false);
+        //   await handleRemoveBackground();
+        // }}
       />
 
       {/* <FilterModal

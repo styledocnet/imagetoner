@@ -10,7 +10,9 @@ import {
   ChevronDownIcon,
   ChevronRightIcon,
 } from "@heroicons/react/24/outline";
+import "../../styles/shinui.css";
 
+// Nav items definition
 type NavItem = {
   name: string;
   value?: string;
@@ -35,13 +37,26 @@ const navItems: NavItem[] = [
   },
 ];
 
+// Utility for pointer detection
+const usePointerDevice = () => {
+  const [isPointer, setPointer] = useState(false);
+  useEffect(() => {
+    const updatePointer = (e: Event) => setPointer((e as any).pointerType !== "touch");
+    window.addEventListener("pointerdown", updatePointer, { once: true });
+    return () => window.removeEventListener("pointerdown", updatePointer);
+  }, []);
+  return isPointer;
+};
+
 const MainNav: React.FC = () => {
   const { currentRoute } = useRouter();
   const [isNavOpen, setIsNavOpen] = useState(false);
   const [openMenus, setOpenMenus] = useState<{ [k: string]: boolean }>({});
+  const isPointer = usePointerDevice();
 
   useEffect(() => {
     setIsNavOpen(false);
+    setOpenMenus({});
   }, [currentRoute]);
 
   const toggleNav = () => setIsNavOpen((prev) => !prev);
@@ -53,25 +68,28 @@ const MainNav: React.FC = () => {
     }));
   };
 
-  const navBg = "bg-gradient-to-br from-[#292c36] via-[#545a68] to-[#17181b] shadow-2xl backdrop-blur-md";
-  const metallic = "text-slate-100 bg-gradient-to-br from-[#979ca7] via-[#dbe4ee] to-[#767e8a] bg-clip-text text-transparent";
-  const glass = "bg-white/10 backdrop-blur-lg border border-white/20 shadow-lg";
+  // Styling classes
+  const navBg = "shinnav-bg";
+  const metallic = "shinmetallic";
+  const glass = "shinglass";
   const transition = "transition-all duration-400 ease-[cubic-bezier(.33,1.02,.53,1)]";
-  const itemPerspective = "transform-gpu hover:scale-105 hover:rotate-x-[8deg] hover:rotate-y-[-8deg] hover:shadow-[0_8px_40px_rgba(40,100,255,0.25)]";
+  const itemPerspective = "shinitem-perspective";
 
-  // Recursive render function for menu items
+  // Nav item renderer
   const renderNavItem = (item: NavItem, depth = 0) => {
     const isActive = item.value && currentRoute === item.value;
     const hasChildren = Array.isArray(item.children) && item.children.length > 0;
     const isOpened = openMenus[item.name];
 
+    const baseGlow = "focus-visible:ring-2 focus-visible:ring-sky-300 focus-visible:ring-offset-2 focus-visible:z-20";
+    const pointerGlow = isPointer ? "hover:shadow-[0_0_18px_3px_rgba(56,189,248,0.22)] hover:ring-2 hover:ring-sky-300" : "";
+
     const ItemContent = (
       <div
-        className={`flex items-center gap-3 px-4 py-3 rounded-2xl cursor-pointer select-none group
-          ${glass} ${transition} ${itemPerspective}
+        className={`flex items-center gap-3 px-4 py-3 rounded-2xl cursor-pointer select-none group outline-none
+          ${glass} ${transition} ${itemPerspective} ${baseGlow} ${pointerGlow}
           ${isActive ? "ring-2 ring-sky-300 bg-sky-900/10 scale-105 text-sky-200" : ""}
           ${depth === 0 ? "text-lg font-extrabold" : "text-base font-semibold"}
-          hover:bg-white/10 hover:ring-2 hover:ring-sky-300
           `}
         style={{
           marginLeft: depth * 22,
@@ -82,6 +100,12 @@ const MainNav: React.FC = () => {
         tabIndex={0}
         role="button"
         aria-expanded={hasChildren ? isOpened : undefined}
+        onKeyDown={(e) => {
+          if (hasChildren && (e.key === " " || e.key === "Enter")) {
+            e.preventDefault();
+            handleMenuToggle(item.name);
+          }
+        }}
       >
         <item.icon className={`h-7 w-7 ${metallic} drop-shadow-[0_1px_3px_rgba(0,0,0,0.36)]`} />
         <span className="truncate">{item.name}</span>
@@ -89,11 +113,10 @@ const MainNav: React.FC = () => {
       </div>
     );
 
-    // If leaf, render as Link, else just a div
     return (
       <div key={item.name + (item.value || "")}>
         {item.value && !hasChildren ? (
-          <Link to={item.value} className="block">
+          <Link to={item.value} className="block focus:outline-none">
             {ItemContent}
           </Link>
         ) : (
@@ -110,7 +133,8 @@ const MainNav: React.FC = () => {
     <div className="relative z-50">
       {/* Floating Nav Button */}
       <button
-        className={`group focus:outline-none p-3 rounded-full shadow-xl ring-2 ring-sky-600/40
+        className={`
+          group focus:outline-none p-3 rounded-full shadow-xl ring-2 ring-sky-600/40
           bg-gradient-to-br from-[#242d3c] to-[#3d4256] hover:from-[#31354a] hover:to-[#2e3340]
           border-2 border-slate-700 hover:scale-105 active:scale-95 transition
           fixed top-4 left-4 md:static
@@ -139,11 +163,12 @@ const MainNav: React.FC = () => {
           backdropFilter: "blur(9px)",
         }}
         onClick={(e) => e.stopPropagation()}
+        aria-label="Main navigation"
       >
         <div className="flex-1 flex flex-col gap-2">{navItems.map((item) => renderNavItem(item))}</div>
       </nav>
       {/* Overlay for mobile */}
-      {isNavOpen && <div className="fixed inset-0 bg-black/40 z-40" onClick={toggleNav} />}
+      {isNavOpen && <div className="fixed inset-0 bg-black/40 z-40" onClick={toggleNav} aria-label="Close navigation menu" tabIndex={-1} />}
     </div>
   );
 };

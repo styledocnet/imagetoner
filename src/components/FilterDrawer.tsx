@@ -5,6 +5,7 @@ import WebGLFilterRenderer from "./WebGLFilterRenderer";
 import { applyFilterToCanvas } from "../utils/filterUtils";
 import { canvasFilterParams, shaderFilterParams } from "../utils/filterParams";
 import { XMarkIcon } from "@heroicons/react/24/outline";
+import ShinSelectBox from "./shinui/ShinSelectBox";
 
 interface FilterDrawerProps {
   isOpen: boolean;
@@ -17,15 +18,15 @@ interface FilterDrawerProps {
 }
 
 const FilterDrawer: React.FC<FilterDrawerProps> = ({ isOpen, onClose, onApply, imageSrc, documentSize, mainCanvasRef, brandStyle }) => {
+  // --- State
   const [filter, setFilter] = useState("shader_vignette");
   const [params, setParams] = useState<any>(shaderFilterParams[filter]);
   const [filteredImage, setFilteredImage] = useState<string | null>(null);
   const previewShaderCanvasRef = useRef<any>(null);
   const canvasRef = useRef<HTMLCanvasElement>(null);
-
   const themeColors = brandStyle?.colors ?? [];
 
-  // Ensure params are reset on filter change
+  // --- Effect: Reset params on filter change
   useEffect(() => {
     if (shaderFilterParams[filter]) {
       setParams({ ...shaderFilterParams[filter] });
@@ -34,12 +35,13 @@ const FilterDrawer: React.FC<FilterDrawerProps> = ({ isOpen, onClose, onApply, i
     }
   }, [filter]);
 
-  // Always update preview when settings change
+  // --- Effect: Update preview
   useEffect(() => {
     if (isOpen) renderPreview();
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [filter, params, imageSrc, isOpen]);
 
+  // --- Preview renderer
   const renderPreview = () => {
     if (filter.startsWith("shader_")) {
       // WebGLFilterRenderer handles preview
@@ -62,6 +64,7 @@ const FilterDrawer: React.FC<FilterDrawerProps> = ({ isOpen, onClose, onApply, i
     }
   };
 
+  // --- Apply handler
   const handleApply = async (mode: "applyCurrent" | "createNew") => {
     const mainCanvas = mainCanvasRef.current;
     if (!mainCanvas) return;
@@ -74,9 +77,7 @@ const FilterDrawer: React.FC<FilterDrawerProps> = ({ isOpen, onClose, onApply, i
         onApply(imageDataUrl, mode);
         onClose();
         return;
-      } catch (error) {
-        // handle error
-      }
+      } catch (error) {}
     } else {
       const mainCtx = mainCanvas.getContext("2d");
       if (!mainCtx) return;
@@ -96,6 +97,7 @@ const FilterDrawer: React.FC<FilterDrawerProps> = ({ isOpen, onClose, onApply, i
     }
   };
 
+  // --- Parameter input renderers
   const handleParamChange = (paramName: string, value: any) => {
     setParams((prevParams: any) => ({
       ...prevParams,
@@ -104,16 +106,11 @@ const FilterDrawer: React.FC<FilterDrawerProps> = ({ isOpen, onClose, onApply, i
   };
 
   const renderColorInput = (paramName: string, param: any) => {
-    // Only compare swatch with string value
-    // The value could be in params[paramName], or fall back to param.default or param.value
     let val: string = "";
-    if (typeof params[paramName] === "string") {
-      val = params[paramName];
-    } else if (typeof param.value === "string") {
-      val = param.value;
-    } else if (typeof param.default === "string") {
-      val = param.default;
-    }
+    if (typeof params[paramName] === "string") val = params[paramName];
+    else if (typeof param.value === "string") val = param.value;
+    else if (typeof param.default === "string") val = param.default;
+
     return (
       <div className="flex items-center gap-2">
         {themeColors.map((c) => (
@@ -160,48 +157,72 @@ const FilterDrawer: React.FC<FilterDrawerProps> = ({ isOpen, onClose, onApply, i
     }
   };
 
+  // --- Filters for select box
+  const filterOptions = [
+    {
+      label: "Shader Filters",
+      options: Object.keys(shaderFilterParams).map((key) => ({
+        value: key,
+        label: key.replace("shader_", "").replace(/_/g, " ").toUpperCase(),
+      })),
+    },
+    {
+      label: "Canvas Filters",
+      options: Object.keys(canvasFilterParams).map((key) => ({
+        value: key,
+        label: key.replace(/_/g, " ").toUpperCase(),
+      })),
+    },
+  ];
+
   const currentParams = shaderFilterParams[filter] || canvasFilterParams[filter] || {};
+
+  // --- Responsive drawer classes
+  // ShinUI glass with mobile-friendly layout
+  const drawerBase = "fixed bottom-0 left-0 z-50 shadow-xl shinglass shinitem shinitem-shadowfocus transition-transform duration-300";
+  const drawerDesktop = "w-[33vw] min-w-[320px] max-w-[420px] rounded-t-xl";
+  const drawerMobile = "w-full rounded-t-2xl";
+  const drawerOpen = "translate-y-0";
+  const drawerClosed = "translate-y-full";
+  const mobileHeaderHandle = "mx-auto my-2 w-12 h-1.5 bg-gray-300 dark:bg-gray-700 rounded-full opacity-80";
 
   return (
     <div
-      className={`fixed bottom-0 left-0 z-50 bg-white dark:bg-gray-900 border-t border-gray-300 dark:border-gray-700 transition-transform ${
-        isOpen ? "translate-y-0" : "translate-y-full"
-      }`}
-      style={{ width: "33%", minWidth: "300px", minHeight: "300px" }}
+      className={`${drawerBase} ${isOpen ? drawerOpen : drawerClosed} ${drawerDesktop} sm:${drawerDesktop} xs:${drawerMobile}`}
+      style={{
+        minHeight: isOpen ? 370 : 0,
+        maxHeight: "90vh",
+        right: 0,
+      }}
     >
-      <div className="p-3 border-b border-gray-200 dark:border-gray-700 flex justify-between items-center">
-        <h3 className="font-bold text-lg">Filter Settings</h3>
-        <button onClick={onClose}>
-          <XMarkIcon className="w-6 h-6" />
+      {/* Mobile handle for context */}
+      <div className={`block sm:hidden ${mobileHeaderHandle}`} />
+      {/* Sticky header for desktop/mobile */}
+      <div className="p-3 border-b border-gray-200 dark:border-gray-700 flex justify-between items-center sticky top-0 bg-white/60 dark:bg-gray-900/80 shin-glass z-10 rounded-t-xl">
+        <h3 className="font-normal text-base text-gray-900 dark:text-gray-500">Filter</h3>
+        <button onClick={onClose} className="rounded shinitem p-1 hover:bg-red-100 dark:hover:bg-red-900 transition" aria-label="Close">
+          <XMarkIcon className="w-6 h-6 text-gray-600 dark:text-gray-200" />
         </button>
       </div>
-      <div className="p-4">
-        <label className="block mb-2 font-semibold">Select Filter:</label>
-        <select value={filter} onChange={(e) => setFilter(e.target.value)} className="w-full p-2 border rounded-md dark:bg-gray-800 dark:text-white">
-          <optgroup label="Shader Filters">
-            {Object.keys(shaderFilterParams).map((key) => (
-              <option key={key} value={key}>
-                {key.replace("shader_", "").toUpperCase()}
-              </option>
-            ))}
-          </optgroup>
-          <optgroup label="Canvas Filters">
-            {Object.keys(canvasFilterParams).map((key) => (
-              <option key={key} value={key}>
-                {key.toUpperCase()}
-              </option>
-            ))}
-          </optgroup>
-        </select>
+      {/* Main content */}
+      <div className="p-4 overflow-y-auto max-h-[55vh]">
+        {/* <label className="block mb-2 font-semibold text-gray-900 dark:text-white">Select Filter:</label> */}
+        <ShinSelectBox
+          value={filter}
+          onChange={setFilter}
+          options={filterOptions.flatMap((g) => [{ label: `– ${g.label} –`, value: "", disabled: true }, ...g.options])}
+          placeholder="Choose Filter"
+        />
         {Object.entries(currentParams).map(([paramName, param]) => (
-          <div key={paramName} className="mb-3">
+          <div key={paramName} className="mb-3 mt-3">
             <label className="block font-medium text-sm mb-1 capitalize text-gray-500">{param.desc}</label>
             {renderInput(paramName, param)}
           </div>
         ))}
       </div>
+      {/* Preview */}
       {isOpen && (
-        <div className="mt-4">
+        <div className="px-4 pb-2">
           <div
             style={{
               width: "100%",
@@ -211,8 +232,11 @@ const FilterDrawer: React.FC<FilterDrawerProps> = ({ isOpen, onClose, onApply, i
               justifyContent: "center",
               alignItems: "center",
               border: "1px solid #ccc",
-              borderRadius: "4px",
+              borderRadius: "8px",
+              background: "rgba(255,255,255,0.2)",
+              backdropFilter: "blur(6px)",
             }}
+            className="shinitem shin-glass"
           >
             {filter.startsWith("shader_") ? (
               <WebGLFilterRenderer
@@ -230,20 +254,23 @@ const FilterDrawer: React.FC<FilterDrawerProps> = ({ isOpen, onClose, onApply, i
                 style={{
                   display: "block",
                   maxWidth: "100%",
-                  maxHeight: "200px",
-                  border: "1px solid #ccc",
-                  borderRadius: "4px",
+                  maxHeight: "140px",
+                  borderRadius: "8px",
                 }}
               />
             )}
           </div>
         </div>
       )}
-      <div className="p-4 border-t dark:border-gray-700 flex justify-end gap-2">
-        <button onClick={() => handleApply("applyCurrent")} className="bg-blue-500 text-white px-4 py-2 rounded-md">
+      {/* Action buttons */}
+      <div className="p-4 border-t dark:border-gray-700 flex justify-end gap-2 sticky bottom-0 bg-white/60 dark:bg-gray-900/80 shin-glass rounded-b-xl">
+        <button
+          onClick={() => handleApply("applyCurrent")}
+          className="bg-blue-500 text-white px-4 py-2 rounded-md shinitem hover:bg-blue-600 shadow transition"
+        >
           Apply to Layer
         </button>
-        <button onClick={() => handleApply("createNew")} className="bg-green-500 text-white px-4 py-2 rounded-md">
+        <button onClick={() => handleApply("createNew")} className="bg-green-500 text-white px-4 py-2 rounded-md shinitem hover:bg-green-600 shadow transition">
           Create New Layer
         </button>
       </div>

@@ -42,7 +42,7 @@ const LayerSidebar = ({
       </div>
 
       {expanded ? (
-        <div className="p-2 overflow-y-auto max-h-[calc(100vh-4rem)]">
+        <div className="p-2 overflow-y-auto scrollbar-hidden max-h-[calc(100vh-4rem)]">
           <LayerAccordion
             layers={layers}
             currentLayer={currentLayer}
