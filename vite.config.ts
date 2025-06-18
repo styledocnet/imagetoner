@@ -2,7 +2,10 @@ import { defineConfig } from "vite";
 import react from "@vitejs/plugin-react-swc";
 import { VitePWA } from "vite-plugin-pwa";
 
-export default defineConfig({
+const repoName = "imagetoner";
+
+export default defineConfig(({ mode }) => ({
+  base: mode === "production" ? `/${repoName}/` : "/",
   build: {
     chunkSizeWarningLimit: 1500,
     rollupOptions: {
@@ -18,8 +21,8 @@ export default defineConfig({
     VitePWA({
       registerType: "autoUpdate",
       manifest: {
-        name: "Photo Editor",
-        short_name: "imgapi-ui",
+        name: "ImageToner",
+        short_name: "imagetoner",
         description: "PhotoGraphy, Filter and Edit UI",
         theme_color: "#FF7F50",
         background_color: "#FFFFFF",
@@ -61,4 +64,4 @@ export default defineConfig({
       },
     }),
   ],
-});
+}));

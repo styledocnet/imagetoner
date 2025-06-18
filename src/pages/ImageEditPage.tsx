@@ -253,7 +253,6 @@ const ImageEditPage: React.FC = () => {
   };
 
   return (
-    // <div className="w-full h-screen flex flex-col bg-gray-100 dark:bg-gray-900">
     <div className="w-full h-screen flex flex-col">
       <Toolbar
         isProcessing={isProcessing}
@@ -297,7 +296,6 @@ const ImageEditPage: React.FC = () => {
           </div>
         </div>
       </div>
-      {/* <div className="bg-gray-800 dark:bg-gray-700 text-white p-4 flex justify-between items-center shadow-md"> */}
       <div className="text-white p-4 flex justify-between items-center shadow-md">
         <button className="bg-blue-500 hover:bg-blue-600 py-2 px-4 rounded-md transition" onClick={handleExport}>
           <ArrowDownIcon className="w-4 h-4 inline-block mr-2" />

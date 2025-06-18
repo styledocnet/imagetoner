@@ -1,7 +1,8 @@
 {
-  "name": "document-editor",
+  "name": "imagetoner",
+  "homepage": "https://styledocnet.github.io/imagetoner/",
   "private": true,
-  "version": "0.1.1",
+  "version": "0.1.2",
   "type": "module",
   "scripts": {
     "dev": "vite --host",
@@ -22,7 +23,6 @@
     "onnxruntime-web": "^1.22.0",
     "react": "^19.1.0",
     "react-dom": "^19.1.0",
-    "react-spring": "^10.0.1",
     "react-webcam": "^7.2.0"
   },
   "devDependencies": {
