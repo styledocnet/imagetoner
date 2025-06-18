@@ -1,1 +1,1 @@
-{"name":"Photo Editor","short_name":"imgapi-ui","description":"PhotoGraphy, Filter and Edit UI","start_url":"/","display":"standalone","background_color":"#FFFFFF","theme_color":"#FF7F50","lang":"en","scope":"/","icons":[{"src":"512.png","sizes":"512x512","type":"image/png"}]}
+{"name":"Photo Editor","short_name":"imgapi-ui","description":"PhotoGraphy, Filter and Edit UI","start_url":"/imagetoner/","display":"standalone","background_color":"#FFFFFF","theme_color":"#FF7F50","lang":"en","scope":"/imagetoner/","icons":[{"src":"512.png","sizes":"512x512","type":"image/png"}]}
