@@ -16,6 +16,7 @@ import FilterDrawer from "../components/FilterDrawer";
 import { BrandStyle } from "../types";
 import RemBGModal from "../components/RemBGModal";
 import { initializeRemoveBgModel, removeBackground } from "../utils/removeBackground";
+import { snapToGrid } from "../utils/snapToGrid";
 
 const ImageEditPage: React.FC = () => {
   const { layers, setLayers, currentLayer, setCurrentLayer, restoreOriginalLayer, updateLayerProp, addNewLayer, removeLayer, moveLayerUp, moveLayerDown } =
@@ -200,8 +201,18 @@ const ImageEditPage: React.FC = () => {
     {
       onDrag: ({ offset: [dx, dy] }) => {
         if (currentLayer !== null) {
-          updateLayerProp(currentLayer, "offsetX", dx);
-          updateLayerProp(currentLayer, "offsetY", dy);
+          const vec2 = { x: dx, y: dy };
+          // TODO if settings.snap
+          const snap = snapToGrid(dx, dy, {
+            gridSize: 10,
+            highlightCallback: () => {},
+          });
+          if (snap.snapped) {
+            vec2.x = snap.x;
+            vec2.y = snap.y;
+          }
+          updateLayerProp(currentLayer, "offsetX", vec2.x);
+          updateLayerProp(currentLayer, "offsetY", vec2.y);
         }
       },
       onPinch: ({ offset: [d] }) => {
