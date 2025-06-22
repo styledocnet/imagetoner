@@ -30,8 +30,8 @@ const LayerSidebar = ({
   return (
     // <aside className={"transition-all duration-300 bg-gray-300 dark:bg-gray-700 h-full shadow-lg" + (expanded ? "min-w-fit w-96" : "w-14")}>
     <aside className={"transition-all duration-300 h-full shadow-lg" + (expanded ? "min-w-fit w-96" : "w-14")}>
-      <div className="flex items-center justify-between p-2  border-gray-300 dark:border-gray-700">
-        <button className="btn btn-ghost p-1" onClick={onToggle} title="Toggle Layers Panel">
+      <div className="flex items-center justify-between p-2  border-gray-300  dark:text-gray-400 dark:border-gray-700">
+        <button className="btn btn-ghost p-1 hover:bg-gray-800 rounded-lg" onClick={onToggle} title="Toggle Layers Panel">
           {expanded ? <ChevronLeftIcon className="w-5 h-5" /> : <ChevronRightIcon className="w-5 h-5" />}
         </button>
         {expanded && (
@@ -83,8 +83,11 @@ const LayerSidebar = ({
         </>
       ) : (
         <>
-          <div className="flex flex-col items-center p-2 gap-2">
-            <PlusCircleIcon className="w-4 h-4 mr-2" />
+          <div
+            className="flex flex-col items-center p-2 content-center hover:bg-gray-800 dark:text-gray-400 rounded-lg"
+            onClick={() => setIsAddLayerModalOpen(true)}
+          >
+            <PlusCircleIcon className="w-4 h-4 m-auto" />
           </div>
         </>
       )}

@@ -51,7 +51,7 @@ const LayerAccordion: React.FC<LayerAccordionProps> = ({ layers, currentLayer, s
         >
           <div
             className={`flex justify-between items-center px-4 py-2 rounded-t-xl transition cursor-pointer
-              ${currentLayer === idx ? "bg-gradient-to-t text-white shadow-lg rounded-b-none" : "bg-slate-200 dark:bg-gray-700 dark:text-gray-300 rounded-b-xl"}`}
+              ${currentLayer === idx ? "bg-gradient-to-t text-gray-500 dark:text-gray-300 shadow-lg rounded-b-none" : "bg-slate-200 dark:bg-gray-700 dark:text-gray-300 rounded-b-xl"}`}
             onClick={() => setCurrentLayer(idx)}
           >
             {editLayerName === idx ? (
