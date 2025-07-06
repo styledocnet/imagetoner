@@ -31,6 +31,14 @@ const navItems: NavItem[] = [
     ],
   },
   {
+    name: "Audio",
+    icon: SquaresPlusIcon,
+    children: [
+      { name: "Recorder", value: "recorder", icon: PhotoIcon },
+      { name: "AudioList", value: "audio_list", icon: SquaresPlusIcon },
+    ],
+  },
+  {
     name: "Themes",
     icon: Cog6ToothIcon,
     children: [{ name: "Styles", value: "style_page", icon: SwatchIcon }],

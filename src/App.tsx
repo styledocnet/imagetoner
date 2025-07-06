@@ -10,6 +10,7 @@ import StylePage from "./pages/StylePage";
 // import ImageStyleTransferPage from "./pages/ImageStyleTransferPage";
 import { LayerProvider } from "./context/LayerContext";
 import { useUpdateChecker } from "./app/UpdateChecker";
+import AudioRecorderPage from "./pages/AudioRecorderPage";
 
 const App: React.FC = () => {
   useUpdateChecker();
@@ -40,6 +41,7 @@ const AppContent: React.FC = () => {
         {/* <Route path="image_styletransfer" component={<ImageStyleTransferPage />} /> */}
         <Route path="style_page" component={<StylePage />} />
         <Route path="photos" component={<PhotosPage />} />
+        <Route path="recorder" component={<AudioRecorderPage />} />
         <Route path="not_found" component={<NotFound />} />
       </main>
     </div>
