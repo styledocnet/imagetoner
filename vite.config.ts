@@ -35,6 +35,8 @@ export default defineConfig(({ mode }) => ({
         ],
       },
       workbox: {
+        // sourcemap: true,
+        cleanupOutdatedCaches: true,
         maximumFileSizeToCacheInBytes: 30 * 1024 * 1024,
         globPatterns: ["**/*.{js,css,html,ico,png,svg}"],
         runtimeCaching: [

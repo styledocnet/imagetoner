@@ -9,15 +9,10 @@ import ImageEditPage from "./pages/ImageEditPage";
 import StylePage from "./pages/StylePage";
 // import ImageStyleTransferPage from "./pages/ImageStyleTransferPage";
 import { LayerProvider } from "./context/LayerContext";
+import { useUpdateChecker } from "./app/UpdateChecker";
 
 const App: React.FC = () => {
-  useEffect(() => {
-    if (!window.location.search.includes("cb=")) {
-      const url = new URL(window.location.href);
-      url.searchParams.set("cb", Date.now().toString());
-      window.location.replace(url.toString());
-    }
-  }, []);
+  useUpdateChecker();
 
   return (
     <RouterProvider>
