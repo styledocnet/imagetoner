@@ -34,7 +34,7 @@ const Toolbar: React.FC<ToolbarProps> = ({
 
   return (
     <ShinToolbar
-      className={`shin-glass shinitem shinitem-shadowfocus p-4 flex justify-between items-center shadow-lg ${isProcessing ? "opacity-70 pointer-events-none select-none" : ""}`}
+      className={`shin-glass shinitem mb-2 p-4 flex justify-between items-center shadow-lg ${isProcessing ? "opacity-70 pointer-events-none select-none" : ""}`}
     >
       <div className="flex space-x-4">
         <input ref={fileInputRef} type="file" className="hidden" accept="image/*" onChange={onImportImage} />
