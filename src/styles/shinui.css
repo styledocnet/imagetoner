@@ -85,3 +85,16 @@
 .shinlogo-text {
     @apply shinmetallic font-extrabold text-2xl tracking-wider drop-shadow;
 }
+
+.shinitem.gloss::after {
+    content: "";
+    position: absolute;
+    left: 10%;
+    top: 6%;
+    width: 80%;
+    height: 35%;
+    border-radius: 50% 50% 30% 30%/70% 70% 40% 40%;
+    background: linear-gradient(180deg, rgba(255, 255, 255, 0.25), rgba(255, 255, 255, 0.01));
+    pointer-events: none;
+    filter: blur(0.5px);
+}

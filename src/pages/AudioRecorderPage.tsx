@@ -3,8 +3,10 @@ import Recorder from "../components/Recorder/Recorder";
 
 const AudioRecorderPage = () => {
   return (
-    <div className="flex min-h-screen min-w-screen bg-gray-900 text-white p-6">
-      <Recorder />
+    <div className="flex min-h-screen min-w-screen  dark:text-white  p-6">
+      <div className="container mx-auto">
+        <Recorder />
+      </div>
     </div>
   );
 };

@@ -2,9 +2,10 @@ import React, { useEffect, useRef } from "react";
 
 interface VizBarProps {
   frequencyStats: Uint8Array;
+  sampleRate: number;
 }
 
-const VizBar: React.FC<VizBarProps> = ({ frequencyStats }) => {
+const VizBar: React.FC<VizBarProps> = ({ frequencyStats, sampleRate = 44100 }) => {
   const canvasRef = useRef<HTMLCanvasElement | null>(null);
 
   useEffect(() => {
@@ -38,11 +39,7 @@ const VizBar: React.FC<VizBarProps> = ({ frequencyStats }) => {
       drawLabels(ctx, width, height);
     };
 
-    const drawGrid = (
-      ctx: CanvasRenderingContext2D,
-      width: number,
-      height: number,
-    ) => {
+    const drawGrid = (ctx: CanvasRenderingContext2D, width: number, height: number) => {
       const gridLines = 5;
       const gridColor = "#444";
 
@@ -70,11 +67,7 @@ const VizBar: React.FC<VizBarProps> = ({ frequencyStats }) => {
       }
     };
 
-    const drawLabels = (
-      ctx: CanvasRenderingContext2D,
-      width: number,
-      height: number,
-    ) => {
+    const drawLabels = (ctx: CanvasRenderingContext2D, width: number, height: number) => {
       ctx.fillStyle = "#fff";
       ctx.font = "12px Arial";
 
@@ -86,10 +79,15 @@ const VizBar: React.FC<VizBarProps> = ({ frequencyStats }) => {
       }
 
       // Frequency labels (X-axis)
+      const nyquist = sampleRate / 2;
+      const binHz = nyquist / frequencyStats.length;
       const binLabels = 10;
       for (let i = 0; i <= binLabels; i++) {
         const x = (i / binLabels) * width;
-        const label = `${i * Math.floor(frequencyStats.length / binLabels)} Hz`;
+        // const label = `${i * Math.floor(frequencyStats.length / binLabels)} Hz`;
+        const binIndex = Math.floor((i * frequencyStats.length) / binLabels);
+        const labelHz = Math.round(binIndex * binHz);
+        const label = `${labelHz} Hz`;
         ctx.fillText(label, x - 15, height - 5);
       }
     };
@@ -120,7 +118,7 @@ const VizBar: React.FC<VizBarProps> = ({ frequencyStats }) => {
     };
   }, [frequencyStats]);
 
-  return <canvas ref={canvasRef} className="w-full h-48 bg-gray-950" />;
+  return <canvas ref={canvasRef} className="w-full h-48 bg-gradient-to-tr" />;
 };
 
 export default VizBar;

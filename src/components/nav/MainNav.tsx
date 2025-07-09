@@ -9,6 +9,9 @@ import {
   Cog6ToothIcon,
   ChevronDownIcon,
   ChevronRightIcon,
+  SpeakerWaveIcon,
+  MicrophoneIcon,
+  ListBulletIcon,
 } from "@heroicons/react/24/outline";
 import "../../styles/shinui.css";
 
@@ -32,10 +35,10 @@ const navItems: NavItem[] = [
   },
   {
     name: "Audio",
-    icon: SquaresPlusIcon,
+    icon: SpeakerWaveIcon,
     children: [
-      { name: "Recorder", value: "recorder", icon: PhotoIcon },
-      { name: "AudioList", value: "audio_list", icon: SquaresPlusIcon },
+      { name: "Recorder", value: "recorder", icon: MicrophoneIcon },
+      { name: "AudioList", value: "audio_list", icon: ListBulletIcon },
     ],
   },
   {

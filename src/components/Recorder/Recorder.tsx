@@ -5,95 +5,82 @@ import AudioFilesList from "./AudioFilesList";
 import { calculatePitchAutocorrelation, calculatePitchYIN } from "../../utils/audio/calculations";
 import SpectrumAnalyzer from "./SpectrumAnalyzer";
 import ShinSelectBox from "../shinui/ShinSelectBox";
+import ShinButton from "../shinui/ShinButton";
+import { audioStorage } from "../../storage/audioStorage";
+import { AudioRecordingDocument } from "@/types/audio";
+import { useTonePlaybackWithStats } from "@/hooks/useTonePlaybackWithStats";
+import * as Tone from "tone";
 
 const Recorder = () => {
   const [isArmed, setIsArmed] = useState(false);
   const [isRecording, setIsRecording] = useState(false);
   const [pitch, setPitch] = useState<number | null>(null);
-  const [noteInfo, setNoteInfo] = useState<{
-    note: string;
-    cents: number;
-  } | null>(null);
+  const [noteInfo, setNoteInfo] = useState<{ note: string; cents: number } | null>(null);
   const [frequencyStats, setFrequencyStats] = useState<Uint8Array | null>(null);
   const [lastSevenNotes, setLastSevenNotes] = useState<string[]>([]);
   const mediaRecorderRef = useRef<MediaRecorder | null>(null);
-  const [audioFiles, setAudioFiles] = useState<{ id: string; name: string; blob: Blob }[]>([]);
+  const [audioFiles, setAudioFiles] = useState<AudioRecordingDocument[]>([]);
   const audioContextRef = useRef<AudioContext | null>(null);
   const analyserRef = useRef<AnalyserNode | null>(null);
   const streamRef = useRef<MediaStream | null>(null);
   const [pitchDetectionMethod, setPitchDetectionMethod] = useState("YIN");
   const [visualizationType, setVisualizationType] = useState("VizBar");
-  const { theme } = { theme: "dark" };
+  const { play, toneFrequencyStats } = useTonePlaybackWithStats();
+  const [sampleRate, setSampleRate] = useState(44100);
+
+  const pitchOptions = [
+    { label: "YIN", value: "YIN" },
+    { label: "Autocorrelation", value: "Autocorrelation" },
+  ];
+
+  const vizOptions = [
+    { label: "VizBar", value: "VizBar" },
+    { label: "SpectrumAnalyzer", value: "SpectrumAnalyzer" },
+  ];
+
+  // Load saved audio files from storage on mount
+  useEffect(() => {
+    audioStorage.getAudioFiles().then((files) => setAudioFiles(files.reverse())); // latest first
+  }, []);
+
+  // Save audio file to IndexedDB with metadata
+  const handleSaveRecording = async (blob: Blob, name: string) => {
+    let duration: number | undefined;
+    try {
+      const audio = document.createElement("audio");
+      audio.src = URL.createObjectURL(blob);
+      await new Promise<void>((resolve) => {
+        audio.onloadedmetadata = () => resolve();
+      });
+      duration = audio.duration;
+    } catch {}
+    await audioStorage.addAudioFile({
+      name,
+      blob,
+      mimeType: blob.type,
+      duration,
+    });
+    // Update UI list
+    const files = await audioStorage.getAudioFiles();
+    setAudioFiles(files.reverse());
+  };
 
   const stopRecording = () => {
     mediaRecorderRef.current?.stop();
     setIsRecording(false);
   };
 
-  const startPlayback = (audio: HTMLAudioElement, audioContext: AudioContext) => {
-    const analyser = audioContext.createAnalyser();
-    analyser.fftSize = 2048;
-    setFrequencyStats(new Uint8Array(analyser.frequencyBinCount));
-
-    const source = audioContext.createMediaElementSource(audio);
-    source.connect(analyser).connect(audioContext.destination);
-
-    const processAudio = () => {
-      const dataArray = new Uint8Array(analyser.frequencyBinCount);
-      analyser.getByteFrequencyData(dataArray);
-      setFrequencyStats(dataArray);
-
-      if (!audio.paused) {
-        requestAnimationFrame(processAudio);
-      }
-    };
-
-    audio.onplay = () => {
-      requestAnimationFrame(processAudio);
-    };
-
-    audio.play().catch((error) => {
-      console.error("Playback error:", error);
-    });
-  };
-
-  const playAudio = (blob: Blob) => {
-    const url = URL.createObjectURL(blob);
-    const audioContext = new window.AudioContext();
-    const audio = new Audio(url);
-
-    if (audioContext.state === "suspended") {
-      audioContext.resume().then(() => {
-        startPlayback(audio, audioContext);
-      });
-    } else {
-      startPlayback(audio, audioContext);
-    }
-
-    audio.onloadedmetadata = () => {
-      console.log("Audio duration:", audio.duration);
-    };
-  };
-
   const startRecording = async () => {
     let stream;
     try {
-      stream = await navigator.mediaDevices.getUserMedia({
-        audio: {
-          channelCount: 2,
-        },
-      });
-    } catch (error) {
-      console.error("Mono fallback, Error getting user media:", error);
-      stream = await navigator.mediaDevices.getUserMedia({
-        audio: {
-          channelCount: 1,
-        },
-      });
+      stream = await navigator.mediaDevices.getUserMedia({ audio: { channelCount: 2 } });
+    } catch {
+      stream = await navigator.mediaDevices.getUserMedia({ audio: { channelCount: 1 } });
     }
     streamRef.current = stream;
     const audioContext = new window.AudioContext();
     audioContextRef.current = audioContext;
+    setSampleRate(audioContext.sampleRate);
 
     const analyser = audioContext.createAnalyser();
     analyser.fftSize = 2048;
@@ -105,12 +92,11 @@ const Recorder = () => {
     const recorder = new MediaRecorder(stream);
     mediaRecorderRef.current = recorder;
 
-    recorder.ondataavailable = (e) => {
-      let mimeType = "audio/wav";
+    recorder.ondataavailable = async (e) => {
+      const mimeType = "audio/wav";
       const blob = new Blob([e.data], { type: mimeType });
-      const id = crypto.randomUUID();
       const name = `Recording-${audioFiles.length + 1}.wav`;
-      setAudioFiles((prev) => [...prev, { id, name, blob }]);
+      await handleSaveRecording(blob, name);
     };
 
     setIsArmed(true);
@@ -165,56 +151,70 @@ const Recorder = () => {
   }, [isArmed, pitchDetectionMethod]);
 
   return (
-    <div
-      className={`flex flex-col items-center justify-center p-4 sm:p-6 md:p-8 ${theme === "light" ? "bg-backgroundLight text-textLight" : "bg-backgroundDark text-textDark"}`}
-    >
-      <h1 className="text-2xl font-bold mb-4 text-center md:text-left">Audio Recorder</h1>
-      <div className="flex flex-col md:flex-row gap-4 mb-6">
-        <button
-          onClick={startRecording}
-          disabled={isArmed}
-          className={`px-6 py-2 rounded-md font-semibold shadow-neumorphism ring ring-gray-500 ring-offset-2 ring-offset-slate-50 dark:ring-offset-slate-900 ${
-            isArmed ? "bg-gray-600 cursor-not-allowed" : "bg-primary hover:bg-primary-light"
-          }`}
-        >
+    <div className="flex flex-col items-center transition-colors duration-200">
+      <div className="flex flex-col md:flex-row gap-4 mb-8">
+        <ShinButton onClick={startRecording} disabled={isArmed} size="lg" color={isArmed ? "gray" : "primary"} className="font-semibold">
           {isArmed ? "Armed" : "Arm"}
-        </button>
-        <button
+        </ShinButton>
+        <ShinButton
           onClick={handleRecord}
           disabled={!isArmed}
-          className={`px-6 py-2 rounded-md font-semibold shadow-neumorphism ring ring-gray-500 ring-offset-2 ring-offset-slate-50 dark:ring-offset-slate-900 ${
-            !isArmed ? "bg-gray-600 cursor-not-allowed" : isRecording ? "bg-red-600 hover:bg-red-700" : "bg-green-600 hover:bg-green-700"
-          }`}
+          size="lg"
+          color={!isArmed ? "gray" : isRecording ? "danger" : "success"}
+          className="font-semibold"
         >
           {isRecording ? "Stop" : "Record"}
-        </button>
+        </ShinButton>
       </div>
-      <div className="w-full max-w-xl">
+      <div className="w-full max-w-xl bg-muted/50 rounded-lg p-6 mb-6 shadow">
         <h2 className="text-xl font-semibold mb-2">Real-time Stats</h2>
-        <p className="mb-4">Pitch: {pitch ? `${pitch.toFixed(2)} Hz` : "N/A"}</p>
-        <p className="mb-4">Note: {noteInfo ? `${noteInfo.note} (${noteInfo.cents} cents)` : "N/A"}</p>
-        <p className="mb-4">Last Notes: [{lastSevenNotes.join(", ")}]</p>
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+          <span>
+            Pitch: <span className="font-mono">{pitch ? `${pitch.toFixed(2)} Hz` : "N/A"}</span>
+          </span>
+          <span>
+            Note: <span className="font-mono">{noteInfo ? `${noteInfo.note} (${noteInfo.cents} cents)` : "N/A"}</span>
+          </span>
+          <span className="col-span-2">
+            Last Notes:
+            <span className="font-mono">[{lastSevenNotes.join(", ")}]</span>
+          </span>
+        </div>
       </div>
-      <div className="mb-6 w-full">
-        <label className="mr-2 font-semibold">Pitch Detection Method:</label>
+      <div className="flex flex-wrap gap-4 w-full max-w-xl mb-2 items-center">
+        <label className="font-semibold min-w-fit">Pitch Detection:</label>
         <ShinSelectBox
-          options={["YIN", "Autocorrelation"]}
+          options={pitchOptions}
           value={pitchDetectionMethod}
           onChange={setPitchDetectionMethod}
-          label="Pitch Method"
           placeholder="Select..."
-          className="my-class"
           small
+          className="flex-1"
         />
-      </div>
-      <div className="mb-6 w-full">
-        <label className="mr-2 font-semibold">Visualization Type:</label>
-        <ShinSelectBox options={["VizBar", "SpectrumAnalyzer"]} value={visualizationType} onChange={setVisualizationType} />
+        <label className="font-semibold min-w-fit">Visualization:</label>
+        <ShinSelectBox options={vizOptions} value={visualizationType} onChange={setVisualizationType} small className="flex-1" />
       </div>
       <div className="w-full max-w-4xl mx-auto p-4">
-        {frequencyStats && (visualizationType === "VizBar" ? <VizBar frequencyStats={frequencyStats} /> : <SpectrumAnalyzer frequencyStats={frequencyStats} />)}
+        {frequencyStats &&
+          (visualizationType === "VizBar" ? (
+            <VizBar frequencyStats={frequencyStats} sampleRate={sampleRate} />
+          ) : (
+            <SpectrumAnalyzer frequencyStats={frequencyStats} />
+          ))}
       </div>
-      <AudioFilesList files={audioFiles} onPlay={playAudio} />
+      {audioFiles.length > 0 && (
+        <AudioFilesList
+          files={audioFiles.map((f) => ({
+            id: f.id?.toString() || "",
+            name: f.name,
+            blob: f.blob,
+            duration: f.duration,
+          }))}
+          onPlay={(file) => {
+            play(file.blob);
+          }}
+        />
+      )}
     </div>
   );
 };

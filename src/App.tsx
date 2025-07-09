@@ -11,6 +11,7 @@ import StylePage from "./pages/StylePage";
 import { LayerProvider } from "./context/LayerContext";
 import { useUpdateChecker } from "./app/UpdateChecker";
 import AudioRecorderPage from "./pages/AudioRecorderPage";
+import AudioFilesPage from "./pages/AudioFilesPage";
 
 const App: React.FC = () => {
   useUpdateChecker();
@@ -42,6 +43,7 @@ const AppContent: React.FC = () => {
         <Route path="style_page" component={<StylePage />} />
         <Route path="photos" component={<PhotosPage />} />
         <Route path="recorder" component={<AudioRecorderPage />} />
+        <Route path="audio_list" component={<AudioFilesPage />} />
         <Route path="not_found" component={<NotFound />} />
       </main>
     </div>

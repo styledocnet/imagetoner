@@ -1,3 +1,14 @@
+export interface AudioRecordingDocument {
+  id?: number; // IndexedDB key, auto-incremented
+  name: string;
+  blob: Blob;
+  mimeType: string;
+  duration?: number; // seconds
+  createdAt: string;
+  updatedAt: string;
+  // more metadata (e.g. pitch, note, user, device info)
+}
+
 // export type InstrumentType =
 //   | "Sawtooth"
 //   | "Sine"
