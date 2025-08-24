@@ -228,11 +228,11 @@ const MainNav: React.FC = () => {
       {/* Enhanced Navigation Menu */}
       <nav
         className={`
-          fixed top-0 left-0 w-[85vw] max-w-sm h-full z-50
+          fixed top-0 left-0 w-1/3 max-w-[85vw] h-full z-50
           shinnav-bg shin-backdrop
           transition-all duration-500 ease-[cubic-bezier(0.23,1,0.32,1)]
           ${isNavOpen ? "translate-x-0 opacity-100" : "-translate-x-full opacity-0"}
-          rounded-tr-3xl rounded-br-3xl
+          rounded-tr-2xl rounded-br-2xl
           flex flex-col pt-16 pb-8 px-6
           shin-border-glow
         `}
