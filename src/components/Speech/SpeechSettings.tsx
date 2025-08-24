@@ -123,7 +123,7 @@ const SpeechSettings: React.FC<SpeechSettingsProps> = ({ className = "", initial
           >
             <option value={-1}>Select a voice</option>
             {voices.map((voice, index) => (
-              <option key={`${voice.name}-${voice.lang}`} value={index}>
+              <option key={`${voice.name}-${voice.lang}-${index}`} value={index}>
                 {voice.name} ({voice.lang}) {voice.default ? "(Default)" : ""}
               </option>
             ))}
@@ -151,7 +151,7 @@ const SpeechSettings: React.FC<SpeechSettingsProps> = ({ className = "", initial
             value={rate}
             onChange={handleRateChange}
             disabled={!isEnabled}
-            className="w-full h-2 bg-gray-200 dark:bg-gray-700 rounded-lg appearance-none cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed slider"
+            className="w-full h-2 bg-gray-200 dark:bg-gray-700 rounded-lg appearance-none cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed"
           />
           <div className="flex justify-between text-xs text-gray-500 dark:text-gray-400">
             <span>Slow</span>
@@ -170,7 +170,7 @@ const SpeechSettings: React.FC<SpeechSettingsProps> = ({ className = "", initial
             value={pitch}
             onChange={handlePitchChange}
             disabled={!isEnabled}
-            className="w-full h-2 bg-gray-200 dark:bg-gray-700 rounded-lg appearance-none cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed slider"
+            className="w-full h-2 bg-gray-200 dark:bg-gray-700 rounded-lg appearance-none cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed"
           />
           <div className="flex justify-between text-xs text-gray-500 dark:text-gray-400">
             <span>Low</span>
@@ -189,7 +189,7 @@ const SpeechSettings: React.FC<SpeechSettingsProps> = ({ className = "", initial
             value={volume}
             onChange={handleVolumeChange}
             disabled={!isEnabled}
-            className="w-full h-2 bg-gray-200 dark:bg-gray-700 rounded-lg appearance-none cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed slider"
+            className="w-full h-2 bg-gray-200 dark:bg-gray-700 rounded-lg appearance-none cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed"
           />
           <div className="flex justify-between text-xs text-gray-500 dark:text-gray-400">
             <span>Quiet</span>
@@ -203,7 +203,7 @@ const SpeechSettings: React.FC<SpeechSettingsProps> = ({ className = "", initial
         <button
           onClick={resetToDefaults}
           disabled={!isEnabled}
-          className="px-4 py-2 bg-gray-600 hover:bg-gray-700 disabled:bg-gray-400 disabled:cursor-not-allowed text-white rounded-md transition-colors"
+          className="px-4 py-2 bg-gray-600 hover:bg-gray-700 disabled:bg-gray-400 disabled:cursor-not-allowed text-white rounded-md transition-colors duration-200"
         >
           Reset to Defaults
         </button>

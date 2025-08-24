@@ -9,7 +9,7 @@ import AddLayerModal from "../components/AddLayerModal";
 import WebCamInputModal from "../components/WebCamInputModal";
 import useDocument from "../hooks/useDocument";
 import { renderLayers } from "../utils/canvasUtils";
-import { useRouter } from "../context/CustomRouter";
+import { useNavigate } from "react-router-dom";
 import Toolbar from "../components/Toolbar";
 import { useLayerContext } from "../context/LayerContext";
 import FilterDrawer from "../components/FilterDrawer";
@@ -17,6 +17,8 @@ import { BrandStyle } from "../types";
 import RemBGModal from "../components/RemBGModal";
 import { initializeRemoveBgModel, removeBackground } from "../utils/removeBackground";
 import { snapToGrid } from "../utils/snapToGrid";
+import { useTypeSafeNavigate, useImageEditParams } from "../router/hooks";
+import { ROUTES } from "../router/routes";
 
 const ImageEditPage: React.FC = () => {
   const { layers, setLayers, currentLayer, setCurrentLayer, restoreOriginalLayer, updateLayerProp, addNewLayer, removeLayer, moveLayerUp, moveLayerDown } =
@@ -34,7 +36,8 @@ const ImageEditPage: React.FC = () => {
   const [isSidebarOpen, setSidebarOpen] = useState(true);
   const [isWebcamOpen, setIsWebcamOpen] = useState(false);
   const canvasRef = useRef<HTMLCanvasElement>(null);
-  const { navigate, currentRoute } = useRouter();
+  const params = useImageEditParams();
+  const navigate = useTypeSafeNavigate();
 
   // Calculate canvas size from document size
   const calculateCanvasSize = (docSize: { width: number; height: number }) => {
@@ -67,12 +70,11 @@ const ImageEditPage: React.FC = () => {
   }, []);
 
   useEffect(() => {
-    const params = new URLSearchParams(window.location.search);
-    const documentId = params.get("id");
+    const documentId = params.id;
     if (documentId) {
       loadDocument(parseInt(documentId, 10));
     }
-  }, [currentRoute]);
+  }, [params.id]);
 
   useEffect(() => {
     setCanvasSize(calculateCanvasSize(documentSize));
@@ -194,7 +196,7 @@ const ImageEditPage: React.FC = () => {
     };
     await storageService.addDocument(document);
     alert("Document saved successfully!");
-    navigate("photos");
+    navigate.to(ROUTES.PHOTOS);
   };
 
   const bind = useGesture(

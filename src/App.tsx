@@ -1,50 +1,20 @@
-import React, { useEffect } from "react";
-import { RouterProvider, Route, useRouter } from "./context/CustomRouter";
-import Dashboard from "./pages/Dashboard";
-import NotFound from "./pages/NotFound";
+import React from "react";
+import { Outlet, useLocation } from "react-router-dom";
 import MainNav from "./components/nav/MainNav";
-import PhotosPage from "./pages/PhotosPage";
-// import ImageFilterPage from "./pages/ImageFilterPage";
-import ImageEditPage from "./pages/ImageEditPage";
-import StylePage from "./pages/StylePage";
-// import ImageStyleTransferPage from "./pages/ImageStyleTransferPage";
-import { LayerProvider } from "./context/LayerContext";
 import { useUpdateChecker } from "./app/UpdateChecker";
-import AudioRecorderPage from "./pages/AudioRecorderPage";
-import AudioFilesPage from "./pages/AudioFilesPage";
 
 const App: React.FC = () => {
   useUpdateChecker();
-
-  return (
-    <RouterProvider>
-      <LayerProvider>
-        <AppContent />
-      </LayerProvider>
-    </RouterProvider>
-  );
-};
-
-const AppContent: React.FC = () => {
-  const { currentRoute } = useRouter();
+  const location = useLocation();
 
   return (
     <div className="antialiased flex flex-col text-slate-400 dark:text-slate-800 min-h-screen bg-gradient-to-br from-neutral-300 to-stone-400 dark:from-gray-900 dark:to-gray-700">
       <header className="flex justify-between items-center bg-sky-900 text-gray-400 dark:bg-gray-900 p-4">
         <MainNav />
-        <h1 className="text-xs">{currentRoute}</h1>
+        <h1 className="text-xs">{location.pathname}</h1>
       </header>
       <main className="flex-grow p-4">
-        <Route path="dashboard" component={<Dashboard />} />
-        {/* <Route path="image_filter" component={<ImageFilterPage />} /> */}
-        <Route path="image_edit" component={<ImageEditPage />} />
-        <Route path="/image-edit/:id" component={<ImageEditPage />} />
-        {/* <Route path="image_styletransfer" component={<ImageStyleTransferPage />} /> */}
-        <Route path="style_page" component={<StylePage />} />
-        <Route path="photos" component={<PhotosPage />} />
-        <Route path="recorder" component={<AudioRecorderPage />} />
-        <Route path="audio_list" component={<AudioFilesPage />} />
-        <Route path="not_found" component={<NotFound />} />
+        <Outlet />
       </main>
     </div>
   );

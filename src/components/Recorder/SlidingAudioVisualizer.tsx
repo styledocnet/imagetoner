@@ -8,12 +8,7 @@ interface SlidingAudioVisualizerProps {
   className?: string;
 }
 
-const SlidingAudioVisualizer: React.FC<SlidingAudioVisualizerProps> = ({
-  visualizationData,
-  width = 300,
-  height = 60,
-  className = "",
-}) => {
+const SlidingAudioVisualizer: React.FC<SlidingAudioVisualizerProps> = ({ visualizationData, width = 300, height = 60, className = "" }) => {
   const { frequencyData, progress, currentTime, duration } = visualizationData;
 
   // Calculate sliding window parameters
@@ -50,7 +45,7 @@ const SlidingAudioVisualizer: React.FC<SlidingAudioVisualizerProps> = ({
 
       // Bars closer to center (playhead) are more prominent
       const opacity = Math.max(0.3, 1 - distanceFromCenter * 0.7);
-      const hue = 220 + (intensity * 60); // Blue to purple range
+      const hue = 220 + intensity * 60; // Blue to purple range
 
       barsData.push({
         height: Math.max(2, barHeight),
@@ -67,7 +62,7 @@ const SlidingAudioVisualizer: React.FC<SlidingAudioVisualizerProps> = ({
   const formatTime = (seconds: number) => {
     const mins = Math.floor(seconds / 60);
     const secs = Math.floor(seconds % 60);
-    return `${mins}:${secs.toString().padStart(2, '0')}`;
+    return `${mins}:${secs.toString().padStart(2, "0")}`;
   };
 
   return (
@@ -77,11 +72,7 @@ const SlidingAudioVisualizer: React.FC<SlidingAudioVisualizerProps> = ({
         {/* Background grid */}
         <div className="absolute inset-0 opacity-10">
           {Array.from({ length: 5 }).map((_, i) => (
-            <div
-              key={i}
-              className="absolute border-t border-gray-600"
-              style={{ top: `${(i + 1) * 20}%`, left: 0, right: 0 }}
-            />
+            <div key={i} className="absolute border-t border-gray-600" style={{ top: `${(i + 1) * 20}%`, left: 0, right: 0 }} />
           ))}
         </div>
 
@@ -102,10 +93,7 @@ const SlidingAudioVisualizer: React.FC<SlidingAudioVisualizerProps> = ({
         </svg>
 
         {/* Playhead */}
-        <div
-          className="absolute top-0 bottom-0 w-0.5 bg-white shadow-lg z-10"
-          style={{ left: `${width / 2}px`, transform: 'translateX(-50%)' }}
-        >
+        <div className="absolute top-0 bottom-0 w-0.5 bg-white shadow-lg z-10" style={{ left: `${width / 2}px`, transform: "translateX(-50%)" }}>
           {/* Playhead indicator */}
           <div className="absolute top-1 w-3 h-3 bg-white rounded-full shadow-md transform -translate-x-1/2">
             <div className="w-2 h-2 bg-green-400 rounded-full absolute top-0.5 left-0.5 animate-pulse"></div>
@@ -113,19 +101,12 @@ const SlidingAudioVisualizer: React.FC<SlidingAudioVisualizerProps> = ({
         </div>
 
         {/* Progress indicator on sides */}
-        <div className="absolute left-2 top-2 text-xs text-gray-400 font-mono">
-          {formatTime(Math.max(0, currentTime - duration * 0.1))}
-        </div>
-        <div className="absolute right-2 top-2 text-xs text-gray-400 font-mono">
-          {formatTime(Math.min(duration, currentTime + duration * 0.1))}
-        </div>
+        <div className="absolute left-2 top-2 text-xs text-gray-400 font-mono">{formatTime(Math.max(0, currentTime - duration * 0.1))}</div>
+        <div className="absolute right-2 top-2 text-xs text-gray-400 font-mono">{formatTime(Math.min(duration, currentTime + duration * 0.1))}</div>
 
         {/* Waveform overlay for additional visual interest */}
         <div className="absolute bottom-1 left-2 right-2 h-1 bg-gray-800 rounded-full overflow-hidden">
-          <div
-            className="h-full bg-gradient-to-r from-blue-500 to-purple-500 transition-all duration-150"
-            style={{ width: `${progress * 100}%` }}
-          />
+          <div className="h-full bg-gradient-to-r from-blue-500 to-purple-500 transition-all duration-150" style={{ width: `${progress * 100}%` }} />
         </div>
       </div>
 
@@ -146,7 +127,7 @@ const SlidingAudioVisualizer: React.FC<SlidingAudioVisualizerProps> = ({
             key={i}
             className="w-0.5 bg-gray-600 rounded-full transition-all duration-150"
             style={{
-              height: `${4 + (bars[i * Math.floor(bars.length / 8)]?.height || 0) / maxBarHeight * 8}px`,
+              height: `${4 + ((bars[i * Math.floor(bars.length / 8)]?.height || 0) / maxBarHeight) * 8}px`,
               opacity: 0.6,
             }}
           />

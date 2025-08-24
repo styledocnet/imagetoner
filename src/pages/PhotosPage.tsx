@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from "react";
 import { storageService } from "../services/storageService";
 import { ArrowDownIcon } from "@heroicons/react/24/outline";
-import { useRouter } from "../context/CustomRouter";
+import { useNavigate } from "react-router-dom";
 import { ImageDocument, Layer } from "../types";
 import SelectBox from "../components/SelectBox";
 
@@ -47,7 +47,7 @@ const PhotosPage: React.FC = () => {
   const [page, setPage] = useState<number>(1);
   const [totalPages, setTotalPages] = useState<number>(1);
 
-  const { navigate } = useRouter();
+  const navigate = useNavigate();
 
   useEffect(() => {
     // On mount, load docs and compute sizes
@@ -91,7 +91,7 @@ const PhotosPage: React.FC = () => {
   const paginatedDocuments = processedDocuments.slice((page - 1) * itemsPerPage, page * itemsPerPage);
 
   const onEditDocument = (documentId: number) => {
-    navigate(`image_edit?id=${documentId}`);
+    navigate(`/image-edit/${documentId}`);
   };
 
   const handleDelete = async (id: number) => {

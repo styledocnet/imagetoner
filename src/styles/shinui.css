@@ -1,100 +1,287 @@
-/* Glassmorphism (for cards, nav, modals, etc.) */
+/* Modern Glassmorphism with enhanced dark mode */
 .shinglass {
-    @apply bg-white/10 dark:bg-[#25262b]/60 border border-white/20 dark:border-white/10 shadow-lg backdrop-blur-lg;
+    @apply bg-white/5 dark:bg-[#1a1b20]/80 border border-white/10 dark:border-slate-600/30 shadow-2xl backdrop-blur-xl;
+    background: linear-gradient(135deg, rgba(255, 255, 255, 0.03), rgba(255, 255, 255, 0.01));
+    backdrop-filter: blur(20px) saturate(180%);
+    box-shadow:
+        0 8px 32px rgba(0, 0, 0, 0.3),
+        inset 0 1px 0 rgba(255, 255, 255, 0.1),
+        inset 0 -1px 0 rgba(0, 0, 0, 0.2);
 }
-/* Metallic gradient text */
+
+/* Enhanced metallic text with depth */
 .shinmetallic {
-    @apply bg-gradient-to-br from-[#979ca7] via-[#dbe4ee] to-[#767e8a] bg-clip-text text-transparent;
-    color: #aab6c3;
+    background: linear-gradient(135deg, #c0c7d1 0%, #f0f4f8 25%, #8a95a3 50%, #b8c5d1 75%, #929ca8 100%);
+    background-clip: text;
+    -webkit-background-clip: text;
+    color: transparent;
+    filter: drop-shadow(0 1px 2px rgba(0, 0, 0, 0.3));
 }
 
+/* Modern navigation background with enhanced depth */
 .shinnav-bg {
-    @apply bg-gradient-to-br from-[#292c36] via-[#545a68] to-[#17181b] shadow-2xl backdrop-blur-md;
-}
-.dark .shinnav-bg {
-    @apply from-[#131419] via-[#31343b] to-[#0c0d0f];
+    background: linear-gradient(145deg, #1a1d26, #242832, #1e2129);
+    backdrop-filter: blur(24px) saturate(120%);
+    border-right: 1px solid rgba(255, 255, 255, 0.08);
+    box-shadow:
+        20px 0 60px rgba(0, 0, 0, 0.4),
+        inset 1px 0 0 rgba(255, 255, 255, 0.05),
+        inset -1px 0 0 rgba(0, 0, 0, 0.3);
 }
 
-/* Perspective hover effect */
-/*
-.shinitem-perspective {
-    @apply transform-gpu transition-all duration-300;
-    perspective: 600px;
+.dark .shinnav-bg {
+    background: linear-gradient(145deg, #0f1117, #1a1e26, #141820);
+    border-right-color: rgba(148, 163, 184, 0.1);
 }
-.shinitem-perspective:hover {
-    transform: scale(1.05) rotateX(8deg) rotateY(-8deg);
-    box-shadow: 0 8px 40px rgba(40, 100, 255, 0.25);
-}
-*/
+
+/* Enhanced perspective hover effect with modern neumorphism */
 .shinitem-perspective {
-    @apply transform-gpu transition-all duration-300;
+    @apply transform-gpu transition-all duration-300 ease-out;
     transform: scale(1);
-    /* perspective: 600px; */
+    position: relative;
+    overflow: hidden;
 }
+
+.shinitem-perspective::before {
+    content: "";
+    position: absolute;
+    top: 0;
+    left: -100%;
+    width: 100%;
+    height: 100%;
+    background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.1), transparent);
+    transition: left 0.5s ease;
+    z-index: 1;
+}
+
+.shinitem-perspective:hover::before {
+    left: 100%;
+}
+
 .shinitem-perspective:hover,
 .shinitem-perspective:focus-visible {
-    /* transform: scale(1.02); */
-    box-shadow: 0 8px 40px 0 rgba(40, 100, 255, 0.21);
+    transform: scale(1.02) translateY(-1px);
+    box-shadow:
+        0 12px 48px rgba(59, 130, 246, 0.15),
+        0 6px 24px rgba(59, 130, 246, 0.1),
+        inset 0 1px 0 rgba(255, 255, 255, 0.1);
 }
 
+/* Enhanced shadow focus with smooth animations */
 .shinitem-shadowfocus {
-    @apply transform-gpu transition-all duration-300;
+    @apply transform-gpu transition-all duration-300 ease-out;
+    position: relative;
 }
+
+.shinitem-shadowfocus::after {
+    content: "";
+    position: absolute;
+    inset: 0;
+    border-radius: inherit;
+    padding: 1px;
+    background: linear-gradient(135deg, rgba(59, 130, 246, 0.3), rgba(139, 92, 246, 0.2));
+    mask:
+        linear-gradient(#fff 0 0) content-box,
+        linear-gradient(#fff 0 0);
+    mask-composite: xor;
+    opacity: 0;
+    transition: opacity 0.3s ease;
+}
+
+.shinitem-shadowfocus:hover::after,
+.shinitem-shadowfocus:focus-visible::after {
+    opacity: 1;
+}
+
 .shinitem-shadowfocus:hover,
 .shinitem-shadowfocus:focus-visible {
-    box-shadow: 0 8px 40px 0 rgba(40, 100, 255, 0.21);
+    box-shadow:
+        0 12px 48px rgba(59, 130, 246, 0.2),
+        0 6px 24px rgba(139, 92, 246, 0.15);
 }
 
-/* Neuromorphic soft shadow effect */
+/* Modern neumorphic design with enhanced depth */
 .shinneumorph {
+    background: linear-gradient(145deg, #24252b, #2a2c32);
+    border-radius: 1.5rem;
+    border: 1px solid rgba(255, 255, 255, 0.05);
+    position: relative;
+    transition: all 0.3s cubic-bezier(0.23, 1, 0.32, 1);
     box-shadow:
-        8px 8px 24px #1a1c21,
-        -8px -8px 24px #35373d;
-    background: #23242a;
-    border-radius: 1.2rem;
-    border: 1px solid #33343a;
-    transition:
-        box-shadow 0.3s,
-        background 0.3s;
+        12px 12px 32px rgba(16, 18, 22, 0.6),
+        -12px -12px 32px rgba(42, 46, 52, 0.3),
+        inset 0 1px 0 rgba(255, 255, 255, 0.03),
+        inset 0 -1px 0 rgba(0, 0, 0, 0.2);
 }
+
+.shinneumorph::before {
+    content: "";
+    position: absolute;
+    top: 1px;
+    left: 1px;
+    right: 1px;
+    height: 40%;
+    background: linear-gradient(180deg, rgba(255, 255, 255, 0.04), transparent);
+    border-radius: inherit;
+    border-bottom-left-radius: 0;
+    border-bottom-right-radius: 0;
+}
+
+.shinneumorph:hover {
+    transform: translateY(-2px);
+    box-shadow:
+        16px 16px 40px rgba(16, 18, 22, 0.7),
+        -16px -16px 40px rgba(42, 46, 52, 0.4),
+        inset 0 1px 0 rgba(255, 255, 255, 0.05),
+        inset 0 -1px 0 rgba(0, 0, 0, 0.3);
+}
+
 .dark .shinneumorph {
+    background: linear-gradient(145deg, #16171c, #1d1f24);
+    border-color: rgba(148, 163, 184, 0.08);
     box-shadow:
-        4px 4px 20px #18191d,
-        -4px -4px 20px #2c2d33;
-    background: #191a1e;
-    border-color: #25272c;
+        8px 8px 24px rgba(12, 13, 16, 0.8),
+        -8px -8px 24px rgba(28, 31, 36, 0.3),
+        inset 0 1px 0 rgba(255, 255, 255, 0.02),
+        inset 0 -1px 0 rgba(0, 0, 0, 0.4);
 }
 
-/* Shin buttons (flat glassy) */
+/* Modern glassy buttons with enhanced neumorphism */
 .shinbtn {
-    @apply px-4 py-2 rounded-lg font-semibold transition-all duration-300 ease-in-out select-none;
-    @apply bg-white/30 dark:bg-gray-800/40 shadow-md border border-white/20 dark:border-gray-700/40;
-    @apply hover:bg-white/50 dark:hover:bg-gray-700/60 hover:shadow-xl;
-    @apply focus:ring-2 focus:ring-sky-400 focus:outline-none;
-    /* Neuromorph edge: */
+    @apply px-6 py-3 rounded-xl font-semibold transition-all duration-300 ease-out select-none relative overflow-hidden;
+    background: linear-gradient(135deg, rgba(255, 255, 255, 0.08), rgba(255, 255, 255, 0.02));
+    backdrop-filter: blur(12px) saturate(180%);
+    border: 1px solid rgba(255, 255, 255, 0.15);
     box-shadow:
-        0 4px 24px 0 rgba(80, 100, 140, 0.09),
-        0 1.5px 5px 0 rgba(45, 50, 60, 0.06);
-}
-.shinbtn-primary {
-    @apply bg-gradient-to-br from-sky-600/80 to-blue-700/80 text-white;
-    @apply hover:from-sky-500 hover:to-blue-600;
+        0 8px 32px rgba(0, 0, 0, 0.15),
+        inset 0 1px 0 rgba(255, 255, 255, 0.1),
+        inset 0 -1px 0 rgba(0, 0, 0, 0.1);
 }
 
-/* glass/metallic text in nav or hero */
+.shinbtn::before {
+    content: "";
+    position: absolute;
+    top: 0;
+    left: -100%;
+    width: 100%;
+    height: 100%;
+    background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.1), transparent);
+    transition: left 0.5s ease;
+}
+
+.shinbtn:hover::before {
+    left: 100%;
+}
+
+.shinbtn:hover {
+    transform: translateY(-1px);
+    background: linear-gradient(135deg, rgba(255, 255, 255, 0.12), rgba(255, 255, 255, 0.04));
+    border-color: rgba(255, 255, 255, 0.2);
+    box-shadow:
+        0 12px 40px rgba(0, 0, 0, 0.2),
+        inset 0 1px 0 rgba(255, 255, 255, 0.15),
+        inset 0 -1px 0 rgba(0, 0, 0, 0.15);
+}
+
+.shinbtn:active {
+    transform: translateY(0);
+    box-shadow:
+        0 4px 16px rgba(0, 0, 0, 0.2),
+        inset 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+.shinbtn:focus-visible {
+    outline: none;
+    box-shadow:
+        0 8px 32px rgba(0, 0, 0, 0.15),
+        0 0 0 2px rgba(59, 130, 246, 0.5),
+        inset 0 1px 0 rgba(255, 255, 255, 0.1);
+}
+
+.shinbtn-primary {
+    background: linear-gradient(135deg, rgba(59, 130, 246, 0.9), rgba(37, 99, 235, 0.9));
+    border-color: rgba(59, 130, 246, 0.3);
+    color: white;
+    text-shadow: 0 1px 2px rgba(0, 0, 0, 0.2);
+}
+
+.shinbtn-primary:hover {
+    background: linear-gradient(135deg, rgba(59, 130, 246, 1), rgba(37, 99, 235, 1));
+    border-color: rgba(59, 130, 246, 0.5);
+    box-shadow:
+        0 12px 40px rgba(59, 130, 246, 0.3),
+        inset 0 1px 0 rgba(255, 255, 255, 0.2),
+        inset 0 -1px 0 rgba(0, 0, 0, 0.2);
+}
+
+/* logo text with dynamic metallic effect */
+/*.shinlogo-text {
+    @apply font-extrabold text-3xl tracking-wider;
+    background: linear-gradient(135deg, #249 0%, #369 20%, #fff 40%, #275 60%, #28f 80%, #e2e8f0 100%);
+    background-size: 200% 200%;
+    background-clip: text;
+    -webkit-background-clip: text;
+    color: transparent;
+    animation: shimmer 3s ease-in-out infinite;
+    filter: drop-shadow(0 2px 4px rgba(0, 0, 0, 0.3));
+}
+@keyframes shimmer {
+    0%,
+    100% {
+        background-position: 0% 50%;
+    }
+    50% {
+        background-position: 100% 50%;
+    }
+}*/
+
 .shinlogo-text {
-    @apply shinmetallic font-extrabold text-2xl tracking-wider drop-shadow;
+    @apply font-extrabold text-3xl tracking-wider;
+    filter: drop-shadow(0 2px 4px rgba(0, 0, 0, 0.3));
+}
+
+/* Enhanced gloss effect with modern styling */
+.shinitem.gloss {
+    position: relative;
+    overflow: hidden;
 }
 
 .shinitem.gloss::after {
     content: "";
     position: absolute;
-    left: 10%;
-    top: 6%;
-    width: 80%;
-    height: 35%;
-    border-radius: 50% 50% 30% 30%/70% 70% 40% 40%;
-    background: linear-gradient(180deg, rgba(255, 255, 255, 0.25), rgba(255, 255, 255, 0.01));
+    left: 8%;
+    top: 4%;
+    width: 84%;
+    height: 40%;
+    border-radius: 50% 50% 25% 25%/60% 60% 30% 30%;
+    background: linear-gradient(180deg, rgba(255, 255, 255, 0.15) 0%, rgba(255, 255, 255, 0.08) 30%, rgba(255, 255, 255, 0.02) 70%, transparent 100%);
     pointer-events: none;
-    filter: blur(0.5px);
+    filter: blur(0.8px);
+    animation: glossPulse 4s ease-in-out infinite;
+}
+
+@keyframes glossPulse {
+    0%,
+    100% {
+        opacity: 0.6;
+    }
+    50% {
+        opacity: 1;
+    }
+}
+
+/* Additional utility classes for modern design */
+.shin-border-glow {
+    border: 1px solid transparent;
+    background:
+        linear-gradient(135deg, rgba(255, 255, 255, 0.1), rgba(255, 255, 255, 0.05)) padding-box,
+        linear-gradient(135deg, rgba(59, 130, 246, 0.3), rgba(139, 92, 246, 0.2)) border-box;
+}
+
+.shin-text-glow {
+    text-shadow: 0 0 10px rgba(59, 130, 246, 0.5);
+}
+
+.shin-backdrop {
+    backdrop-filter: blur(24px) saturate(180%) brightness(120%);
 }

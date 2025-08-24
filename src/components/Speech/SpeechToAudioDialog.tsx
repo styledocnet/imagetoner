@@ -330,7 +330,7 @@ const SpeechToAudioDialog: React.FC<SpeechToAudioDialogProps> = ({ isOpen, onClo
                 step="0.1"
                 value={rate}
                 onChange={handleRateChange}
-                className="w-full h-2 bg-gray-200 dark:bg-gray-700 rounded-lg appearance-none cursor-pointer slider"
+                className="w-full h-2 bg-gray-200 dark:bg-gray-700 rounded-lg appearance-none cursor-pointer"
               />
               <div className="flex justify-between text-xs text-gray-500 dark:text-gray-400">
                 <span>Slow</span>
@@ -348,7 +348,7 @@ const SpeechToAudioDialog: React.FC<SpeechToAudioDialogProps> = ({ isOpen, onClo
                 step="0.1"
                 value={pitch}
                 onChange={handlePitchChange}
-                className="w-full h-2 bg-gray-200 dark:bg-gray-700 rounded-lg appearance-none cursor-pointer slider"
+                className="w-full h-2 bg-gray-200 dark:bg-gray-700 rounded-lg appearance-none cursor-pointer"
               />
               <div className="flex justify-between text-xs text-gray-500 dark:text-gray-400">
                 <span>Low</span>
@@ -366,7 +366,7 @@ const SpeechToAudioDialog: React.FC<SpeechToAudioDialogProps> = ({ isOpen, onClo
                 step="0.1"
                 value={volume}
                 onChange={handleVolumeChange}
-                className="w-full h-2 bg-gray-200 dark:bg-gray-700 rounded-lg appearance-none cursor-pointer slider"
+                className="w-full h-2 bg-gray-200 dark:bg-gray-700 rounded-lg appearance-none cursor-pointer"
               />
               <div className="flex justify-between text-xs text-gray-500 dark:text-gray-400">
                 <span>Quiet</span>
@@ -377,18 +377,18 @@ const SpeechToAudioDialog: React.FC<SpeechToAudioDialogProps> = ({ isOpen, onClo
 
           {/* Action Buttons */}
           <div className="flex justify-between space-x-4">
-            <button onClick={resetToDefaults} className="px-4 py-2 bg-gray-600 hover:bg-gray-700 text-white rounded-md transition-colors">
+            <button onClick={resetToDefaults} className="px-4 py-2 bg-gray-600 hover:bg-gray-700 text-white rounded-md transition-colors duration-200">
               Reset to Defaults
             </button>
 
             <div className="flex space-x-2">
-              <button onClick={onClose} className="px-4 py-2 bg-gray-500 hover:bg-gray-600 text-white rounded-md transition-colors">
+              <button onClick={onClose} className="px-4 py-2 bg-gray-500 hover:bg-gray-600 text-white rounded-md transition-colors duration-200">
                 Cancel
               </button>
               <button
                 onClick={generateAudioFile}
                 disabled={!text.trim() || !fileName.trim() || selectedVoiceIndex === -1 || isGenerating}
-                className="px-6 py-2 bg-green-600 hover:bg-green-700 disabled:bg-gray-400 disabled:cursor-not-allowed text-white rounded-md transition-colors"
+                className="px-6 py-2 bg-green-600 hover:bg-green-700 disabled:bg-gray-400 disabled:cursor-not-allowed text-white rounded-md transition-colors duration-200"
               >
                 {isGenerating ? "Generating..." : "Generate Audio"}
               </button>

@@ -1,18 +1,18 @@
 import React, { useState, useEffect } from "react";
 import { storageService } from "../../services/storageService";
-import { useRouter } from "../../context/CustomRouter";
 import { ImageDocument } from "../../types";
+import { useTypeSafeNavigate } from "../../router/hooks";
 
 const PhotosWidget: React.FC = () => {
   const [documents, setDocuments] = useState<ImageDocument[]>([]);
-  const { navigate } = useRouter();
+  const navigate = useTypeSafeNavigate();
 
   const onEditDocument = (documentId?: number) => {
     if (!documentId) {
       console.error("Document ID is missing or invalid.");
       return;
     }
-    navigate(`image_edit?id=${documentId}`);
+    navigate.toImageEdit(documentId);
   };
 
   useEffect(() => {
