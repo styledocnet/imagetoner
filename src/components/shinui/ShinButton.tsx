@@ -24,11 +24,21 @@ const sizeMap: Record<string, string> = {
   lg: "text-lg px-6 py-3",
 };
 
-const ShinButton: React.FC<ShinButtonProps> = ({ children, onClick, disabled = false, color = "primary", size = "md", className = "", type = "button" }) => (
+const ShinButton: React.FC<ShinButtonProps> = ({
+  children,
+  onClick,
+  disabled = false,
+  color = "primary",
+  size = "md",
+  className = "",
+  type = "button",
+  label = "Action",
+}) => (
   <button
     type={type}
     onClick={onClick}
     disabled={disabled}
+    ariaLabel={label}
     className={clsx(
       "relative shinitem shin-glass shinitem-perspective rounded transition focus:outline-none focus:ring-2 focus:ring-offset-2 disabled:opacity-50 disabled:cursor-not-allowed",
       colorMap[color],

@@ -1,8 +1,8 @@
+import { PencilIcon, PlusIcon, TrashIcon } from "@heroicons/react/24/outline";
 import React, { useEffect, useRef, useState } from "react";
-import { BrandStyle, BrandColorRole } from "../types";
-import { storageService, saveCurrentStyleId, loadCurrentStyleId } from "../services/storageService";
-import { TrashIcon, PencilIcon, PlusIcon } from "@heroicons/react/24/outline";
 import SelectBox from "../components/SelectBox";
+import { loadCurrentStyleId, saveCurrentStyleId, storageService } from "../services/storageService";
+import { BrandColorRole, BrandStyle } from "../types";
 
 const defaultColorRoles: BrandColorRole[] = ["primary", "secondary", "accent", "other"];
 

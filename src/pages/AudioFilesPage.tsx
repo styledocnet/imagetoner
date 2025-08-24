@@ -1,6 +1,5 @@
 import React, { useEffect, useState, useRef } from "react";
 import AudioFilesList from "../components/Recorder/AudioFilesList";
-import SpectrumAnalyzer from "../components/Recorder/SpectrumAnalyzer";
 import { audioStorage } from "../storage/audioStorage";
 import { AudioRecordingDocument } from "../types/audio";
 import { useTonePlaybackWithStats } from "../hooks/useTonePlaybackWithStats";
@@ -83,11 +82,7 @@ const AudioFilesPage: React.FC = () => {
         <ShinFileInput onChange={handleUpload} disabled={isUploading} accept="audio/*" inputRef={fileInputRef} />
         {isUploading && <span className="text-blue-600 dark:text-blue-300 animate-pulse">Uploading...</span>}
       </div>
-      {showAnalyzer && playingFile && frequencyStats && (
-        <div className="my-2">
-          <SpectrumAnalyzer frequencyStats={frequencyStats} />
-        </div>
-      )}
+
       <AudioFilesList
         files={files}
         onEdit={handleEdit}
