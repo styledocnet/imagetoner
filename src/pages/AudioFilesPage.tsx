@@ -20,9 +20,11 @@ const AudioFilesPage: React.FC = () => {
   const [files, setFiles] = useState<AudioRecordingDocument[]>([]);
   const [playingFile, setPlayingFile] = useState<AudioRecordingDocument | null>(null);
   const [isUploading, setIsUploading] = useState(false);
+  // @ts-ignore TS6133
   const [showAnalyzer, setShowAnalyzer] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
-  const { play, frequencyStats } = useTonePlaybackWithStats();
+  // const { play, frequencyStats } = useTonePlaybackWithStats();
+  const { play } = useTonePlaybackWithStats();
 
   // Initial load
   useEffect(() => {

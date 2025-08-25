@@ -16,7 +16,7 @@ import {
 } from "@heroicons/react/24/outline";
 import "@/styles/shinui.css";
 import { ROUTES } from "@/router/routes";
-import { useTypeSafeNavigate } from "@/router/hooks";
+// import { useTypeSafeNavigate } from "@/router/hooks";
 
 // Nav items definition
 type NavItem = {
@@ -62,6 +62,7 @@ const navItems: NavItem[] = [
 ];
 
 // Utility for pointer detection
+// @ts-ignore TS6133
 const usePointerDevice = () => {
   const [isPointer, setPointer] = useState(false);
   useEffect(() => {

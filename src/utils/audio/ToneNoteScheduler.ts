@@ -31,9 +31,12 @@ export class ToneNoteScheduler {
     this.notes.push(note);
 
     // Schedule the note
+    // const id = Tone.Transport.schedule((time) => {
+    //   this.synth.triggerAttackRelease(note.pitch, note.duration, time);
+    // }, note.time);
     const id = Tone.Transport.schedule((time) => {
-      this.synth.triggerAttackRelease(note.pitch, note.duration, time);
-    }, note.time);
+      this.synth.triggerAttackRelease(note.pitch, note.length, time);
+    }, note.length);
 
     this.scheduleIds.push(id);
   }

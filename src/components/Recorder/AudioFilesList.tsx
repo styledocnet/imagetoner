@@ -3,6 +3,7 @@ import ShinButton from "../shinui/ShinButton";
 import SpeechToAudioDialog from "../Speech/SpeechToAudioDialog";
 import SlidingAudioVisualizer from "./SlidingAudioVisualizer";
 import { AudioRecordingDocument } from "../../types/audio";
+import { useAudioPlaybackWithVisualization } from "@/hooks/useAudioPlaybackWithVisualization";
 
 interface Props {
   files: AudioRecordingDocument[];
@@ -24,6 +25,9 @@ const AudioFilesList: React.FC<Props> = ({ files, onPlay, onEdit, onDelete, onAd
   const [currentPlayingId, setCurrentPlayingId] = useState<string | null>(null);
   const [isPlaying, setIsPlaying] = useState(false);
   const audioRef = useRef<HTMLAudioElement | null>(null);
+
+  // xxx state vs hook
+  const { visualizationData } = useAudioPlaybackWithVisualization();
 
   // Check Web Speech API support
   useEffect(() => {
@@ -104,12 +108,28 @@ const AudioFilesList: React.FC<Props> = ({ files, onPlay, onEdit, onDelete, onAd
     setCurrentPlayingId(null);
   };
 
-  const handleSpeechGenerated = (audioFile: AudioRecordingDocument) => {
-    // Notify parent component to add the generated audio file
-    onAddFile?.(audioFile);
+  // const handleSpeechGenerated = (audioFile: AudioRecordingDocument) => {
+  //   // Notify parent component to add the generated audio file
+  //   onAddFile?.(audioFile);
 
-    // Optionally play the generated file immediately
-    onPlay?.(audioFile);
+  //   // Optionally play the generated file immediately
+  //   onPlay?.(audioFile);
+  // };
+
+  const handleSpeechGenerated = (audioFile: { id: string; name: string; blob: Blob }) => {
+    // Fill in missing fields for AudioRecordingDocument
+    const now = new Date().toISOString();
+    const audioDoc: AudioRecordingDocument = {
+      id: Number(audioFile.id),
+      name: audioFile.name,
+      blob: audioFile.blob,
+      mimeType: "audio/webm", // or whatever is appropriate
+      createdAt: now,
+      updatedAt: now,
+      duration: undefined,
+    };
+    onAddFile?.(audioDoc);
+    onPlay?.(audioDoc);
   };
 
   return (
@@ -172,12 +192,12 @@ const AudioFilesList: React.FC<Props> = ({ files, onPlay, onEdit, onDelete, onAd
           <li
             key={file.id}
             className={`flex justify-between items-center gap-2 p-2 rounded-md transition-colors ${
-              currentPlayingId === file.id ? "bg-blue-800 border border-blue-600" : "bg-gray-800"
+              currentPlayingId === file.id?.toString() ? "bg-blue-800 border border-blue-600" : "bg-gray-800"
             }`}
           >
-            <span className={`truncate max-w-[40vw] sm:max-w-xs ${currentPlayingId === file.id ? "text-blue-200 font-medium" : ""}`}>
+            <span className={`truncate max-w-[40vw] sm:max-w-xs ${currentPlayingId === file.id?.toString() ? "text-blue-200 font-medium" : ""}`}>
               {file.name}
-              {currentPlayingId === file.id && <span className="ml-2 text-xs text-blue-400">♪ Playing</span>}
+              {currentPlayingId === file.id?.toString() && <span className="ml-2 text-xs text-blue-400">♪ Playing</span>}
             </span>
             <div className="flex gap-2 items-center">
               {currentPlayingId === file.id?.toString() && isPlaying ? (

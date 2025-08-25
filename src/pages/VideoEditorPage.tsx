@@ -6,12 +6,12 @@ import { ROUTES } from "../router/routes";
 import VideoTimeline from "../components/VideoEditor/VideoTimeline";
 import {
   ArrowLeftIcon,
-  PlayIcon,
-  PauseIcon,
+  // PlayIcon,
+  // PauseIcon,
   CogIcon,
   DocumentArrowDownIcon,
   ShareIcon,
-  PlusIcon,
+  // PlusIcon,
   PhotoIcon,
   MusicalNoteIcon,
   FilmIcon,
@@ -31,7 +31,7 @@ const VideoEditorPage: React.FC = () => {
   const [showProjectSettings, setShowProjectSettings] = useState(false);
 
   const canvasRef = useRef<HTMLCanvasElement>(null);
-  const audioContextRef = useRef<AudioContext | null>(null);
+  // const audioContextRef = useRef<AudioContext | null>(null);
   const playIntervalRef = useRef<NodeJS.Timeout | null>(null);
 
   useEffect(() => {

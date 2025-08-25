@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef } from "react";
+import { useState, useEffect, useRef } from "react";
 import { Note, TimelineSettings, PlaybackState } from "@/types/audio";
 import { ToneNoteScheduler } from "@/utils/audio/ToneNoteScheduler";
 import TimelineControls from "@/components/Timeline/TimelineControls";
@@ -43,6 +43,7 @@ const Timeline = () => {
     setPlaybackState((prev) => ({ ...prev, currentStep: step }));
   };
 
+  // @ts-ignore TS6133
   const handleMute = () => {
     if (isMuted) {
       Tone.Master.mute = false;

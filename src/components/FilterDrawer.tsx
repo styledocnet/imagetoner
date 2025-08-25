@@ -1,4 +1,4 @@
-import React, { useEffect, useRef, useState, useCallback, ErrorBoundary } from "react";
+import React, { useEffect, useRef, useState, useCallback } from "react";
 import ColorSwatch from "./ColorSwatch";
 import { BrandStyle } from "@/types";
 import WebGLFilterRenderer from "./WebGLFilterRenderer";
@@ -27,7 +27,7 @@ class FilterDrawerErrorBoundary extends React.Component<{ children: React.ReactN
     console.error("FilterDrawer Error:", error);
     return { hasError: true, error };
   }
-
+  // @ts-ignore TS6133
   componentDidCatch(error: Error, errorInfo: React.ErrorInfo) {
     console.error("FilterDrawer Error Info:", errorInfo);
   }

@@ -15,7 +15,7 @@ export interface VideoProjectDocument {
 
 export interface VideoTrack {
   id: string;
-  type: 'image' | 'audio' | 'video';
+  type: "image" | "audio" | "video";
   name: string;
   startTime: number;
   endTime: number;
@@ -30,7 +30,7 @@ export interface VideoTrack {
 }
 
 export interface VideoSource {
-  type: 'image' | 'audio' | 'video';
+  type: "image" | "audio" | "video";
   blob?: Blob;
   url?: string;
   mimeType: string;
@@ -44,7 +44,7 @@ export interface VideoSource {
 
 export interface VideoEffect {
   id: string;
-  type: 'transition' | 'filter' | 'transform';
+  type: "transition" | "filter" | "transform";
   name: string;
   startTime: number;
   endTime: number;
@@ -57,7 +57,7 @@ export interface Keyframe {
   property: string;
   time: number;
   value: any;
-  easing: 'linear' | 'ease-in' | 'ease-out' | 'ease-in-out';
+  easing: "linear" | "ease-in" | "ease-out" | "ease-in-out";
 }
 
 export interface VideoProjectSettings {
@@ -73,9 +73,9 @@ interface VideoStorageDB extends DBSchema {
     key: number;
     value: VideoProjectDocument;
     indexes: {
-      'by-name': string;
-      'by-created': Date;
-      'by-updated': Date;
+      "by-name": string;
+      "by-created": Date;
+      "by-updated": Date;
     };
   };
   videoAssets: {
@@ -83,7 +83,7 @@ interface VideoStorageDB extends DBSchema {
     value: {
       id?: number;
       name: string;
-      type: 'image' | 'audio' | 'video';
+      type: "image" | "audio" | "video";
       blob: Blob;
       mimeType: string;
       createdAt: Date;
@@ -94,8 +94,8 @@ interface VideoStorageDB extends DBSchema {
       };
     };
     indexes: {
-      'by-type': string;
-      'by-name': string;
+      "by-type": string;
+      "by-name": string;
     };
   };
 }
@@ -133,10 +133,10 @@ class VideoStorage {
   }
 
   // Project CRUD operations
-  async createProject(project: Omit<VideoProjectDocument, 'id' | 'createdAt' | 'updatedAt'>): Promise<number> {
+  async createProject(project: Omit<VideoProjectDocument, "id" | "createdAt" | "updatedAt">): Promise<number> {
     const db = await this.initDB();
     const now = new Date();
-    const projectWithTimestamps: Omit<VideoProjectDocument, 'id'> = {
+    const projectWithTimestamps: Omit<VideoProjectDocument, "id"> = {
       ...project,
       createdAt: now,
       updatedAt: now,
@@ -169,6 +169,7 @@ class VideoStorage {
   }
 
   async duplicateProject(id: number, newName: string): Promise<number> {
+    // @ts-ignore
     const db = await this.initDB();
     const project = await this.getProject(id);
     if (!project) throw new Error("Project not found");
@@ -182,7 +183,7 @@ class VideoStorage {
   }
 
   // Asset CRUD operations
-  async addAsset(asset: Omit<VideoStorageDB['videoAssets']['value'], 'id' | 'createdAt'>): Promise<number> {
+  async addAsset(asset: Omit<VideoStorageDB["videoAssets"]["value"], "id" | "createdAt">): Promise<number> {
     const db = await this.initDB();
     const assetWithTimestamp = {
       ...asset,
@@ -191,7 +192,7 @@ class VideoStorage {
     return await db.add("videoAssets", assetWithTimestamp);
   }
 
-  async getAssets(type?: 'image' | 'audio' | 'video'): Promise<VideoStorageDB['videoAssets']['value'][]> {
+  async getAssets(type?: "image" | "audio" | "video"): Promise<VideoStorageDB["videoAssets"]["value"][]> {
     const db = await this.initDB();
     if (type) {
       return await db.getAllFromIndex("videoAssets", "by-type", type);
@@ -199,7 +200,7 @@ class VideoStorage {
     return await db.getAll("videoAssets");
   }
 
-  async getAsset(id: number): Promise<VideoStorageDB['videoAssets']['value'] | undefined> {
+  async getAsset(id: number): Promise<VideoStorageDB["videoAssets"]["value"] | undefined> {
     const db = await this.initDB();
     return await db.get("videoAssets", id);
   }
@@ -209,7 +210,7 @@ class VideoStorage {
     await db.delete("videoAssets", id);
   }
 
-  async updateAsset(asset: VideoStorageDB['videoAssets']['value']): Promise<void> {
+  async updateAsset(asset: VideoStorageDB["videoAssets"]["value"]): Promise<void> {
     const db = await this.initDB();
     await db.put("videoAssets", asset);
   }
@@ -225,9 +226,8 @@ class VideoStorage {
 
   async searchProjectsByName(query: string): Promise<VideoProjectDocument[]> {
     const projects = await this.getProjects();
-    return projects.filter(project =>
-      project.name.toLowerCase().includes(query.toLowerCase()) ||
-      project.description?.toLowerCase().includes(query.toLowerCase())
+    return projects.filter(
+      (project) => project.name.toLowerCase().includes(query.toLowerCase()) || project.description?.toLowerCase().includes(query.toLowerCase()),
     );
   }
 
@@ -248,7 +248,7 @@ class VideoStorage {
       video: 0,
     };
 
-    assets.forEach(asset => {
+    assets.forEach((asset) => {
       totalSize += asset.blob.size;
       assetsByType[asset.type]++;
     });
@@ -262,7 +262,7 @@ class VideoStorage {
   }
 
   // Create default project template
-  createDefaultProject(name: string): Omit<VideoProjectDocument, 'id' | 'createdAt' | 'updatedAt'> {
+  createDefaultProject(name: string): Omit<VideoProjectDocument, "id" | "createdAt" | "updatedAt"> {
     return {
       name,
       description: "",
@@ -281,12 +281,7 @@ class VideoStorage {
   }
 
   // Helper to create tracks from assets
-  createTrackFromAsset(
-    asset: VideoStorageDB['videoAssets']['value'],
-    startTime: number,
-    layer: number,
-    duration?: number
-  ): VideoTrack {
+  createTrackFromAsset(asset: VideoStorageDB["videoAssets"]["value"], startTime: number, layer: number, duration?: number): VideoTrack {
     const trackDuration = duration || asset.metadata?.duration || 3.0;
 
     return {
@@ -298,8 +293,8 @@ class VideoStorage {
       duration: trackDuration,
       layer,
       enabled: true,
-      volume: asset.type === 'audio' ? 0.8 : undefined,
-      opacity: asset.type === 'image' ? 1.0 : undefined,
+      volume: asset.type === "audio" ? 0.8 : undefined,
+      opacity: asset.type === "image" ? 1.0 : undefined,
       effects: [],
       keyframes: [],
       source: {

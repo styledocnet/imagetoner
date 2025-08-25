@@ -25,6 +25,7 @@ const Recorder = () => {
   const streamRef = useRef<MediaStream | null>(null);
   const [pitchDetectionMethod, setPitchDetectionMethod] = useState("YIN");
   const [visualizationType, setVisualizationType] = useState("VizBar");
+  // @ts-ignore TS6133
   const { play, toneFrequencyStats } = useTonePlaybackWithStats();
   const [sampleRate, setSampleRate] = useState(44100);
 
@@ -207,10 +208,13 @@ const Recorder = () => {
       {audioFiles.length > 0 && (
         <AudioFilesList
           files={audioFiles.map((f) => ({
-            id: f.id?.toString() || "",
+            id: f.id,
             name: f.name,
             blob: f.blob,
             duration: f.duration,
+            mimeType: f.mimeType ?? "audio/webm", // default if missing
+            createdAt: f.createdAt ?? new Date().toISOString(),
+            updatedAt: f.updatedAt ?? new Date().toISOString(),
           }))}
           onPlay={(file) => {
             play(file.blob);

@@ -9,7 +9,7 @@ import AddLayerModal from "../components/AddLayerModal";
 import WebCamInputModal from "../components/WebCamInputModal";
 import useDocument from "../hooks/useDocument";
 import { renderLayers } from "../utils/canvasUtils";
-import { useNavigate } from "react-router-dom";
+// import { useNavigate } from "react-router-dom";
 import Toolbar from "../components/Toolbar";
 import { useLayerContext } from "../context/LayerContext";
 import FilterDrawer from "../components/FilterDrawer";

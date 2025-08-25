@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useRef } from "react";
 import { videoStorage } from "../storage/videoStorage";
-import { useTypeSafeNavigate } from "../router/hooks";
+// import { useTypeSafeNavigate } from "../router/hooks";
 import {
   PlusIcon,
   TrashIcon,
@@ -36,7 +36,7 @@ const VideoAssetsPage: React.FC = () => {
   const [isUploading, setIsUploading] = useState(false);
   const [previewAsset, setPreviewAsset] = useState<VideoAsset | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
-  const navigate = useTypeSafeNavigate();
+  // const navigate = useTypeSafeNavigate();
 
   useEffect(() => {
     loadAssets();
