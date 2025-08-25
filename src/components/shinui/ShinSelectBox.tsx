@@ -3,6 +3,7 @@ import React from "react";
 interface SelectBoxOption {
   label: string;
   value: string;
+  disabled?: boolean;
 }
 
 interface ShinSelectBoxProps {
@@ -13,14 +14,16 @@ interface ShinSelectBoxProps {
   placeholder?: string;
   className?: string;
   small?: boolean;
+  id?: string;
 }
 
-const ShinSelectBox: React.FC<ShinSelectBoxProps> = ({ options, value, onChange, label, placeholder = "Select...", className = "", small = false }) => {
+const ShinSelectBox: React.FC<ShinSelectBoxProps> = ({ options, value, onChange, label, placeholder = "Select...", className = "", small = false, id }) => {
   return (
     <div className={`flex flex-col gap-1 ${className}`}>
       {label && <label className={`font-semibold ${small ? "text-xs mb-0.5" : "text-sm mb-1"} text-gray-800 dark:text-gray-200`}>{label}</label>}
       <div className="relative">
         <select
+          id={id}
           value={value}
           onChange={(e) => onChange(e.target.value)}
           className={`
@@ -40,7 +43,7 @@ const ShinSelectBox: React.FC<ShinSelectBoxProps> = ({ options, value, onChange,
         >
           {placeholder && <option value="">{placeholder}</option>}
           {options.map((opt) => (
-            <option key={opt.value} value={opt.value}>
+            <option key={opt.value} value={opt.value} disabled={opt.disabled}>
               {opt.label}
             </option>
           ))}
