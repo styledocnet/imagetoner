@@ -70,7 +70,7 @@ vec4 watercolorBleed(sampler2D tex, vec2 uv, vec2 resolution, float radius, floa
         float angleRad = float(angle) * 0.39269908; // 2*PI/16
 
         for (int dist = 1; dist <= 4; dist++) {
-            float distance = float(dist) * bleedRadius;
+            float dist_f = float(dist) * bleedRadius;
 
             // Add noise to sampling position for organic bleeding
             vec2 noiseOffset = vec2(
@@ -78,7 +78,7 @@ vec4 watercolorBleed(sampler2D tex, vec2 uv, vec2 resolution, float radius, floa
                 noise(uv * 30.0 + float(angle) + 100.0) - 0.5
             ) * texel * wetness * 2.0;
 
-            vec2 offset = vec2(cos(angleRad), sin(angleRad)) * distance * texel + noiseOffset;
+            vec2 offset = vec2(cos(angleRad), sin(angleRad)) * dist_f * texel + noiseOffset;
             vec2 samplePos = uv + offset;
 
             if (samplePos.x >= 0.0 && samplePos.x <= 1.0 &&
@@ -87,11 +87,11 @@ vec4 watercolorBleed(sampler2D tex, vec2 uv, vec2 resolution, float radius, floa
                 vec4 sampleColor = texture2D(tex, samplePos);
 
                 // Weight based on distance and color similarity
-                float weight = 1.0 / (1.0 + distance * distance);
+                float weight = 1.0 / (1.0 + dist_f * dist_f);
 
                 // Enhance bleeding for similar colors
                 vec4 centerColor = texture2D(tex, uv);
-                float colorSimilarity = 1.0 - distance(sampleColor.rgb, centerColor.rgb);
+                float colorSimilarity = 1.0 - length(sampleColor.rgb - centerColor.rgb);
                 weight *= (0.5 + colorSimilarity * 0.5);
 
                 result += sampleColor * weight;

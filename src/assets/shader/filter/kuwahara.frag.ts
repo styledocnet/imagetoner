@@ -4,7 +4,7 @@ precision mediump float;
 uniform sampler2D u_image;
 uniform vec2 u_resolution;
 uniform float u_radius;
-uniform int u_kernelSize;
+uniform float u_kernelSize;
 uniform float u_sharpness;
 uniform float u_fade;
 
@@ -18,7 +18,7 @@ void main() {
 
     // Define the four quadrants around the current pixel
     float radius = u_radius;
-    int kernelSize = max(1, u_kernelSize);
+    int kernelSize = int(max(1.0, u_kernelSize));
 
     // Initialize variables for the four regions
     vec3 mean[4];

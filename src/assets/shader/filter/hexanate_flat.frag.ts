@@ -11,41 +11,42 @@ uniform float u_fade;
 
 varying vec2 vUV;
 
-// Function to convert from UV coordinates to hexagonal grid coordinates
-vec2 hexGrid(vec2 uv, float size) {
-    vec2 r = vec2(1.0, 1.732050808); // 1.0, sqrt(3)
-    vec2 h = r * size;
-    vec2 a = mod(uv, h) - h * 0.5;
-    vec2 b = mod(uv - h * 0.5, h) - h * 0.5;
-    vec2 gv = length(a) < length(b) ? a : b;
-
-    float x = atan(gv.x, gv.y);
-    float y = 0.5 - length(gv);
-    vec2 id = uv - gv;
-
-    return id;
-}
-
 // Function to get the center of a hexagonal cell
 vec2 hexCenter(vec2 uv, float size) {
-    vec2 r = vec2(1.0, 1.732050808);
-    vec2 h = r * size;
-    vec2 a = mod(uv, h) - h * 0.5;
-    vec2 b = mod(uv - h * 0.5, h) - h * 0.5;
+    // Hexagonal grid constants
+    vec2 s = vec2(1.0, 1.732050808); // 1, sqrt(3)
+
+    // Scale the grid based on size
+    vec2 scaledUV = uv / (size * 0.01); // Adjust scaling factor
+
+    // Create hexagonal grid
+    vec2 r = s * 0.5;
+    vec2 a = mod(scaledUV, s) - r;
+    vec2 b = mod(scaledUV - r, s) - r;
+
     vec2 gv = length(a) < length(b) ? a : b;
-    return uv - gv;
+    vec2 center = scaledUV - gv;
+
+    return center * size * 0.01;
 }
 
 // Function to check if we're near the edge of a hexagon
 float hexEdge(vec2 uv, float size) {
-    vec2 r = vec2(1.0, 1.732050808);
-    vec2 h = r * size;
-    vec2 a = mod(uv, h) - h * 0.5;
-    vec2 b = mod(uv - h * 0.5, h) - h * 0.5;
-    vec2 gv = length(a) < length(b) ? a : b;
+    // Hexagonal grid constants
+    vec2 s = vec2(1.0, 1.732050808); // 1, sqrt(3)
 
+    // Scale the grid based on size
+    vec2 scaledUV = uv / (size * 0.01);
+
+    // Create hexagonal grid
+    vec2 r = s * 0.5;
+    vec2 a = mod(scaledUV, s) - r;
+    vec2 b = mod(scaledUV - r, s) - r;
+
+    vec2 gv = length(a) < length(b) ? a : b;
     float d = length(gv);
-    return 1.0 - smoothstep(size * 0.4, size * 0.5, d);
+
+    return 1.0 - smoothstep(0.35, 0.45, d);
 }
 
 // Simple edge detection using Sobel operator
@@ -79,6 +80,9 @@ void main() {
     // Get hexagon center for current pixel
     vec2 hexCenterPos = hexCenter(uv, u_hexSize);
     vec2 hexCenterUV = hexCenterPos / u_resolution;
+
+    // Clamp to valid texture coordinates
+    hexCenterUV = clamp(hexCenterUV, 0.0, 1.0);
 
     // Sample color at hexagon center
     vec4 hexColor = texture2D(u_image, hexCenterUV);

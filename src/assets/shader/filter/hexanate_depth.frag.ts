@@ -18,42 +18,51 @@ uniform float u_fade;
 
 varying vec2 vUV;
 
-// Function to convert from UV coordinates to hexagonal grid coordinates
-vec2 hexGrid(vec2 uv, float size) {
-    vec2 r = vec2(1.0, 1.732050808); // 1.0, sqrt(3)
-    vec2 h = r * size;
-    vec2 a = mod(uv, h) - h * 0.5;
-    vec2 b = mod(uv - h * 0.5, h) - h * 0.5;
+// Function to get the center of a hexagonal cell
+vec2 hexCenter(vec2 uv, float size) {
+    // Hexagonal grid constants
+    vec2 s = vec2(1.0, 1.732050808); // 1, sqrt(3)
+
+    // Scale the grid based on size
+    vec2 scaledUV = uv / (size * 0.01); // Adjust scaling factor
+
+    // Create hexagonal grid
+    vec2 r = s * 0.5;
+    vec2 a = mod(scaledUV, s) - r;
+    vec2 b = mod(scaledUV - r, s) - r;
+
     vec2 gv = length(a) < length(b) ? a : b;
-    return uv - gv;
+    vec2 center = scaledUV - gv;
+
+    return center * size * 0.01;
 }
 
 // Function to get distorted hexagonal position based on depth
-vec2 hexGridWithDepth(vec2 uv, float size, float depth) {
+vec2 hexCenterWithDepth(vec2 uv, float size, float depth) {
     // Apply perspective distortion based on depth
     float distortion = 1.0 + depth * u_depthIntensity * 0.5;
-    vec2 center = vec2(0.5);
-    vec2 offset = (uv - center) * distortion;
-    vec2 distortedUV = center + offset;
+    float adjustedSize = size * distortion;
 
-    vec2 r = vec2(1.0, 1.732050808);
-    vec2 h = r * (size * distortion);
-    vec2 a = mod(distortedUV * u_resolution, h) - h * 0.5;
-    vec2 b = mod(distortedUV * u_resolution - h * 0.5, h) - h * 0.5;
-    vec2 gv = length(a) < length(b) ? a : b;
-    return distortedUV * u_resolution - gv;
+    return hexCenter(uv * u_resolution, adjustedSize);
 }
 
 // Function to check if we're near the edge of a hexagon
 float hexEdge(vec2 uv, float size) {
-    vec2 r = vec2(1.0, 1.732050808);
-    vec2 h = r * size;
-    vec2 a = mod(uv, h) - h * 0.5;
-    vec2 b = mod(uv - h * 0.5, h) - h * 0.5;
-    vec2 gv = length(a) < length(b) ? a : b;
+    // Hexagonal grid constants
+    vec2 s = vec2(1.0, 1.732050808); // 1, sqrt(3)
 
+    // Scale the grid based on size
+    vec2 scaledUV = uv / (size * 0.01);
+
+    // Create hexagonal grid
+    vec2 r = s * 0.5;
+    vec2 a = mod(scaledUV, s) - r;
+    vec2 b = mod(scaledUV - r, s) - r;
+
+    vec2 gv = length(a) < length(b) ? a : b;
     float d = length(gv);
-    return 1.0 - smoothstep(size * 0.4, size * 0.5, d);
+
+    return 1.0 - smoothstep(0.35, 0.45, d);
 }
 
 // Edge detection using Sobel operator
@@ -84,11 +93,11 @@ vec3 findClosestPaletteColor(vec3 color) {
     if (!u_usePalette || u_paletteSize == 0) return color;
 
     vec3 closest = u_palette[0];
-    float minDist = distance(color, closest);
+    float minDist = length(color - closest);
 
     for (int i = 1; i < 8; i++) {
         if (i >= u_paletteSize) break;
-        float dist = distance(color, u_palette[i]);
+        float dist = length(color - u_palette[i]);
         if (dist < minDist) {
             minDist = dist;
             closest = u_palette[i];
@@ -127,9 +136,9 @@ void main() {
     // Get hexagon center with or without depth distortion
     vec2 hexCenterPos;
     if (u_useDepth) {
-        hexCenterPos = hexGridWithDepth(vUV, u_hexSize, depth);
+        hexCenterPos = hexCenterWithDepth(vUV, u_hexSize, depth);
     } else {
-        hexCenterPos = hexGrid(uv, u_hexSize);
+        hexCenterPos = hexCenter(uv, u_hexSize);
     }
 
     vec2 hexCenterUV = hexCenterPos / u_resolution;

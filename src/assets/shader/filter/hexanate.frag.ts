@@ -12,24 +12,23 @@ uniform float u_block;
 
 varying vec2 vUV;
 
-// Function to convert from UV coordinates to hexagonal grid coordinates
-vec2 hexGrid(vec2 uv, float size) {
-    vec2 r = vec2(1.0, 1.732050808); // 1.0, sqrt(3)
-    vec2 h = r * size;
-    vec2 a = mod(uv, h) - h * 0.5;
-    vec2 b = mod(uv - h * 0.5, h) - h * 0.5;
-    vec2 gv = length(a) < length(b) ? a : b;
-    return uv - gv;
-}
-
 // Function to get the center of a hexagonal cell
 vec2 hexCenter(vec2 uv, float size) {
-    vec2 r = vec2(1.0, 1.732050808);
-    vec2 h = r * size;
-    vec2 a = mod(uv, h) - h * 0.5;
-    vec2 b = mod(uv - h * 0.5, h) - h * 0.5;
+    // Hexagonal grid constants
+    vec2 s = vec2(1.0, 1.732050808); // 1, sqrt(3)
+
+    // Scale the grid based on size
+    vec2 scaledUV = uv / (size * 0.01); // Adjust scaling factor
+
+    // Create hexagonal grid
+    vec2 r = s * 0.5;
+    vec2 a = mod(scaledUV, s) - r;
+    vec2 b = mod(scaledUV - r, s) - r;
+
     vec2 gv = length(a) < length(b) ? a : b;
-    return uv - gv;
+    vec2 center = scaledUV - gv;
+
+    return center * size * 0.01;
 }
 
 // Noise function for variation
@@ -59,7 +58,7 @@ void main() {
     vec4 originalColor = texture2D(u_image, vUV);
 
     // Calculate hexagon size based on points parameter
-    float hexSize = mix(10.0, 100.0, u_points / 1000.0);
+    float hexSize = mix(20.0, 80.0, u_points / 1000.0);
 
     // Convert screen coordinates to hexagon grid
     vec2 uv = vUV * u_resolution;
