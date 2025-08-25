@@ -7,7 +7,7 @@ const repoName = "imagetoner";
 
 export default defineConfig(({ mode }) => ({
   // base: mode === "production" ? `/${repoName}/` : "/",
-  base: `/${repoName}/`,
+  base: mode === "production" ? `/${repoName}/` : `/${repoName}/`,
   build: {
     chunkSizeWarningLimit: 1500,
     rollupOptions: {
