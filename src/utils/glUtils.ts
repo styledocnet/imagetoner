@@ -15,6 +15,10 @@ export const shaderAllowList = [
   "triangulate",
   "hexanate",
   "polygonate",
+  "oldfilm",
+  "watercolor",
+  "kuwahara",
+  "filmnoir",
 ];
 
 export const initGL = (gl: WebGLRenderingContext) => {

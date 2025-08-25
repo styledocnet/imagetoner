@@ -40,6 +40,8 @@ const Recorder = () => {
 
   // Load saved audio files from storage on mount
   useEffect(() => {
+    // TODO getAudioFiles(limit) ? Limit to latest 10 files (also in handleSaveRecording)
+    // audioStorage.getAudioFiles(10).then((files) => setAudioFiles(files.reverse())); // latest first
     audioStorage.getAudioFiles().then((files) => setAudioFiles(files.reverse())); // latest first
   }, []);
 

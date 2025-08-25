@@ -84,6 +84,7 @@ const AudioFilesPage: React.FC = () => {
       </div>
 
       <AudioFilesList
+        fullMode={true}
         files={files}
         onEdit={handleEdit}
         onDelete={handleDelete}

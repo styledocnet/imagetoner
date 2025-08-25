@@ -18,9 +18,10 @@ interface Props {
   onDelete?: (file: AudioFile) => void;
   onAddFile?: (file: AudioFile) => void;
   pageSize?: number;
+  fullMode?: boolean;
 }
 
-const AudioFilesList: React.FC<Props> = ({ files, onPlay, onEdit, onDelete, onAddFile, pageSize = 10 }) => {
+const AudioFilesList: React.FC<Props> = ({ files, onPlay, onEdit, onDelete, onAddFile, pageSize = 10, fullMode = false }) => {
   const [displayFiles, setDisplayFiles] = useState<AudioFile[]>([]);
   const [page, setPage] = useState(1);
   const [isSpeechDialogOpen, setIsSpeechDialogOpen] = useState(false);
@@ -75,50 +76,54 @@ const AudioFilesList: React.FC<Props> = ({ files, onPlay, onEdit, onDelete, onAd
   return (
     <div className="flex flex-col w-full max-w-lg mx-auto p-3 dark:text-white space-y-4">
       {/* Header with Speech Generation Button */}
-      <div className="flex justify-between items-center">
-        <h2 className="text-xl font-semibold">Audio Files</h2>
-        {isSpeechSupported && (
-          <ShinButton
-            onClick={() => setIsSpeechDialogOpen(true)}
-            className="px-3 py-2 bg-purple-600 text-white rounded hover:bg-purple-700 active:bg-purple-800 text-sm flex items-center"
-            ariaLabel="Generate Speech Audio"
-          >
-            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth="1.5" stroke="currentColor" className="w-4 h-4 mr-1">
-              <path
-                strokeLinecap="round"
-                strokeLinejoin="round"
-                d="M12 18.75a6 6 0 0 0 6-6v-1.5m-6 7.5a6 6 0 0 1-6-6v-1.5m6 7.5v3.75m-3.75 0h7.5M12 15.75a3 3 0 0 1-3-3V4.5a3 3 0 1 1 6 0v8.25a3 3 0 0 1-3 3Z"
-              />
-            </svg>
-            Speech
-          </ShinButton>
-        )}
-      </div>
+      {fullMode && (
+        <div className="flex justify-between items-center">
+          <h2 className="text-xl font-semibold">Audio Files</h2>
+          {isSpeechSupported && (
+            <ShinButton
+              onClick={() => setIsSpeechDialogOpen(true)}
+              className="px-3 py-2 bg-purple-600 text-white rounded hover:bg-purple-700 active:bg-purple-800 text-sm flex items-center"
+              aria-label="Generate Speech Audio"
+            >
+              <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth="1.5" stroke="currentColor" className="w-4 h-4 mr-1">
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  d="M12 18.75a6 6 0 0 0 6-6v-1.5m-6 7.5a6 6 0 0 1-6-6v-1.5m6 7.5v3.75m-3.75 0h7.5M12 15.75a3 3 0 0 1-3-3V4.5a3 3 0 1 1 6 0v8.25a3 3 0 0 1-3 3Z"
+                />
+              </svg>
+              Speech
+            </ShinButton>
+          )}
+        </div>
+      )}
       {/* Preview Panel - Always present to prevent layout shift */}
-      <div className="bg-gray-800 rounded-lg p-4 min-h-[120px] flex items-center justify-center border border-gray-700">
-        {visualizationData && isPlaying ? (
-          <SlidingAudioVisualizer visualizationData={visualizationData} width={280} height={80} className="w-full" />
-        ) : (
-          <div className="flex items-center space-x-3 text-gray-400">
-            <div className="relative">
-              <div className="w-10 h-10 rounded-full border-2 border-gray-600 flex items-center justify-center">
-                <div className="w-4 h-4 bg-gray-500 rounded-full animate-pulse"></div>
+      {fullMode && (
+        <div className="bg-gray-800 rounded-lg p-4 min-h-[140px] h-[150px] flex items-center justify-center border border-gray-700">
+          {visualizationData ? (
+            <SlidingAudioVisualizer visualizationData={visualizationData} width={280} height={100} className="w-full" />
+          ) : (
+            <div className="flex items-center space-x-3 text-gray-400 h-[150px] min-h-[140px]  p-4">
+              <div className="relative">
+                <div className="w-10 h-10 rounded-full border-2 border-gray-600 flex items-center justify-center">
+                  <div className="w-4 h-4 bg-gray-500 rounded-full animate-pulse"></div>
+                </div>
+                <div className="absolute -top-1 -right-1 w-3 h-3 bg-green-500 rounded-full animate-ping opacity-75"></div>
               </div>
-              <div className="absolute -top-1 -right-1 w-3 h-3 bg-green-500 rounded-full animate-ping opacity-75"></div>
+              <div className="flex flex-col">
+                <span className="text-sm font-medium">Audio Preview</span>
+                <span className="text-xs text-gray-500">Ready to play audio files</span>
+              </div>
+              <div className="flex space-x-1">
+                <div className="w-1 h-4 bg-gray-600 rounded-full animate-pulse" style={{ animationDelay: "0ms" }}></div>
+                <div className="w-1 h-6 bg-gray-600 rounded-full animate-pulse" style={{ animationDelay: "150ms" }}></div>
+                <div className="w-1 h-3 bg-gray-600 rounded-full animate-pulse" style={{ animationDelay: "300ms" }}></div>
+                <div className="w-1 h-5 bg-gray-600 rounded-full animate-pulse" style={{ animationDelay: "450ms" }}></div>
+              </div>
             </div>
-            <div className="flex flex-col">
-              <span className="text-sm font-medium">Audio Preview</span>
-              <span className="text-xs text-gray-500">Ready to play audio files</span>
-            </div>
-            <div className="flex space-x-1">
-              <div className="w-1 h-4 bg-gray-600 rounded-full animate-pulse" style={{ animationDelay: "0ms" }}></div>
-              <div className="w-1 h-6 bg-gray-600 rounded-full animate-pulse" style={{ animationDelay: "150ms" }}></div>
-              <div className="w-1 h-3 bg-gray-600 rounded-full animate-pulse" style={{ animationDelay: "300ms" }}></div>
-              <div className="w-1 h-5 bg-gray-600 rounded-full animate-pulse" style={{ animationDelay: "450ms" }}></div>
-            </div>
-          </div>
-        )}
-      </div>
+          )}
+        </div>
+      )}
       <ul
         className="shadow-neumorphism space-y-2 rounded-lg overflow-auto max-h-[60vh] min-h-[5rem]"
         ref={listRef}
@@ -137,7 +142,7 @@ const AudioFilesList: React.FC<Props> = ({ files, onPlay, onEdit, onDelete, onAd
             </span>
             <div className="flex gap-2 items-center">
               {currentPlayingId === file.id && isPlaying ? (
-                <ShinButton onClick={stop} className="px-3 py-1 bg-red-600 text-white rounded hover:bg-red-700 active:bg-red-800 text-xs" ariaLabel="Stop">
+                <ShinButton onClick={stop} className="px-3 py-1 bg-red-600 text-white rounded hover:bg-red-700 active:bg-red-800 text-xs" aria-label="Stop">
                   <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth="1.5" stroke="currentColor" className="w-4 h-4">
                     <path
                       strokeLinecap="round"
@@ -150,7 +155,7 @@ const AudioFilesList: React.FC<Props> = ({ files, onPlay, onEdit, onDelete, onAd
                 <ShinButton
                   onClick={() => playWithTone(file)}
                   className="px-3 py-1 bg-blue-600 text-white rounded hover:bg-blue-700 active:bg-blue-800 text-xs"
-                  ariaLabel="Play"
+                  aria-label="Play"
                 >
                   <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth="1.5" stroke="currentColor" className="w-4 h-4">
                     <path
@@ -166,7 +171,7 @@ const AudioFilesList: React.FC<Props> = ({ files, onPlay, onEdit, onDelete, onAd
                 href={URL.createObjectURL(file.blob)}
                 download={file.name}
                 className="px-3 py-1 bg-green-600 text-white rounded hover:bg-green-700 text-xs  relative shinitem shin-glass shinitem-perspective rounded transition focus:outline-none focus:ring-2 focus:ring-offset-2 disabled:opacity-50 disabled:cursor-not-allowed"
-                ariaLabel="Download"
+                AudioFilesView="Download"
               >
                 <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth="1.5" stroke="currentColor" className="w-4 h-4">
                   <path
@@ -177,7 +182,11 @@ const AudioFilesList: React.FC<Props> = ({ files, onPlay, onEdit, onDelete, onAd
                 </svg>
               </a>
               {onEdit && (
-                <ShinButton className="px-3 py-1 bg-yellow-500 text-black rounded hover:bg-yellow-600 text-xs" onClick={() => onEdit(file)} ariaLabel="Edit">
+                <ShinButton
+                  className="px-3 py-1 bg-yellow-500 text-black rounded hover:bg-yellow-600 text-xs"
+                  onClick={() => onEdit(file)}
+                  AudioFilesView="Edit"
+                >
                   <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth="1.5" stroke="currentColor" className="w-4 h-4">
                     <path
                       strokeLinecap="round"
@@ -188,7 +197,7 @@ const AudioFilesList: React.FC<Props> = ({ files, onPlay, onEdit, onDelete, onAd
                 </ShinButton>
               )}
               {onDelete && (
-                <ShinButton onClick={() => onDelete(file)} className="px-3 py-1 bg-red-600 text-white rounded hover:bg-red-700 text-xs" ariaLabel="Delete">
+                <ShinButton onClick={() => onDelete(file)} className="px-3 py-1 bg-red-600 text-white rounded hover:bg-red-700 text-xs" AudioFilesView="Delete">
                   <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth="1.5" stroke="currentColor" className="w-4 h-4">
                     <path
                       strokeLinecap="round"
@@ -204,7 +213,6 @@ const AudioFilesList: React.FC<Props> = ({ files, onPlay, onEdit, onDelete, onAd
         {displayFiles.length < files.length && <li className="text-center text-gray-400 py-2 text-sm">Loading more...</li>}
         {files.length === 0 && <li className="text-center text-gray-400 py-2 text-sm">No files yet.</li>}
       </ul>
-
       {/* Speech Generation Dialog */}
       {isSpeechSupported && (
         <SpeechToAudioDialog isOpen={isSpeechDialogOpen} onClose={() => setIsSpeechDialogOpen(false)} onAudioGenerated={handleSpeechGenerated} />
