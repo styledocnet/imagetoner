@@ -6,7 +6,8 @@ import { VitePWA } from "vite-plugin-pwa";
 const repoName = "imagetoner";
 
 export default defineConfig(({ mode }) => ({
-  base: mode === "production" ? `/${repoName}/` : "/",
+  // base: mode === "production" ? `/${repoName}/` : "/",
+  base: `/${repoName}/`,
   build: {
     chunkSizeWarningLimit: 1500,
     rollupOptions: {
