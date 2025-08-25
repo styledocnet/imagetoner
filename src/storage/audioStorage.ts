@@ -37,4 +37,13 @@ export const audioStorage = {
     const db = await dbPromise;
     return db.delete("audioFiles", id);
   },
+  async updateAudioFile(doc: AudioRecordingDocument) {
+    const now = new Date().toISOString();
+    const toUpdate: AudioRecordingDocument = {
+      ...doc,
+      updatedAt: now,
+    };
+    const db = await dbPromise;
+    return db.put("audioFiles", toUpdate);
+  },
 };

@@ -152,11 +152,7 @@ const AudioFilesList: React.FC<Props> = ({ files, onPlay, onEdit, onDelete, onAd
                   </svg>
                 </ShinButton>
               ) : (
-                <ShinButton
-                  onClick={() => playWithTone(file)}
-                  className="px-3 py-1 bg-blue-600 text-white rounded hover:bg-blue-700 active:bg-blue-800 text-xs"
-                  aria-label="Play"
-                >
+                <ShinButton onClick={() => handlePlay(file)} className="px-3 py-1 bg-blue-600 text-white rounded hover:bg-blue-700 text-xs" aria-label="Play">
                   <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth="1.5" stroke="currentColor" className="w-4 h-4">
                     <path
                       strokeLinecap="round"
@@ -171,7 +167,7 @@ const AudioFilesList: React.FC<Props> = ({ files, onPlay, onEdit, onDelete, onAd
                 href={URL.createObjectURL(file.blob)}
                 download={file.name}
                 className="px-3 py-1 bg-green-600 text-white rounded hover:bg-green-700 text-xs  relative shinitem shin-glass shinitem-perspective rounded transition focus:outline-none focus:ring-2 focus:ring-offset-2 disabled:opacity-50 disabled:cursor-not-allowed"
-                AudioFilesView="Download"
+                aria-label="Download"
               >
                 <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth="1.5" stroke="currentColor" className="w-4 h-4">
                   <path
@@ -182,11 +178,7 @@ const AudioFilesList: React.FC<Props> = ({ files, onPlay, onEdit, onDelete, onAd
                 </svg>
               </a>
               {onEdit && (
-                <ShinButton
-                  className="px-3 py-1 bg-yellow-500 text-black rounded hover:bg-yellow-600 text-xs"
-                  onClick={() => onEdit(file)}
-                  AudioFilesView="Edit"
-                >
+                <ShinButton className="px-3 py-1 bg-yellow-500 text-black rounded hover:bg-yellow-600 text-xs" onClick={() => onEdit(file)} aria-label="Edit">
                   <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth="1.5" stroke="currentColor" className="w-4 h-4">
                     <path
                       strokeLinecap="round"
@@ -197,7 +189,7 @@ const AudioFilesList: React.FC<Props> = ({ files, onPlay, onEdit, onDelete, onAd
                 </ShinButton>
               )}
               {onDelete && (
-                <ShinButton onClick={() => onDelete(file)} className="px-3 py-1 bg-red-600 text-white rounded hover:bg-red-700 text-xs" AudioFilesView="Delete">
+                <ShinButton onClick={() => onDelete(file)} className="px-3 py-1 bg-red-600 text-white rounded hover:bg-red-700 text-xs" aria-label="Delete">
                   <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth="1.5" stroke="currentColor" className="w-4 h-4">
                     <path
                       strokeLinecap="round"

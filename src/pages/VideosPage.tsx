@@ -2,6 +2,7 @@ import React, { useState, useEffect } from "react";
 import { videoStorage, VideoProjectDocument } from "../storage/videoStorage";
 import VideosList from "../components/Video/VideosList";
 import { useTypeSafeNavigate } from "../router/hooks";
+import { ROUTES } from "../router/routes";
 import { PlusIcon, FolderOpenIcon } from "@heroicons/react/24/outline";
 
 const VideosPage: React.FC = () => {
@@ -42,14 +43,14 @@ const VideosPage: React.FC = () => {
       setNewProjectDescription("");
 
       // Navigate to video editor
-      navigate("video-editor", { projectId: projectId.toString() });
+      navigate.toRoute(ROUTES.VIDEO_EDITOR, { projectId: projectId.toString() });
     } catch (error) {
       console.error("Error creating project:", error);
     }
   };
 
   const handleOpenProject = (project: VideoProjectDocument) => {
-    navigate("video-editor", { projectId: project.id!.toString() });
+    navigate.toRoute(ROUTES.VIDEO_EDITOR, { projectId: project.id!.toString() });
   };
 
   const handleEditProject = async (project: VideoProjectDocument) => {
@@ -116,7 +117,7 @@ const VideosPage: React.FC = () => {
           </div>
           <div className="flex items-center space-x-3">
             <button
-              onClick={() => navigate("video-assets")}
+              onClick={() => navigate.to(ROUTES.VIDEO_ASSETS)}
               className="inline-flex items-center px-4 py-2 text-sm font-medium
                        text-gray-700 dark:text-gray-300 bg-white dark:bg-gray-800
                        border border-gray-300 dark:border-gray-600 rounded-md

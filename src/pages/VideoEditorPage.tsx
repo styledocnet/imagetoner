@@ -2,6 +2,7 @@ import React, { useState, useEffect, useRef } from "react";
 import { useParams } from "react-router-dom";
 import { videoStorage, VideoProjectDocument, VideoTrack, VideoEffect, Keyframe } from "../storage/videoStorage";
 import { useTypeSafeNavigate } from "../router/hooks";
+import { ROUTES } from "../router/routes";
 import VideoTimeline from "../components/VideoEditor/VideoTimeline";
 import {
   ArrowLeftIcon,
@@ -13,7 +14,7 @@ import {
   PlusIcon,
   PhotoIcon,
   MusicalNoteIcon,
-  FilmIcon
+  FilmIcon,
 } from "@heroicons/react/24/outline";
 
 const VideoEditorPage: React.FC = () => {
@@ -25,7 +26,7 @@ const VideoEditorPage: React.FC = () => {
   const [currentTime, setCurrentTime] = useState(0);
   const [isPlaying, setIsPlaying] = useState(false);
   const [showAssetsPicker, setShowAssetsPicker] = useState(false);
-  const [assetPickerType, setAssetPickerType] = useState<'image' | 'audio' | 'video'>('image');
+  const [assetPickerType, setAssetPickerType] = useState<"image" | "audio" | "video">("image");
   const [availableAssets, setAvailableAssets] = useState<any[]>([]);
   const [showProjectSettings, setShowProjectSettings] = useState(false);
 
@@ -46,7 +47,7 @@ const VideoEditorPage: React.FC = () => {
   useEffect(() => {
     if (isPlaying && project) {
       playIntervalRef.current = setInterval(() => {
-        setCurrentTime(prev => {
+        setCurrentTime((prev) => {
           const nextTime = prev + 1 / project.fps;
           if (nextTime >= project.duration) {
             setIsPlaying(false);
@@ -75,11 +76,11 @@ const VideoEditorPage: React.FC = () => {
         setProject(loadedProject);
         setCurrentTime(0);
       } else {
-        navigate("videos");
+        navigate.to(ROUTES.VIDEOS);
       }
     } catch (error) {
       console.error("Error loading project:", error);
-      navigate("videos");
+      navigate.to(ROUTES.VIDEOS);
     } finally {
       setLoading(false);
     }
@@ -120,7 +121,7 @@ const VideoEditorPage: React.FC = () => {
     setCurrentTime(0);
   };
 
-  const handleAddTrack = (type: 'image' | 'audio' | 'video') => {
+  const handleAddTrack = (type: "image" | "audio" | "video") => {
     setAssetPickerType(type);
     setShowAssetsPicker(true);
   };
@@ -129,14 +130,14 @@ const VideoEditorPage: React.FC = () => {
     if (!project) return;
 
     // Find the next available layer
-    const maxLayer = Math.max(0, ...project.tracks.map(t => t.layer));
+    const maxLayer = Math.max(0, ...project.tracks.map((t) => t.layer));
     const newLayer = maxLayer + 1;
 
     const newTrack = videoStorage.createTrackFromAsset(
       asset,
       currentTime,
       newLayer,
-      asset.type === 'image' ? project.settings.defaultImageDuration : undefined
+      asset.type === "image" ? project.settings.defaultImageDuration : undefined,
     );
 
     const updatedTracks = [...project.tracks, newTrack];
@@ -146,14 +147,14 @@ const VideoEditorPage: React.FC = () => {
 
   const handleDeleteTrack = async (trackId: string) => {
     if (!project) return;
-    const updatedTracks = project.tracks.filter(t => t.id !== trackId);
+    const updatedTracks = project.tracks.filter((t) => t.id !== trackId);
     await handleTracksChange(updatedTracks);
   };
 
   const handleSplitTrack = async (trackId: string, time: number) => {
     if (!project) return;
 
-    const trackIndex = project.tracks.findIndex(t => t.id === trackId);
+    const trackIndex = project.tracks.findIndex((t) => t.id === trackId);
     const track = project.tracks[trackIndex];
 
     if (!track || time <= track.startTime || time >= track.endTime) return;
@@ -163,22 +164,17 @@ const VideoEditorPage: React.FC = () => {
       ...track,
       id: `${track.id}_1`,
       endTime: time,
-      duration: time - track.startTime
+      duration: time - track.startTime,
     };
 
     const secondTrack = {
       ...track,
       id: `${track.id}_2`,
       startTime: time,
-      duration: track.endTime - time
+      duration: track.endTime - time,
     };
 
-    const updatedTracks = [
-      ...project.tracks.slice(0, trackIndex),
-      firstTrack,
-      secondTrack,
-      ...project.tracks.slice(trackIndex + 1)
-    ];
+    const updatedTracks = [...project.tracks.slice(0, trackIndex), firstTrack, secondTrack, ...project.tracks.slice(trackIndex + 1)];
 
     await handleTracksChange(updatedTracks);
   };
@@ -186,11 +182,11 @@ const VideoEditorPage: React.FC = () => {
   const handleAddEffect = async (trackId: string, effect: VideoEffect) => {
     if (!project) return;
 
-    const updatedTracks = project.tracks.map(track => {
+    const updatedTracks = project.tracks.map((track) => {
       if (track.id === trackId) {
         return {
           ...track,
-          effects: [...track.effects, effect]
+          effects: [...track.effects, effect],
         };
       }
       return track;
@@ -202,11 +198,11 @@ const VideoEditorPage: React.FC = () => {
   const handleAddKeyframe = async (trackId: string, keyframe: Keyframe) => {
     if (!project) return;
 
-    const updatedTracks = project.tracks.map(track => {
+    const updatedTracks = project.tracks.map((track) => {
       if (track.id === trackId) {
         return {
           ...track,
-          keyframes: [...track.keyframes, keyframe]
+          keyframes: [...track.keyframes, keyframe],
         };
       }
       return track;
@@ -224,7 +220,7 @@ const VideoEditorPage: React.FC = () => {
     if (!project || !canvasRef.current) return;
 
     const canvas = canvasRef.current;
-    const ctx = canvas.getContext('2d');
+    const ctx = canvas.getContext("2d");
     if (!ctx) return;
 
     // Set canvas size to project resolution
@@ -237,11 +233,11 @@ const VideoEditorPage: React.FC = () => {
 
     // Render active tracks at current time
     const activeTracks = project.tracks
-      .filter(track => track.enabled && currentTime >= track.startTime && currentTime <= track.endTime)
+      .filter((track) => track.enabled && currentTime >= track.startTime && currentTime <= track.endTime)
       .sort((a, b) => a.layer - b.layer); // Render in layer order
 
-    activeTracks.forEach(track => {
-      if (track.type === 'image' && track.source.blob) {
+    activeTracks.forEach((track) => {
+      if (track.type === "image" && track.source.blob) {
         const img = new Image();
         img.onload = () => {
           const opacity = track.opacity || 1;
@@ -252,16 +248,16 @@ const VideoEditorPage: React.FC = () => {
           let x = 0;
           let y = 0;
 
-          track.keyframes.forEach(keyframe => {
+          track.keyframes.forEach((keyframe) => {
             if (keyframe.time <= currentTime) {
               switch (keyframe.property) {
-                case 'opacity':
+                case "opacity":
                   ctx.globalAlpha = keyframe.value;
                   break;
-                case 'scale':
+                case "scale":
                   scale = keyframe.value;
                   break;
-                case 'position':
+                case "position":
                   x = keyframe.value.x || 0;
                   y = keyframe.value.y || 0;
                   break;
@@ -299,10 +295,7 @@ const VideoEditorPage: React.FC = () => {
       <div className="h-screen bg-gray-900 flex items-center justify-center">
         <div className="text-center text-white">
           <h2 className="text-2xl font-bold mb-4">Project Not Found</h2>
-          <button
-            onClick={() => navigate("videos")}
-            className="px-4 py-2 bg-blue-600 hover:bg-blue-700 rounded"
-          >
+          <button onClick={() => navigate.to(ROUTES.VIDEOS)} className="px-4 py-2 bg-blue-600 hover:bg-blue-700 rounded">
             Back to Projects
           </button>
         </div>
@@ -315,10 +308,7 @@ const VideoEditorPage: React.FC = () => {
       {/* Header */}
       <div className="flex items-center justify-between p-4 bg-gray-800 border-b border-gray-700">
         <div className="flex items-center space-x-4">
-          <button
-            onClick={() => navigate("videos")}
-            className="p-2 text-gray-400 hover:text-white transition-colors"
-          >
+          <button onClick={() => navigate.to(ROUTES.VIDEOS)} className="p-2 text-gray-400 hover:text-white transition-colors">
             <ArrowLeftIcon className="w-6 h-6" />
           </button>
           <div>
@@ -337,10 +327,7 @@ const VideoEditorPage: React.FC = () => {
             <CogIcon className="w-4 h-4 mr-2" />
             Settings
           </button>
-          <button
-            onClick={saveProject}
-            className="flex items-center px-3 py-2 text-sm text-white bg-green-600 hover:bg-green-700 rounded transition-colors"
-          >
+          <button onClick={saveProject} className="flex items-center px-3 py-2 text-sm text-white bg-green-600 hover:bg-green-700 rounded transition-colors">
             <DocumentArrowDownIcon className="w-4 h-4 mr-2" />
             Save
           </button>
@@ -364,12 +351,15 @@ const VideoEditorPage: React.FC = () => {
               className="max-w-full max-h-full border border-gray-600"
               style={{
                 aspectRatio: `${project.resolution.width}/${project.resolution.height}`,
-                width: 'auto',
-                height: '100%'
+                width: "auto",
+                height: "100%",
               }}
             />
             <div className="absolute top-4 left-4 text-white text-sm bg-black bg-opacity-50 px-2 py-1 rounded">
-              {Math.floor(currentTime / 60)}:{Math.floor(currentTime % 60).toString().padStart(2, '0')}
+              {Math.floor(currentTime / 60)}:
+              {Math.floor(currentTime % 60)
+                .toString()
+                .padStart(2, "0")}
             </div>
           </div>
         </div>
@@ -400,13 +390,8 @@ const VideoEditorPage: React.FC = () => {
         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
           <div className="bg-gray-800 rounded-lg w-full max-w-4xl max-h-[80vh] overflow-hidden">
             <div className="flex items-center justify-between p-4 border-b border-gray-700">
-              <h2 className="text-lg font-semibold text-white">
-                Select {assetPickerType.charAt(0).toUpperCase() + assetPickerType.slice(1)} Asset
-              </h2>
-              <button
-                onClick={() => setShowAssetsPicker(false)}
-                className="text-gray-400 hover:text-white text-xl"
-              >
+              <h2 className="text-lg font-semibold text-white">Select {assetPickerType.charAt(0).toUpperCase() + assetPickerType.slice(1)} Asset</h2>
+              <button onClick={() => setShowAssetsPicker(false)} className="text-gray-400 hover:text-white text-xl">
                 ×
               </button>
             </div>
@@ -414,7 +399,7 @@ const VideoEditorPage: React.FC = () => {
             <div className="p-4 overflow-y-auto max-h-96">
               <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
                 {availableAssets
-                  .filter(asset => asset.type === assetPickerType)
+                  .filter((asset) => asset.type === assetPickerType)
                   .map((asset) => (
                     <div
                       key={asset.id}
@@ -422,13 +407,9 @@ const VideoEditorPage: React.FC = () => {
                       className="bg-gray-700 rounded-lg p-3 cursor-pointer hover:bg-gray-600 transition-colors"
                     >
                       <div className="aspect-square bg-gray-600 rounded mb-2 flex items-center justify-center">
-                        {asset.type === 'image' ? (
-                          <img
-                            src={URL.createObjectURL(asset.blob)}
-                            alt={asset.name}
-                            className="w-full h-full object-cover rounded"
-                          />
-                        ) : asset.type === 'audio' ? (
+                        {asset.type === "image" ? (
+                          <img src={URL.createObjectURL(asset.blob)} alt={asset.name} className="w-full h-full object-cover rounded" />
+                        ) : asset.type === "audio" ? (
                           <MusicalNoteIcon className="w-8 h-8 text-gray-400" />
                         ) : (
                           <FilmIcon className="w-8 h-8 text-gray-400" />
@@ -439,14 +420,11 @@ const VideoEditorPage: React.FC = () => {
                   ))}
               </div>
 
-              {availableAssets.filter(asset => asset.type === assetPickerType).length === 0 && (
+              {availableAssets.filter((asset) => asset.type === assetPickerType).length === 0 && (
                 <div className="text-center text-gray-400 py-8">
                   <PhotoIcon className="w-12 h-12 mx-auto mb-4" />
                   <p>No {assetPickerType} assets found</p>
-                  <button
-                    onClick={() => navigate("video-assets")}
-                    className="mt-2 text-blue-400 hover:text-blue-300"
-                  >
+                  <button onClick={() => navigate.to(ROUTES.VIDEO_ASSETS)} className="mt-2 text-blue-400 hover:text-blue-300">
                     Upload some assets
                   </button>
                 </div>
@@ -462,19 +440,14 @@ const VideoEditorPage: React.FC = () => {
           <div className="bg-gray-800 rounded-lg w-full max-w-md">
             <div className="flex items-center justify-between p-4 border-b border-gray-700">
               <h2 className="text-lg font-semibold text-white">Project Settings</h2>
-              <button
-                onClick={() => setShowProjectSettings(false)}
-                className="text-gray-400 hover:text-white text-xl"
-              >
+              <button onClick={() => setShowProjectSettings(false)} className="text-gray-400 hover:text-white text-xl">
                 ×
               </button>
             </div>
 
             <div className="p-4 space-y-4">
               <div>
-                <label className="block text-sm font-medium text-gray-300 mb-2">
-                  Duration (seconds)
-                </label>
+                <label className="block text-sm font-medium text-gray-300 mb-2">Duration (seconds)</label>
                 <input
                   type="number"
                   value={project.duration}
@@ -487,9 +460,7 @@ const VideoEditorPage: React.FC = () => {
               </div>
 
               <div>
-                <label className="block text-sm font-medium text-gray-300 mb-2">
-                  FPS
-                </label>
+                <label className="block text-sm font-medium text-gray-300 mb-2">FPS</label>
                 <select
                   value={project.fps}
                   onChange={(e) => {
@@ -505,16 +476,14 @@ const VideoEditorPage: React.FC = () => {
               </div>
 
               <div>
-                <label className="block text-sm font-medium text-gray-300 mb-2">
-                  Background Color
-                </label>
+                <label className="block text-sm font-medium text-gray-300 mb-2">Background Color</label>
                 <input
                   type="color"
                   value={project.settings.backgroundColor}
                   onChange={(e) => {
                     setProject({
                       ...project,
-                      settings: { ...project.settings, backgroundColor: e.target.value }
+                      settings: { ...project.settings, backgroundColor: e.target.value },
                     });
                   }}
                   className="w-full h-10 bg-gray-700 border border-gray-600 rounded"
@@ -522,10 +491,7 @@ const VideoEditorPage: React.FC = () => {
               </div>
 
               <div className="flex justify-end space-x-3 pt-4 border-t border-gray-700">
-                <button
-                  onClick={() => setShowProjectSettings(false)}
-                  className="px-4 py-2 text-sm text-gray-300 bg-gray-700 hover:bg-gray-600 rounded"
-                >
+                <button onClick={() => setShowProjectSettings(false)} className="px-4 py-2 text-sm text-gray-300 bg-gray-700 hover:bg-gray-600 rounded">
                   Cancel
                 </button>
                 <button

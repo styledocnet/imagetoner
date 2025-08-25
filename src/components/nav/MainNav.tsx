@@ -1,13 +1,11 @@
 import React, { useState, useEffect } from "react";
-import { Link, useLocation, useNavigate } from "react-router-dom";
+import { Link, useLocation } from "react-router-dom";
 import {
   Bars3Icon,
   PhotoIcon,
-  // RectangleGroupIcon,
   SquaresPlusIcon,
   SwatchIcon,
   Cog6ToothIcon,
-  // ChevronDownIcon,
   ChevronRightIcon,
   SpeakerWaveIcon,
   MicrophoneIcon,
@@ -76,10 +74,8 @@ const usePointerDevice = () => {
 
 const MainNav: React.FC = () => {
   const location = useLocation();
-  const navigate = useTypeSafeNavigate();
   const [isNavOpen, setIsNavOpen] = useState(false);
   const [openMenus, setOpenMenus] = useState<{ [k: string]: boolean }>({});
-  const isPointer = usePointerDevice();
 
   // Auto-expand parent menu if child is active
   useEffect(() => {

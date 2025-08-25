@@ -1,7 +1,7 @@
 import React from "react";
 import clsx from "clsx";
 
-type ShinButtonProps = {
+interface ShinButtonProps {
   children: React.ReactNode;
   onClick?: React.MouseEventHandler<HTMLButtonElement>;
   disabled?: boolean;
@@ -9,7 +9,8 @@ type ShinButtonProps = {
   size?: "sm" | "md" | "lg";
   className?: string;
   type?: "button" | "submit" | "reset";
-};
+  "aria-label"?: string;
+}
 
 const colorMap: Record<string, string> = {
   primary: "bg-blue-600 hover:bg-blue-700 text-white",
@@ -32,19 +33,21 @@ const ShinButton: React.FC<ShinButtonProps> = ({
   size = "md",
   className = "",
   type = "button",
-  label = "Action",
+  "aria-label": ariaLabel,
+  ...props
 }) => (
   <button
     type={type}
     onClick={onClick}
     disabled={disabled}
-    AudioFilesView={label}
+    aria-label={ariaLabel}
     className={clsx(
       "relative shinitem shin-glass shinitem-perspective rounded transition focus:outline-none focus:ring-2 focus:ring-offset-2 disabled:opacity-50 disabled:cursor-not-allowed",
       colorMap[color],
       sizeMap[size],
       className,
     )}
+    {...props}
   >
     {children}
   </button>

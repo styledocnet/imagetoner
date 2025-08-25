@@ -1,26 +1,33 @@
-import React, { useEffect } from "react";
-import { registerSW } from "virtual:pwa-register";
+import { useEffect } from "react";
 
 export const useUpdateChecker = () => {
   useEffect(() => {
-    const updateSW = registerSW({
-      onNeedRefresh() {
-        if (window.confirm("A new version is available. Reload to update?")) {
-          updateSW(true);
-        }
-      },
-      onOfflineReady() {
-        console.log("App ready to work offline");
-      },
-    });
+    // Check if PWA registration is available
+    if ("serviceWorker" in navigator) {
+      // Register service worker for PWA functionality
+      navigator.serviceWorker
+        .register("/sw.js", { scope: "/" })
+        .then((registration) => {
+          console.log("SW registered: ", registration);
 
-    function onFocus() {
-      updateSW();
+          // Check for updates
+          registration.addEventListener("updatefound", () => {
+            const newWorker = registration.installing;
+            if (newWorker) {
+              newWorker.addEventListener("statechange", () => {
+                if (newWorker.state === "installed" && navigator.serviceWorker.controller) {
+                  // New version available
+                  if (confirm("New version available! Reload to update?")) {
+                    window.location.reload();
+                  }
+                }
+              });
+            }
+          });
+        })
+        .catch((registrationError) => {
+          console.log("SW registration failed: ", registrationError);
+        });
     }
-    window.addEventListener("focus", onFocus);
-
-    return () => {
-      window.removeEventListener("focus", onFocus);
-    };
   }, []);
 };
