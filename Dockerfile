@@ -2,7 +2,8 @@ FROM node:23
 
 WORKDIR /usr/src/app
 
-COPY package.json package-lock.json ./
+COPY package.json  ./
+# COPY package.json package-lock.json ./
 
 # RUN npm install --legacy-peer-deps
 RUN npm install

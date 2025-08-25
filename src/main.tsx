@@ -79,7 +79,7 @@ const router = createBrowserRouter(
       element: <NotFound />,
     },
   ],
-  { basename: window.location.hostnane != "localhost" ? "/imagetoner" : "" },
+  { basename: window.location.hostname != "localhost" ? "/imagetoner" : "" },
 );
 
 createRoot(document.getElementById("root")!).render(
