@@ -9,6 +9,10 @@ import ImageEditPage from "./pages/ImageEditPage";
 import StylePage from "./pages/StylePage";
 import AudioRecorderPage from "./pages/AudioRecorderPage";
 import AudioFilesPage from "./pages/AudioFilesPage";
+import VideosPage from "./pages/VideosPage";
+import VideoAssetsPage from "./pages/VideoAssetsPage";
+import VideoEditorPage from "./pages/VideoEditorPage";
+import Timeline from "./pages/Timeline";
 import NotFound from "./pages/NotFound";
 import { LayerProvider } from "./context/LayerContext";
 import { ROUTES } from "./router/routes";
@@ -50,6 +54,22 @@ const router = createBrowserRouter([
       {
         path: ROUTES.AUDIO_LIST.slice(1),
         element: <AudioFilesPage />,
+      },
+      {
+        path: ROUTES.VIDEOS.slice(1),
+        element: <VideosPage />,
+      },
+      {
+        path: ROUTES.VIDEO_ASSETS.slice(1),
+        element: <VideoAssetsPage />,
+      },
+      {
+        path: ROUTES.VIDEO_EDITOR.slice(1),
+        element: <VideoEditorPage />,
+      },
+      {
+        path: ROUTES.TIMELINE.slice(1),
+        element: <Timeline />,
       },
     ],
   },

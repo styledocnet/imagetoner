@@ -14,6 +14,7 @@ import {
   ListBulletIcon,
   XMarkIcon,
   HomeIcon,
+  VideoCameraIcon,
 } from "@heroicons/react/24/outline";
 import "@/styles/shinui.css";
 import { ROUTES } from "@/router/routes";
@@ -44,6 +45,15 @@ const navItems: NavItem[] = [
     children: [
       { name: "Recorder", path: ROUTES.RECORDER, icon: MicrophoneIcon },
       { name: "Audio Library", path: ROUTES.AUDIO_LIST, icon: ListBulletIcon },
+      { name: "Timeline", path: ROUTES.TIMELINE, icon: ListBulletIcon },
+    ],
+  },
+  {
+    name: "Videos",
+    icon: VideoCameraIcon,
+    children: [
+      { name: "Video Projects", path: ROUTES.VIDEOS, icon: VideoCameraIcon },
+      { name: "Video Assets", path: ROUTES.VIDEO_ASSETS, icon: PhotoIcon },
     ],
   },
   {

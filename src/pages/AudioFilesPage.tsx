@@ -77,7 +77,7 @@ const AudioFilesPage: React.FC = () => {
   // <div className="w-full max-w-2xl p-4 space-y-4 bg-muted/50 dark:bg-muted/70 rounded-lg shadow">
   return (
     <div className="flex flex-col min-h-screen w-full max-w-lg mx-auto p-3 dark:text-white p-4 space-y-4">
-      <h1 className="text-2xl font-bold mb-4 text-center">Audio Files</h1>
+      <h1 className="text-2xl font-bold mb-4 text-center">Audio Library</h1>
       <div className="flex items-center gap-3 mb-4">
         <ShinFileInput onChange={handleUpload} disabled={isUploading} accept="audio/*" inputRef={fileInputRef} />
         {isUploading && <span className="text-blue-600 dark:text-blue-300 animate-pulse">Uploading...</span>}

@@ -5,15 +5,19 @@
 
 // Route path constants - single source of truth for all routes
 export const ROUTES = {
-  HOME: '/',
-  DASHBOARD: '/dashboard',
-  PHOTOS: '/photos',
-  IMAGE_EDIT: '/image-edit',
-  IMAGE_EDIT_WITH_ID: '/image-edit/:id',
-  STYLE_PAGE: '/style-page',
-  RECORDER: '/recorder',
-  AUDIO_LIST: '/audio-list',
-  ROUTER_DEMO: '/router-demo',
+  HOME: "/",
+  DASHBOARD: "/dashboard",
+  PHOTOS: "/photos",
+  IMAGE_EDIT: "/image-edit",
+  IMAGE_EDIT_WITH_ID: "/image-edit/:id",
+  STYLE_PAGE: "/style-page",
+  RECORDER: "/recorder",
+  AUDIO_LIST: "/audio-list",
+  VIDEOS: "/videos",
+  VIDEO_ASSETS: "/video-assets",
+  VIDEO_EDITOR: "/video-editor/:projectId",
+  TIMELINE: "/timeline",
+  ROUTER_DEMO: "/router-demo",
 } as const;
 
 // Type definitions for route parameters
@@ -21,11 +25,14 @@ export interface RouteParams {
   [ROUTES.IMAGE_EDIT_WITH_ID]: {
     id: string;
   };
+  [ROUTES.VIDEO_EDITOR]: {
+    projectId: string;
+  };
   // Add more parameterized routes here as needed
 }
 
 // Type for all valid route paths
-export type RoutePath = typeof ROUTES[keyof typeof ROUTES];
+export type RoutePath = (typeof ROUTES)[keyof typeof ROUTES];
 
 // Type for routes that have parameters
 export type ParameterizedRoute = keyof RouteParams;
@@ -34,10 +41,7 @@ export type ParameterizedRoute = keyof RouteParams;
 export type SimpleRoute = Exclude<RoutePath, ParameterizedRoute>;
 
 // Helper function to build parameterized routes with type safety
-export function buildRoute<T extends ParameterizedRoute>(
-  route: T,
-  params: RouteParams[T]
-): string {
+export function buildRoute<T extends ParameterizedRoute>(route: T, params: RouteParams[T]): string {
   let path = route as string;
 
   // Replace route parameters with actual values
@@ -64,6 +68,11 @@ export const Navigation = {
    * Navigate to image edit page (new document)
    */
   toNewImageEdit: () => ROUTES.IMAGE_EDIT,
+
+  /**
+   * Navigate to video editor with specific project ID
+   */
+  toVideoEditor: (projectId: number | string) => buildRoute(ROUTES.VIDEO_EDITOR, { projectId: String(projectId) }),
 } as const;
 
 // Route metadata for navigation components
@@ -77,38 +86,59 @@ export interface RouteInfo {
 export const ROUTE_INFO: Record<string, RouteInfo> = {
   dashboard: {
     path: ROUTES.DASHBOARD,
-    label: 'Dashboard',
-    description: 'Main dashboard with overview and widgets',
+    label: "Dashboard",
+    description: "Main dashboard with overview and widgets",
   },
   photos: {
     path: ROUTES.PHOTOS,
-    label: 'Photos',
-    description: 'Manage your photo library',
+    label: "Photos",
+    description: "Manage your photo library",
   },
   imageEdit: {
     path: ROUTES.IMAGE_EDIT,
-    label: 'Image Editor',
-    description: 'Create and edit images',
+    label: "Image Editor",
+    description: "Create and edit images",
   },
   stylePage: {
     path: ROUTES.STYLE_PAGE,
-    label: 'Style Page',
-    description: 'Customize application themes and styles',
+    label: "Style Page",
+    description: "Customize application themes and styles",
   },
   recorder: {
     path: ROUTES.RECORDER,
-    label: 'Audio Recorder',
-    description: 'Record audio clips',
+    label: "Audio Recorder",
+    description: "Record audio clips",
   },
   audioList: {
     path: ROUTES.AUDIO_LIST,
-    label: 'Audio Library',
-    description: 'Manage your audio files',
+    label: "Audio Library",
+    description: "Manage your audio files",
+  },
+  videos: {
+    path: ROUTES.VIDEOS,
+    label: "Videos",
+    description: "Manage video projects",
+  },
+  videoAssets: {
+    path: ROUTES.VIDEO_ASSETS,
+    label: "Video Assets",
+    description: "Manage video assets (images, audio, video)",
+  },
+  videoEditor: {
+    path: ROUTES.VIDEO_EDITOR,
+    label: "Video Editor",
+    description: "Edit video projects with timeline and effects",
+    requiresParams: true,
+  },
+  timeline: {
+    path: ROUTES.TIMELINE,
+    label: "Timeline",
+    description: "Audio timeline sequencer",
   },
   routerDemo: {
     path: ROUTES.ROUTER_DEMO,
-    label: 'Router Demo',
-    description: 'Demonstrate routing capabilities',
+    label: "Router Demo",
+    description: "Demonstrate routing capabilities",
   },
 } as const;
 
@@ -119,5 +149,5 @@ export function isValidRoute(path: string): path is RoutePath {
 
 // Get route info helper
 export function getRouteInfo(path: RoutePath): RouteInfo | undefined {
-  return Object.values(ROUTE_INFO).find(info => info.path === path);
+  return Object.values(ROUTE_INFO).find((info) => info.path === path);
 }
