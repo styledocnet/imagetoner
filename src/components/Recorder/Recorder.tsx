@@ -9,7 +9,7 @@ import ShinButton from "../shinui/ShinButton";
 import { audioStorage } from "../../storage/audioStorage";
 import { AudioRecordingDocument } from "@/types/audio";
 import { useTonePlaybackWithStats } from "@/hooks/useTonePlaybackWithStats";
-import * as Tone from "tone";
+// import * as Tone from "tone";
 
 const Recorder = () => {
   const [isArmed, setIsArmed] = useState(false);

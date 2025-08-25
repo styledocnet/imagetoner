@@ -1,8 +1,15 @@
 import React, { useState, useEffect, useRef } from "react";
 import { videoStorage } from "../storage/videoStorage";
 import { useTypeSafeNavigate } from "../router/hooks";
-import { ROUTES } from "../router/routes";
-import { PlusIcon, TrashIcon, PhotoIcon, MusicalNoteIcon, FilmIcon, ArrowLeftIcon, EyeIcon, PlayIcon } from "@heroicons/react/24/outline";
+import {
+  PlusIcon,
+  TrashIcon,
+  PhotoIcon,
+  MusicalNoteIcon,
+  FilmIcon,
+  // ArrowLeftIcon,
+  EyeIcon,
+} from "@heroicons/react/24/outline";
 
 type AssetType = "image" | "audio" | "video";
 

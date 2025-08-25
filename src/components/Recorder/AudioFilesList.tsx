@@ -1,33 +1,29 @@
 import React, { useRef, useEffect, useState, useCallback } from "react";
-import * as Tone from "tone";
 import ShinButton from "../shinui/ShinButton";
 import SpeechToAudioDialog from "../Speech/SpeechToAudioDialog";
-import { useAudioPlaybackWithVisualization } from "@/hooks/useAudioPlaybackWithVisualization";
 import SlidingAudioVisualizer from "./SlidingAudioVisualizer";
-
-interface AudioFile {
-  id: string;
-  name: string;
-  blob: Blob;
-}
+import { AudioRecordingDocument } from "../../types/audio";
 
 interface Props {
-  files: AudioFile[];
-  onPlay?: (file: AudioFile) => void;
-  onEdit?: (file: AudioFile) => void;
-  onDelete?: (file: AudioFile) => void;
-  onAddFile?: (file: AudioFile) => void;
+  files: AudioRecordingDocument[];
+  onPlay?: (file: AudioRecordingDocument) => void;
+  onEdit?: (file: AudioRecordingDocument) => void;
+  onDelete?: (file: AudioRecordingDocument) => void;
+  onAddFile?: (file: AudioRecordingDocument) => void;
   pageSize?: number;
   fullMode?: boolean;
 }
 
 const AudioFilesList: React.FC<Props> = ({ files, onPlay, onEdit, onDelete, onAddFile, pageSize = 10, fullMode = false }) => {
-  const [displayFiles, setDisplayFiles] = useState<AudioFile[]>([]);
+  const [displayFiles, setDisplayFiles] = useState<AudioRecordingDocument[]>([]);
   const [page, setPage] = useState(1);
   const [isSpeechDialogOpen, setIsSpeechDialogOpen] = useState(false);
   const [isSpeechSupported, setIsSpeechSupported] = useState(false);
   const listRef = useRef<HTMLUListElement>(null);
-  const { play, stop, visualizationData, currentPlayingId, isPlaying } = useAudioPlaybackWithVisualization();
+  // Simple audio playback without complex visualization
+  const [currentPlayingId, setCurrentPlayingId] = useState<string | null>(null);
+  const [isPlaying, setIsPlaying] = useState(false);
+  const audioRef = useRef<HTMLAudioElement | null>(null);
 
   // Check Web Speech API support
   useEffect(() => {
@@ -58,14 +54,57 @@ const AudioFilesList: React.FC<Props> = ({ files, onPlay, onEdit, onDelete, onAd
     return () => ul.removeEventListener("scroll", handleScroll);
   }, [handleScroll]);
 
-  const playWithTone = async (file: AudioFile) => {
-    // Use the new visualization-enabled player
-    await play(file.blob, file.id);
-    // Call parent handler
-    onPlay?.(file);
+  const handlePlay = async (file: AudioRecordingDocument) => {
+    if (currentPlayingId === file.id?.toString() && isPlaying) {
+      // Stop current playback
+      if (audioRef.current) {
+        audioRef.current.pause();
+        audioRef.current.currentTime = 0;
+      }
+      setIsPlaying(false);
+      setCurrentPlayingId(null);
+      return;
+    }
+
+    // Start new playback
+    if (audioRef.current) {
+      audioRef.current.pause();
+    }
+
+    const audio = new Audio(URL.createObjectURL(file.blob));
+    audioRef.current = audio;
+
+    audio.onended = () => {
+      setIsPlaying(false);
+      setCurrentPlayingId(null);
+    };
+
+    try {
+      await audio.play();
+      setIsPlaying(true);
+      setCurrentPlayingId(file.id?.toString() || null);
+
+      // Call the onPlay callback if provided
+      if (onPlay) {
+        onPlay(file);
+      }
+    } catch (error) {
+      console.error("Error playing audio:", error);
+      setIsPlaying(false);
+      setCurrentPlayingId(null);
+    }
   };
 
-  const handleSpeechGenerated = (audioFile: AudioFile) => {
+  const stop = () => {
+    if (audioRef.current) {
+      audioRef.current.pause();
+      audioRef.current.currentTime = 0;
+    }
+    setIsPlaying(false);
+    setCurrentPlayingId(null);
+  };
+
+  const handleSpeechGenerated = (audioFile: AudioRecordingDocument) => {
     // Notify parent component to add the generated audio file
     onAddFile?.(audioFile);
 
@@ -141,8 +180,8 @@ const AudioFilesList: React.FC<Props> = ({ files, onPlay, onEdit, onDelete, onAd
               {currentPlayingId === file.id && <span className="ml-2 text-xs text-blue-400">♪ Playing</span>}
             </span>
             <div className="flex gap-2 items-center">
-              {currentPlayingId === file.id && isPlaying ? (
-                <ShinButton onClick={stop} className="px-3 py-1 bg-red-600 text-white rounded hover:bg-red-700 active:bg-red-800 text-xs" aria-label="Stop">
+              {currentPlayingId === file.id?.toString() && isPlaying ? (
+                <ShinButton onClick={stop} className="px-3 py-1 bg-red-600 text-white rounded hover:bg-red-700 text-xs" aria-label="Stop">
                   <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth="1.5" stroke="currentColor" className="w-4 h-4">
                     <path
                       strokeLinecap="round"
