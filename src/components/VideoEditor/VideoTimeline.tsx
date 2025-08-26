@@ -69,7 +69,7 @@ const VideoTimeline: React.FC<VideoTimelineProps> = ({
   // Refs
   const timelineRef = useRef<HTMLDivElement>(null);
   const playheadRef = useRef<HTMLDivElement>(null);
-  const trackContainerRef = useRef<HTMLDivElement>(null);
+  // Remove unused ref
 
   // Timeline dimensions
   const pixelsPerSecond = 50 * zoom;
@@ -151,7 +151,7 @@ const VideoTimeline: React.FC<VideoTimelineProps> = ({
     (e: MouseEvent) => {
       if (!isDragging || !dragInfo || !timelineRef.current) return;
 
-      const rect = timelineRef.current.getBoundingClientRect();
+      // Get the timeline position info, but we only need the deltaX
       const deltaX = e.clientX - dragInfo.startX;
       const deltaTime = pixelToTime(deltaX);
 
