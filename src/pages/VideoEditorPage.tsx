@@ -17,6 +17,8 @@ import {
   FilmIcon,
 } from "@heroicons/react/24/outline";
 
+import { Panel, PanelGroup, PanelResizeHandle } from "react-resizable-panels";
+
 const VideoEditorPage: React.FC = () => {
   const { projectId } = useParams<{ projectId: string }>();
   const navigate = useTypeSafeNavigate();
@@ -342,47 +344,58 @@ const VideoEditorPage: React.FC = () => {
       </div>
 
       {/* Main Content */}
-      <div className="flex-1 flex">
-        {/* Preview Panel */}
-        <div className="w-1/2 bg-black flex items-center justify-center p-4">
-          <div className="relative">
-            <canvas
-              ref={canvasRef}
-              className="max-w-full max-h-full border border-gray-600"
-              style={{
-                aspectRatio: `${project.resolution.width}/${project.resolution.height}`,
-                width: "auto",
-                height: "100%",
-              }}
-            />
-            <div className="absolute top-4 left-4 text-white text-sm bg-black bg-opacity-50 px-2 py-1 rounded">
-              {Math.floor(currentTime / 60)}:
-              {Math.floor(currentTime % 60)
-                .toString()
-                .padStart(2, "0")}
+      <div className="flex-1">
+        <PanelGroup direction="horizontal">
+          {/* Preview Panel */}
+          <Panel defaultSize={50} minSize={30}>
+            <div className="h-full bg-black flex items-center justify-center p-4">
+              <div className="relative">
+                <canvas
+                  ref={canvasRef}
+                  className="max-w-full max-h-full border border-gray-600"
+                  style={{
+                    aspectRatio: `${project.resolution.width}/${project.resolution.height}`,
+                    width: "auto",
+                    height: "100%",
+                  }}
+                />
+                <div className="absolute top-4 left-4 text-white text-sm bg-black bg-opacity-50 px-2 py-1 rounded">
+                  {Math.floor(currentTime / 60)}:
+                  {Math.floor(currentTime % 60)
+                    .toString()
+                    .padStart(2, "0")}
+                </div>
+              </div>
             </div>
-          </div>
-        </div>
+          </Panel>
 
-        {/* Timeline Panel */}
-        <div className="w-1/2 flex flex-col">
-          <VideoTimeline
-            tracks={project.tracks}
-            duration={project.duration}
-            currentTime={currentTime}
-            fps={project.fps}
-            isPlaying={isPlaying}
-            onTracksChange={handleTracksChange}
-            onCurrentTimeChange={setCurrentTime}
-            onPlayPause={handlePlayPause}
-            onStop={handleStop}
-            onAddTrack={handleAddTrack}
-            onDeleteTrack={handleDeleteTrack}
-            onSplitTrack={handleSplitTrack}
-            onAddEffect={handleAddEffect}
-            onAddKeyframe={handleAddKeyframe}
-          />
-        </div>
+          {/* Resize Handle */}
+          <PanelResizeHandle className="w-2 bg-gray-700 hover:bg-blue-500 transition-colors cursor-col-resize flex items-center justify-center">
+            <div className="w-1 h-8 bg-gray-500 rounded-full"></div>
+          </PanelResizeHandle>
+
+          {/* Timeline Panel */}
+          <Panel defaultSize={50} minSize={30}>
+            <div className="h-full flex flex-col">
+              <VideoTimeline
+                tracks={project.tracks}
+                duration={project.duration}
+                currentTime={currentTime}
+                fps={project.fps}
+                isPlaying={isPlaying}
+                onTracksChange={handleTracksChange}
+                onCurrentTimeChange={setCurrentTime}
+                onPlayPause={handlePlayPause}
+                onStop={handleStop}
+                onAddTrack={handleAddTrack}
+                onDeleteTrack={handleDeleteTrack}
+                onSplitTrack={handleSplitTrack}
+                onAddEffect={handleAddEffect}
+                onAddKeyframe={handleAddKeyframe}
+              />
+            </div>
+          </Panel>
+        </PanelGroup>
       </div>
 
       {/* Asset Picker Modal */}
