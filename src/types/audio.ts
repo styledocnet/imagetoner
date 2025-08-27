@@ -31,8 +31,13 @@ export interface Note {
   length: number; // Length in 16th notes
   pitch: string; // Note pitch (e.g., C4, D#5)
   velocity?: number; // Velocity (optional, range 0-127)
-  instrument: InstrumentType; // Instrument assigned to the note
+  instrument: InstrumentType | string; // Instrument assigned to the note
   sampleUrl?: string; // URL of the sample if instrument is OneShotSampler
+  isGhost?: boolean; // Whether this is a ghost note (lower velocity/emphasis)
+  variation?: string; // Which variation this note belongs to (A, B, C, D)
+  // Aliases for compatibility with some components
+  time?: number; // Alias for start
+  duration?: number; // Alias for length
 }
 
 export interface TimelineSettings {
@@ -40,12 +45,14 @@ export interface TimelineSettings {
   isLooping: boolean; // Whether looping is enabled
   gridLength: number; // Total number of 16th note divisions in the grid
   zoom: number;
+  currentVariation?: string; // Current active variation (A, B, C, D)
 }
 
 // Represents playback state of the NoteScheduler
 export interface PlaybackState {
   isPlaying: boolean; // Whether playback is currently active
   currentStep: number; // Current step in the timeline (in 16th notes)
+  currentVariation?: string; // Which variation is currently playing
 }
 
 // Represents user interactions with the timeline

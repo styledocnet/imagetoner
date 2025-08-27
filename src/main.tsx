@@ -12,7 +12,7 @@ import AudioFilesPage from "./pages/AudioFilesPage";
 import VideosPage from "./pages/VideosPage";
 import VideoAssetsPage from "./pages/VideoAssetsPage";
 import VideoEditorPage from "./pages/VideoEditorPage";
-import Timeline from "./pages/Timeline";
+import AudioTimelinePage from "./pages/AudioTimelinePage.tsx";
 import NotFound from "./pages/NotFound";
 import { LayerProvider } from "./context/LayerContext";
 import { ROUTES } from "./router/routes";
@@ -69,8 +69,8 @@ const router = createBrowserRouter(
           element: <VideoEditorPage />,
         },
         {
-          path: ROUTES.TIMELINE.slice(1),
-          element: <Timeline />,
+          path: ROUTES.AUDIO_TIMELINE.slice(1),
+          element: <AudioTimelinePage />,
         },
       ],
     },

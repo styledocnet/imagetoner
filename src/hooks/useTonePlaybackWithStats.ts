@@ -3,18 +3,18 @@ import * as Tone from "tone";
 
 export function useTonePlaybackWithStats() {
   const [frequencyStats, setFrequencyStats] = useState<Float32Array | null>(null);
-  const analyserRef = useRef<Tone.Analyser | null>(null);
-  const playerRef = useRef<Tone.Player | null>(null);
+  const analyserRef = useRef<any | null>(null);
+  const playerRef = useRef<any | null>(null);
 
   const play = async (blob: Blob) => {
     await Tone.start();
     const arrayBuffer = await blob.arrayBuffer();
-    const buffer = await Tone.context.decodeAudioData(arrayBuffer);
+    const buffer = await (Tone.context as any).decodeAudioData(arrayBuffer);
 
-    const analyser = new Tone.Analyser("fft", 1024);
+    const analyser = new (Tone as any).Analyser("fft", 1024);
     analyserRef.current = analyser;
 
-    const player = new Tone.Player(buffer).connect(analyser).toDestination();
+    const player = new (Tone as any).Player(buffer).connect(analyser).toDestination();
     playerRef.current = player;
 
     player.start();

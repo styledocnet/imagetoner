@@ -43,7 +43,7 @@ const navItems: NavItem[] = [
     children: [
       { name: "Recorder", path: ROUTES.RECORDER, icon: MicrophoneIcon },
       { name: "Audio Library", path: ROUTES.AUDIO_LIST, icon: ListBulletIcon },
-      { name: "Timeline", path: ROUTES.TIMELINE, icon: ListBulletIcon },
+      { name: "Audio Timeline", path: ROUTES.AUDIO_TIMELINE, icon: ListBulletIcon },
     ],
   },
   {

@@ -16,8 +16,7 @@ export const ROUTES = {
   VIDEOS: "/videos",
   VIDEO_ASSETS: "/video-assets",
   VIDEO_EDITOR: "/video-editor/:projectId",
-  TIMELINE: "/timeline",
-  ROUTER_DEMO: "/router-demo",
+  AUDIO_TIMELINE: "/audio-timeline",
 } as const;
 
 // Type definitions for route parameters
@@ -114,6 +113,11 @@ export const ROUTE_INFO: Record<string, RouteInfo> = {
     label: "Audio Library",
     description: "Manage your audio files",
   },
+  audioTimeline: {
+    path: ROUTES.AUDIO_TIMELINE,
+    label: "Audio Timeline",
+    description: "Audio timeline sequencer",
+  },
   videos: {
     path: ROUTES.VIDEOS,
     label: "Videos",
@@ -129,16 +133,6 @@ export const ROUTE_INFO: Record<string, RouteInfo> = {
     label: "Video Editor",
     description: "Edit video projects with timeline and effects",
     requiresParams: true,
-  },
-  timeline: {
-    path: ROUTES.TIMELINE,
-    label: "Timeline",
-    description: "Audio timeline sequencer",
-  },
-  routerDemo: {
-    path: ROUTES.ROUTER_DEMO,
-    label: "Router Demo",
-    description: "Demonstrate routing capabilities",
   },
 } as const;
 
