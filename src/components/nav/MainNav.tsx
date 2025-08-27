@@ -232,7 +232,7 @@ const MainNav: React.FC = () => {
         </div>
       </button>
 
-      {/* Enhanced Navigation Menu */}
+      {/* Enhanced Navigation Menu without shin-border-glow */}
       <nav
         className={`
           fixed top-0 left-0 w-1/3 max-w-[85vw] h-full z-50
@@ -241,7 +241,6 @@ const MainNav: React.FC = () => {
           ${isNavOpen ? "translate-x-0 opacity-100" : "-translate-x-full opacity-0"}
           rounded-tr-2xl rounded-br-2xl
           flex flex-col pt-16 pb-8 px-6
-          shin-border-glow
         `}
         style={{
           boxShadow: `
