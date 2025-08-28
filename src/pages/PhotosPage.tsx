@@ -4,10 +4,9 @@ import { ArrowDownIcon } from "@heroicons/react/24/outline";
 import { ImageDocument, Layer } from "../types";
 import SelectBox from "../components/SelectBox";
 import { useTypeSafeNavigate } from "../router/hooks";
+import { Virtuoso } from "react-virtuoso";
 
 type SortKey = "createdAt" | "name" | "size";
-
-const itemsPerPage = 5;
 
 const formatSize = (size?: number) => (typeof size === "number" ? `${(size / 1024).toFixed(1)} KB` : "—");
 
@@ -44,8 +43,6 @@ const PhotosPage: React.FC = () => {
   const [filter, setFilter] = useState<string>("");
   const [sortKey, setSortKey] = useState<SortKey>("createdAt");
   const [sortDir, setSortDir] = useState<"asc" | "desc">("desc");
-  const [page, setPage] = useState<number>(1);
-  const [totalPages, setTotalPages] = useState<number>(1);
 
   const navigate = useTypeSafeNavigate();
 
@@ -59,7 +56,6 @@ const PhotosPage: React.FC = () => {
         size: computeDocumentSize(doc),
       }));
       setDocuments(docsWithSizes);
-      setTotalPages(Math.max(1, Math.ceil(docsWithSizes.length / itemsPerPage)));
     };
     fetchDocuments();
   }, []);
@@ -78,17 +74,6 @@ const PhotosPage: React.FC = () => {
   if (sortDir === "desc") {
     processedDocuments.reverse();
   }
-
-  useEffect(() => {
-    // Pagination
-    setTotalPages(Math.max(1, Math.ceil(processedDocuments.length / itemsPerPage)));
-    if (page > Math.ceil(processedDocuments.length / itemsPerPage)) {
-      setPage(1);
-    }
-    // eslint-disable-next-line
-  }, [processedDocuments.length]);
-
-  const paginatedDocuments = processedDocuments.slice((page - 1) * itemsPerPage, page * itemsPerPage);
 
   const onEditDocument = (documentId: number) => {
     navigate.toImageEdit(documentId);
@@ -158,74 +143,105 @@ const PhotosPage: React.FC = () => {
           </div>
         </div>
 
-        <div className="space-y-4">
-          {paginatedDocuments.map((doc) => (
-            <div key={doc.id} className="border rounded-md p-4 bg-white dark:bg-gray-800">
-              <div className="flex justify-between items-center mb-4">
-                <h2 className="font-semibold">{doc.name}</h2>
-                <div className="flex space-x-2">
-                  <button className="text-blue-500" onClick={() => onEditDocument(doc.id!)}>
-                    Edit
-                  </button>
-                  <button className="text-red-500" onClick={() => handleDelete(doc.id!)}>
-                    Delete
-                  </button>
-                </div>
-              </div>
-              <div className="text-xs text-gray-500 dark:text-gray-400 mt-2 flex flex-wrap gap-4 mb-3">
-                <span>
-                  Size: {"\u2248"} {formatSize(computeDocumentSize(doc))}
-                </span>
-                <span>Created: {formatDate(doc.createdAt)}</span>
-                <span>Updated: {formatDate(doc.updatedAt)}</span>
-              </div>
-              <div className="mb-4">
-                <h3 className="font-semibold">Preview:</h3>
-                {doc.layers.length === 0 ? (
-                  <p>No preview available</p>
-                ) : (
-                  doc.layers.map((layer, index) =>
-                    layer.type === "text" ? (
-                      <div key={index} className="text-preview text-xs">
-                        <p>{layer.text}</p>
+        {processedDocuments.length === 0 ? (
+          <div className="flex flex-col items-center justify-center h-64 border rounded-md p-8 bg-white dark:bg-gray-800">
+            <p className="text-lg text-gray-500 dark:text-gray-400 mb-4">No photos found</p>
+            <p className="text-sm text-gray-400 dark:text-gray-500">{filter ? "Try adjusting your search filter" : "Create a new document to get started"}</p>
+          </div>
+        ) : (
+          <div style={{ height: "calc(100vh - 170px)" }}>
+            <Virtuoso
+              style={{ height: "100%" }}
+              totalCount={processedDocuments.length}
+              data={processedDocuments}
+              useWindowScroll={false}
+              itemContent={(_, doc) => {
+                // Safety check for invalid document
+                if (!doc || !doc.name) {
+                  return null;
+                }
+
+                return (
+                  <div className="border rounded-md p-4 bg-white dark:bg-gray-800 mb-4">
+                    <div className="flex justify-between items-center mb-4">
+                      <h2 className="font-semibold">{doc.name}</h2>
+                      <div className="flex space-x-2">
+                        <button className="text-blue-500" onClick={() => doc.id && onEditDocument(doc.id)}>
+                          Edit
+                        </button>
+                        <button className="text-red-500" onClick={() => doc.id && handleDelete(doc.id)}>
+                          Delete
+                        </button>
                       </div>
-                    ) : (
-                      <img key={index} src={`data:image/png;base64,${layer.image}`} alt="Document Preview" className="max-w-64 max-h-64 rounded-md shadow-md" />
-                    ),
-                  )
-                )}
-              </div>
-              <div>
-                <h3 className="font-semibold">Layers:</h3>
-                {doc.layers.map((layer) => (
-                  <div key={layer.index} className="flex justify-between items-center mb-2">
-                    <span>
-                      {layer.name}
-                      {getLayerTypeTag(layer)}
-                    </span>
-                    <div className="flex space-x-2">
-                      <button className="text-green-500" onClick={() => handleDownloadLayer(layer)}>
-                        <ArrowDownIcon className="w-4 h-4" />
-                      </button>
+                    </div>
+                    <div className="text-xs text-gray-500 dark:text-gray-400 mt-2 flex flex-wrap gap-4 mb-3">
+                      <span>
+                        Size: {"\u2248"} {formatSize(computeDocumentSize(doc))}
+                      </span>
+                      <span>Created: {formatDate(doc.createdAt)}</span>
+                      <span>Updated: {formatDate(doc.updatedAt)}</span>
+                    </div>
+                    <div className="mb-4">
+                      <h3 className="font-semibold">Preview:</h3>
+                      {doc.layers.length === 0 ? (
+                        <p>No preview available</p>
+                      ) : (
+                        doc.layers.map((layer, index) =>
+                          layer.type === "text" ? (
+                            <div key={index} className="text-preview text-xs">
+                              <p>{layer.text}</p>
+                            </div>
+                          ) : (
+                            <img
+                              key={index}
+                              src={`data:image/png;base64,${layer.image}`}
+                              alt="Document Preview"
+                              className="max-w-64 max-h-64 rounded-md shadow-md"
+                              loading="lazy"
+                              onError={(e) => {
+                                (e.target as HTMLImageElement).style.display = "none";
+                                console.error("Failed to load image preview");
+                              }}
+                            />
+                          ),
+                        )
+                      )}
+                    </div>
+                    <div>
+                      <h3 className="font-semibold">Layers:</h3>
+                      {doc.layers.map((layer) => (
+                        <div key={layer.index} className="flex justify-between items-center mb-2">
+                          <span>
+                            {layer.name}
+                            {getLayerTypeTag(layer)}
+                          </span>
+                          <div className="flex space-x-2">
+                            <button className="text-green-500" onClick={() => handleDownloadLayer(layer)}>
+                              <ArrowDownIcon className="w-4 h-4" />
+                            </button>
+                          </div>
+                        </div>
+                      ))}
                     </div>
                   </div>
-                ))}
-              </div>
-            </div>
-          ))}
-        </div>
-
-        <div className="flex justify-between mt-4">
-          <button className="bg-gray-700 text-white py-2 px-4 rounded-md" disabled={page === 1} onClick={() => setPage(page - 1)}>
-            Previous
-          </button>
-          <span className="text-gray-700 dark:text-gray-300">
-            Page {page} of {totalPages}
-          </span>
-          <button className="bg-gray-700 text-white py-2 px-4 rounded-md" disabled={page === totalPages} onClick={() => setPage(page + 1)}>
-            Next
-          </button>
-        </div>
+                );
+              }}
+              overscan={100}
+              computeItemKey={(index) => {
+                // Safeguard against index being out of bounds
+                if (index < 0 || index >= processedDocuments.length) {
+                  return `index-${index}`;
+                }
+                // Use the document's id if available, otherwise use the index
+                const doc = processedDocuments[index];
+                // Use document id, then created timestamp, then index for more reliable keys
+                return doc?.id ? `doc-${doc.id}` : doc?.createdAt ? `time-${doc.createdAt}-${index}` : `index-${index}`;
+              }}
+              increaseViewportBy={100}
+              initialItemCount={3}
+            />
+          </div>
+        )}
       </div>
     </div>
   );

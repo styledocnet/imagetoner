@@ -266,7 +266,7 @@ const ImageEditPage: React.FC = () => {
   };
 
   return (
-    <div className="w-full h-screen flex flex-col">
+    <div className="w-full min-h-screen flex flex-col bg-gray-100 dark:bg-gray-900 text-gray-900 dark:text-gray-100">
       <Toolbar
         isProcessing={isProcessing}
         onImportImage={handleFileChange}
@@ -292,9 +292,8 @@ const ImageEditPage: React.FC = () => {
             moveLayerDown={moveLayerDown}
             setIsAddLayerModalOpen={setIsAddLayerModalOpen}
           />
-          <div className="flex-grow overflow-auto">
-            {/* <div className="flex-grow overflow-auto bg-gray-300 dark:bg-gray-700 p-4"> */}
-            <div className="w-full h-full max-w-[90%] max-h-[80vh] mx-auto flex items-center justify-center relative">
+          <div className="flex-grow overflow-auto bg-gray-100 dark:bg-gray-900">
+            <div className="w-full h-full max-w-[90%] max-h-[80vh] mx-auto flex items-center justify-center relative p-4">
               <canvas
                 {...bind()}
                 ref={canvasRef}
@@ -309,7 +308,7 @@ const ImageEditPage: React.FC = () => {
           </div>
         </div>
       </div>
-      <div className="text-white p-4 flex justify-between items-center shadow-md">
+      <div className="text-white p-4 flex justify-between items-center shadow-md bg-gray-800 dark:bg-gray-800">
         <button className="bg-blue-500 hover:bg-blue-600 py-2 px-4 rounded-md transition" onClick={handleExport}>
           <ArrowDownIcon className="w-4 h-4 inline-block mr-2" />
           Download

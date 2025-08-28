@@ -35,12 +35,19 @@
 body {
     background-color: theme(colors.gray.100);
     color: theme(colors.gray.900);
+    min-height: 100vh;
+    overflow-x: hidden;
 
     @dark {
         background-color: theme(colors.gray.900);
         color: theme(colors.gray.100);
     }
     /* font-family: "Pixelify Sans", sans-serif; */
+}
+
+html {
+    height: 100%;
+    overflow-x: hidden;
 }
 
 .font-pixelify {
@@ -65,4 +72,69 @@ body {
 
 .break-inside-avoid {
     break-inside: avoid;
+}
+
+/* React Virtuoso Grid Styles */
+.virtuoso-grid-list {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
+    gap: 1rem;
+    width: 100%;
+}
+
+/* VirtuosoGrid specific styles */
+[data-virtuoso-scroller] {
+    scrollbar-width: thin;
+    scrollbar-color: rgba(156, 163, 175, 0.5) transparent;
+}
+
+[data-virtuoso-scroller]::-webkit-scrollbar {
+    width: 6px;
+}
+
+[data-virtuoso-scroller]::-webkit-scrollbar-track {
+    background: transparent;
+}
+
+[data-virtuoso-scroller]::-webkit-scrollbar-thumb {
+    background-color: rgba(156, 163, 175, 0.5);
+    border-radius: 6px;
+}
+
+.virtuoso-grid-item {
+    width: 100%;
+    box-sizing: border-box;
+}
+
+/* Improve scrolling performance */
+.virtuoso-scroller,
+[data-virtuoso-scroller] {
+    overflow-anchor: none;
+    scroll-behavior: auto;
+    -webkit-overflow-scrolling: touch;
+    -ms-overflow-style: -ms-autohiding-scrollbar;
+    background-color: inherit;
+}
+
+/* Add hardware acceleration for images */
+img {
+    transform: translateZ(0);
+    backface-visibility: hidden;
+    content-visibility: auto;
+}
+
+/* Ensure backgrounds extend when scrolling */
+#root,
+main,
+.min-h-screen {
+    min-height: 100vh;
+}
+
+/* Fix background issues when overscrolling */
+:root {
+    background-color: theme(colors.gray.100);
+
+    @dark {
+        background-color: theme(colors.gray.900);
+    }
 }
