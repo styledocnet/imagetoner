@@ -101,24 +101,20 @@ html {
     border-radius: 6px;
 }
 
+/* VirtuosoGrid styles */
 .virtuoso-grid-list {
-    height: 100%;
-}
-
-.virtuoso-grid-list [data-virtuoso-scroller] {
     display: grid;
     grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
     gap: 1rem;
-    padding: 1rem;
+    padding: 0.5rem;
+    width: 100%;
 }
 
-.virtuoso-grid-list [data-test-id="virtuoso-item-list"] > div {
-    display: contents !important;
-}
-
-.virtuoso-grid-list [data-item-index] {
+.virtuoso-grid-item {
+    height: 100%;
+    width: 100%;
+    box-sizing: border-box;
     break-inside: avoid;
-    margin-bottom: 1rem;
 }
 
 /* Improve scrolling performance */
@@ -178,14 +174,43 @@ main,
     }
 }
 
-/* Ensure Virtuoso with grid layout works properly */
-.virtuoso-grid-list [data-virtuoso-scroller] > div {
-    display: contents !important;
+/* VirtuosoGrid container styles */
+[data-virtuoso-grid] {
+    height: 100%;
+    width: 100%;
 }
 
 /* Photo card styles */
-.virtuoso-grid-list [data-item-index] > div {
+.virtuoso-grid-item > div {
     height: 100%;
     display: flex;
     flex-direction: column;
+}
+
+/* Fix background for both light and dark modes */
+body,
+html,
+#root {
+    min-height: 100%;
+    background-color: inherit;
+}
+
+/* Ensure scrollbar is consistent */
+::-webkit-scrollbar {
+    width: 6px;
+    height: 6px;
+}
+
+::-webkit-scrollbar-track {
+    background: rgba(156, 163, 175, 0.1);
+    border-radius: 3px;
+}
+
+::-webkit-scrollbar-thumb {
+    background: rgba(156, 163, 175, 0.5);
+    border-radius: 3px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+    background: rgba(156, 163, 175, 0.7);
 }
