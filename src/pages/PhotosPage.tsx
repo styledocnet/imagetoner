@@ -154,7 +154,8 @@ const PhotosPage: React.FC = () => {
               style={{ height: "100%" }}
               totalCount={processedDocuments.length}
               data={processedDocuments}
-              useWindowScroll={false}
+              className="photos-list"
+              overscan={100}
               itemContent={(_, doc) => {
                 // Safety check for invalid document
                 if (!doc || !doc.name) {
@@ -226,7 +227,6 @@ const PhotosPage: React.FC = () => {
                   </div>
                 );
               }}
-              overscan={100}
               computeItemKey={(index) => {
                 // Safeguard against index being out of bounds
                 if (index < 0 || index >= processedDocuments.length) {
@@ -237,8 +237,7 @@ const PhotosPage: React.FC = () => {
                 // Use document id, then created timestamp, then index for more reliable keys
                 return doc?.id ? `doc-${doc.id}` : doc?.createdAt ? `time-${doc.createdAt}-${index}` : `index-${index}`;
               }}
-              increaseViewportBy={100}
-              initialItemCount={3}
+              initialItemCount={5}
             />
           </div>
         )}

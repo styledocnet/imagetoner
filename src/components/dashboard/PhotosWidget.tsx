@@ -2,7 +2,7 @@ import React, { useState, useEffect, useCallback } from "react";
 import { storageService } from "../../services/storageService";
 import { ImageDocument } from "../../types";
 import { useTypeSafeNavigate } from "../../router/hooks";
-import { VirtuosoGrid } from "react-virtuoso";
+import { Virtuoso } from "react-virtuoso";
 
 const PhotosWidget: React.FC = () => {
   const [documents, setDocuments] = useState<ImageDocument[]>([]);
@@ -78,13 +78,12 @@ const PhotosWidget: React.FC = () => {
           </div>
         ) : (
           <div style={{ height: "calc(100vh - 100px)" }}>
-            <VirtuosoGrid
+            <Virtuoso
               style={{ height: "100%" }}
               totalCount={documents.length}
               data={documents}
               itemContent={(_, doc) => (doc ? <ItemRenderer item={doc} /> : null)}
-              listClassName="virtuoso-grid-list"
-              itemClassName="virtuoso-grid-item"
+              className="virtuoso-grid-list"
               overscan={200}
               computeItemKey={(index) => {
                 // Safeguard against index being out of bounds
@@ -95,7 +94,6 @@ const PhotosWidget: React.FC = () => {
                 // Triple safety check - use document id, then created timestamp, then index
                 return doc?.id ? `doc-${doc.id}` : doc?.createdAt ? `time-${doc.createdAt}-${index}` : `index-${index}`;
               }}
-              fixedItemHeight={false}
             />
           </div>
         )}
