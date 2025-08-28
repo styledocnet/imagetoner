@@ -4,24 +4,20 @@ export default {
   theme: {
     extend: {
       colors: {
-        primary: "rgba(0, 43, 54, 1)",
-        secondary: "rgba(88, 110, 117, 1)",
-        accent: "rgba(7, 54, 66, 1)",
-        background: "rgba(0, 43, 54, 1)",
-        surface: "rgba(7, 54, 66, 1)",
-        text: "rgba(131, 148, 150, 1)",
-        backgroundLight: "rgba(253, 246, 227, 1)", // Solarized light background
-        surfaceLight: "rgba(238, 232, 213, 1)", // Solarized light surface
-        textLight: "rgba(88, 110, 117, 1)", // Solarized dark gray text
-        backgroundDark: "rgba(0, 43, 54, 1)", // Solarized dark background
-        surfaceDark: "rgba(7, 54, 66, 1)", // Solarized dark surface
-        textDark: "rgba(131, 148, 150, 1)", // Solarized light gray text
+        primary: "rgb(0 43 54)",
+        secondary: "rgb(88 110 117)",
+        accent: "rgb(7 54 66)",
+        background: "rgb(0 43 54)",
+        surface: "rgb(7 54 66)",
+        text: "rgb(131 148 150)",
+        backgroundLight: "rgb(253 246 227)", // Solarized light background
+        surfaceLight: "rgb(238 232 213)", // Solarized light surface
+        textLight: "rgb(88 110 117)", // Solarized dark gray text
+        backgroundDark: "rgb(0 43 54)", // Solarized dark background
+        surfaceDark: "rgb(7 54 66)", // Solarized dark surface
+        textDark: "rgb(131 148 150)", // Solarized light gray text
       },
-
-      //     fontFamily: {
-      //       pixelify: ["Pixelify Sans", "sans-serif"],
-      //     },
     },
   },
-  plugins: [],
+  // Tailwind v4 no longer uses plugins, we'll migrate any plugin functionality as needed
 };

@@ -2,6 +2,7 @@ import { defineConfig } from "vite";
 import react from "@vitejs/plugin-react-swc";
 import path from "path";
 import { VitePWA } from "vite-plugin-pwa";
+import tailwindcss from "@tailwindcss/vite";
 
 const repoName = "imagetoner";
 
@@ -13,9 +14,11 @@ export default defineConfig(({ mode }) => ({
       output: {
         manualChunks: {
           transformers: ["@huggingface/transformers"],
+          styles: ["tailwindcss"],
         },
       },
     },
+    cssMinify: "lightningcss",
   },
   resolve: {
     alias: {
@@ -24,6 +27,7 @@ export default defineConfig(({ mode }) => ({
   },
   plugins: [
     react(),
+    tailwindcss(),
     VitePWA({
       registerType: "autoUpdate",
       manifest: {
