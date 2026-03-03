@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from "react";
 import { storageService } from "../services/storageService";
-import { ArrowDownIcon } from "@heroicons/react/24/outline";
+import { ArrowDownIcon, PencilIcon, CheckIcon, XMarkIcon } from "@heroicons/react/24/outline";
 import { ImageDocument, Layer } from "../types";
 import SelectBox from "../components/SelectBox";
 import { useTypeSafeNavigate } from "../router/hooks";
@@ -43,6 +43,8 @@ const PhotosPage: React.FC = () => {
   const [filter, setFilter] = useState<string>("");
   const [sortKey, setSortKey] = useState<SortKey>("createdAt");
   const [sortDir, setSortDir] = useState<"asc" | "desc">("desc");
+  const [editingDocId, setEditingDocId] = useState<number | null>(null);
+  const [editingTitle, setEditingTitle] = useState<string>("");
 
   const navigate = useTypeSafeNavigate();
 
@@ -82,6 +84,31 @@ const PhotosPage: React.FC = () => {
   const handleDelete = async (id: number) => {
     await storageService.deleteDocument(id);
     setDocuments((prev) => prev.filter((doc) => doc.id !== id));
+  };
+
+  const handleStartEditTitle = (doc: ImageDocument) => {
+    setEditingDocId(doc.id || null);
+    setEditingTitle(doc.name);
+  };
+
+  const handleCancelEditTitle = () => {
+    setEditingDocId(null);
+    setEditingTitle("");
+  };
+
+  const handleSaveTitle = async (id: number, newTitle: string) => {
+    if (!newTitle.trim()) {
+      handleCancelEditTitle();
+      return;
+    }
+
+    // Update in storage
+    await storageService.updateDocumentName(id, newTitle);
+
+    // Update in local state
+    setDocuments((prev) => prev.map((d) => (d.id === id ? { ...d, name: newTitle.trim() } : d)));
+
+    handleCancelEditTitle();
   };
 
   const handleDownloadLayer = (layer: Layer) => {
@@ -165,8 +192,45 @@ const PhotosPage: React.FC = () => {
                 return (
                   <div className="border rounded-md p-4 bg-white dark:bg-gray-800 mb-4">
                     <div className="flex justify-between items-center mb-4">
-                      <h2 className="font-semibold">{doc.name}</h2>
-                      <div className="flex space-x-2">
+                      {editingDocId === doc.id ? (
+                        <div className="flex items-center gap-2 flex-1">
+                          <input
+                            type="text"
+                            value={editingTitle}
+                            onChange={(e) => setEditingTitle(e.target.value)}
+                            className="flex-1 border border-blue-500 rounded px-2 py-1 bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                            placeholder="Enter new title"
+                            autoFocus
+                            onKeyPress={(e) => {
+                              if (e.key === "Enter" && doc.id) {
+                                handleSaveTitle(doc.id, editingTitle);
+                              }
+                            }}
+                          />
+                          <button
+                            className="text-green-500 hover:text-green-700 transition"
+                            onClick={() => doc.id && handleSaveTitle(doc.id, editingTitle)}
+                            title="Save title"
+                          >
+                            <CheckIcon className="w-5 h-5" />
+                          </button>
+                          <button className="text-red-500 hover:text-red-700 transition" onClick={handleCancelEditTitle} title="Cancel editing">
+                            <XMarkIcon className="w-5 h-5" />
+                          </button>
+                        </div>
+                      ) : (
+                        <>
+                          <h2 className="font-semibold">{doc.name}</h2>
+                          <button
+                            className="text-gray-400 hover:text-gray-600 dark:hover:text-gray-300 transition ml-2"
+                            onClick={() => handleStartEditTitle(doc)}
+                            title="Edit title"
+                          >
+                            <PencilIcon className="w-4 h-4" />
+                          </button>
+                        </>
+                      )}
+                      <div className="flex space-x-2 ml-4">
                         <button className="text-blue-500" onClick={() => doc.id && onEditDocument(doc.id)}>
                           Edit
                         </button>

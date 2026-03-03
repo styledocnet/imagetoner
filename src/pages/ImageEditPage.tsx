@@ -25,6 +25,7 @@ const ImageEditPage: React.FC = () => {
     useLayerContext();
   const { documentSize, setDocumentSize, setCanvasSize, aspectRatio, setAspectRatio } = useDocument();
   const [currentStyle, setCurrentStyle] = useState<BrandStyle | null>(null);
+  const [documentTitle, setDocumentTitle] = useState<string>("Untitled Document");
   const [isFillModalOpen, setIsFillModalOpen] = useState(false);
   const [isFilterModalOpen, setIsFilterModalOpen] = useState(false);
   const [isRemBgModalOpen, setIsRemBgModalOpen] = useState(false);
@@ -94,6 +95,7 @@ const ImageEditPage: React.FC = () => {
   const loadDocument = async (id: number) => {
     const document = await storageService.getDocument(id);
     if (document) {
+      setDocumentTitle(document.name || "Untitled Document");
       const updatedLayers = document.layers.map((layer) => ({
         ...layer,
         image: layer.image ? `data:image/png;base64,${layer.image}` : null,
@@ -186,7 +188,7 @@ const ImageEditPage: React.FC = () => {
 
   const handleSave = async () => {
     const document = {
-      name: `Document ${Date.now()}`,
+      name: documentTitle || `Document ${Date.now()}`,
       layers: layers.map((layer) => ({
         ...layer,
         image: layer.image?.split(",")[1] || null,
@@ -331,6 +333,8 @@ const ImageEditPage: React.FC = () => {
         setAspectRatio={handleAspectRatioUpdate}
         documentSize={documentSize}
         setDocumentSize={setDocumentSize}
+        documentTitle={documentTitle}
+        onTitleChange={setDocumentTitle}
       />
       <FillImageModal
         brandStyle={currentStyle}

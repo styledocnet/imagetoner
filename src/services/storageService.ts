@@ -62,6 +62,19 @@ export const storageService = {
     const db = await dbPromise;
     return db.put("documents", toSave);
   },
+  async updateDocumentName(id: number, name: string) {
+    const document = await this.getDocument(id);
+    if (document) {
+      const now = new Date().toISOString();
+      const toSave: ImageDocument = {
+        ...document,
+        name: name.trim(),
+        updatedAt: now,
+      };
+      const db = await dbPromise;
+      return db.put("documents", toSave);
+    }
+  },
   async deleteDocument(id: number) {
     const db = await dbPromise;
     return db.delete("documents", id);

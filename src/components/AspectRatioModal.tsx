@@ -1,5 +1,5 @@
 import React, { useRef, useEffect, useState } from "react";
-import { LockOpenIcon, LockClosedIcon } from "@heroicons/react/24/outline";
+import { LockOpenIcon, LockClosedIcon, PencilIcon } from "@heroicons/react/24/outline";
 import Modal from "./Modal";
 import SelectBox from "./SelectBox";
 
@@ -10,6 +10,8 @@ interface AspectRatioModalProps {
   setAspectRatio: (aspectRatio: number | null) => void;
   documentSize: { width: number; height: number };
   setDocumentSize: (size: { width: number; height: number }) => void;
+  documentTitle?: string;
+  onTitleChange?: (title: string) => void;
 }
 
 const aspectRatios: { key: string; label: string; value: number | null }[] = [
@@ -38,13 +40,29 @@ const presets: { key: string; label: string; value: string }[] = [
   { key: "Custom", label: "Custom", value: "" },
 ];
 
-const AspectRatioModal: React.FC<AspectRatioModalProps> = ({ isOpen, onClose, aspectRatio, setAspectRatio, documentSize, setDocumentSize }) => {
+const AspectRatioModal: React.FC<AspectRatioModalProps> = ({
+  isOpen,
+  onClose,
+  aspectRatio,
+  setAspectRatio,
+  documentSize,
+  setDocumentSize,
+  documentTitle = "",
+  onTitleChange = () => {},
+}) => {
   const widthRef = useRef<HTMLInputElement>(null);
   const heightRef = useRef<HTMLInputElement>(null);
+  const titleRef = useRef<HTMLInputElement>(null);
   const [isLinked, setIsLinked] = useState(true);
   const [selectedPreset, setSelectedPreset] = useState("Custom");
   const [selectedAspect, setSelectedAspect] = useState(aspectRatios.find((a) => a.value === aspectRatio)?.key || "Free");
   const [resolution, setResolution] = useState<string>("");
+  const [title, setTitle] = useState(documentTitle);
+
+  // Sync title when modal opens
+  useEffect(() => {
+    setTitle(documentTitle);
+  }, [documentTitle, isOpen]);
 
   // Sync aspect ratio select
   useEffect(() => {
@@ -116,6 +134,9 @@ const AspectRatioModal: React.FC<AspectRatioModalProps> = ({ isOpen, onClose, as
       width: Number(widthRef.current!.value),
       height: Number(heightRef.current!.value),
     });
+    if (title.trim() && title !== documentTitle) {
+      onTitleChange(title.trim());
+    }
     onClose();
   };
 
@@ -133,6 +154,22 @@ const AspectRatioModal: React.FC<AspectRatioModalProps> = ({ isOpen, onClose, as
         </button>
       }
     >
+      <div className="mb-4">
+        <label className="block text-xs font-semibold text-gray-700 dark:text-gray-300 mb-1 flex items-center gap-2">
+          {/*<PencilIcon className="w-4 h-4" />*/}
+          Document Title
+        </label>
+        <input
+          ref={titleRef}
+          type="text"
+          value={title}
+          onChange={(e) => setTitle(e.target.value)}
+          className="w-full border border-gray-300 dark:border-gray-600 px-3 py-2 rounded-md bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 transition"
+          placeholder="Enter document title"
+          maxLength={255}
+        />
+        <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">{title.length}/255 characters</p>
+      </div>
       <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-4">
         <div>
           <label className="block text-xs font-semibold text-gray-700 dark:text-gray-300 mb-1">Aspect Ratio</label>
