@@ -4,10 +4,6 @@ import { Note, InstrumentType } from "@/types/audio";
 // Define scheduled note type
 interface ScheduledNote extends Note {
   trackId?: string;
-}
-// Define scheduled note type
-interface ScheduledNote extends Note {
-  trackId?: string;
   trackLength?: number;
   loopIndependently?: boolean;
 }
@@ -69,8 +65,6 @@ export class ToneNoteScheduler {
       loopIndependently: note.loopIndependently || true, // Default to true for independent looping
       trackId: note.trackId || undefined,
     };
-
-    console.log(`Adding note to scheduler: ${normalizedNote.pitch} at step ${normalizedNote.start} with length ${normalizedNote.length}`);
 
     // Store track info for independent looping if available
     if (normalizedNote.trackId && normalizedNote.trackLength && normalizedNote.loopIndependently) {
@@ -206,7 +200,6 @@ export class ToneNoteScheduler {
         }
 
         this.synths.set(instrumentKey, instrument);
-        console.log(`Created new instrument: ${instrumentKey}`);
       } else {
         instrument = this.synths.get(instrumentKey);
       }
@@ -216,10 +209,7 @@ export class ToneNoteScheduler {
 
       // Play the note
       if (instrument) {
-        console.log(`Playing note: ${note.pitch} at time ${time} with velocity ${velocity} and duration ${duration}`);
         instrument.triggerAttackRelease(note.pitch, duration, time, velocity);
-      } else {
-        console.warn("Instrument not found for note:", note);
       }
     } catch (error) {
       console.error("Error playing note:", error);
@@ -333,8 +323,6 @@ export class ToneNoteScheduler {
 
   cleanup() {
     try {
-      console.log("Cleaning up ToneNoteScheduler...");
-
       // Stop transport first
       if (Tone.Transport.state !== "stopped") {
         Tone.Transport.stop();
@@ -382,8 +370,6 @@ export class ToneNoteScheduler {
       this.transportIds.clear();
       this.notes.clear();
       this.trackInfo.clear();
-
-      console.log("ToneNoteScheduler cleanup complete");
     } catch (error) {
       console.error("Error during ToneNoteScheduler cleanup:", error);
     }

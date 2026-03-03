@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from "react";
 import { Track } from "../../types/audio/audiotimeline";
+import { InstrumentType } from "../../types/audio";
 import {
   SpeakerWaveIcon,
   SpeakerXMarkIcon,
@@ -10,9 +11,11 @@ import {
   MusicalNoteIcon,
   ChevronUpIcon,
   ChevronDownIcon,
+  TrashIcon,
 } from "@heroicons/react/24/outline";
 import TrackMinimap from "./TrackMinimap";
 import SelectBox from "../SelectBox";
+import InstrumentSelectorModal, { InstrumentParameters } from "./InstrumentSelectorModal";
 import { rootNotes, formatScaleOptionsForDropdown, generateScaleOptions, parseScaleString } from "@/utils/audio/scales";
 
 interface ResizableTrackPanelProps {
@@ -24,9 +27,11 @@ interface ResizableTrackPanelProps {
   onSolo: () => void;
   onOctaveChange: (trackId: string, change: number) => void;
   onScaleChange?: (trackId: string, rootNote: string, scaleName: string) => void;
+  onInstrumentChange?: (trackId: string, instrument: InstrumentType, parameters: InstrumentParameters) => void;
   isExpanded: boolean;
   onToggleExpand: () => void;
   currentStep?: number;
+  onClearPattern?: () => void;
 }
 
 const ResizableTrackPanel: React.FC<ResizableTrackPanelProps> = ({
@@ -38,13 +43,23 @@ const ResizableTrackPanel: React.FC<ResizableTrackPanelProps> = ({
   onSolo,
   onOctaveChange = () => {},
   onScaleChange = () => {},
+  onInstrumentChange = () => {},
   isExpanded = false,
   onToggleExpand = () => {},
   currentStep = 0,
+  onClearPattern = () => {},
 }) => {
   const [height, setHeight] = useState(isExpanded ? 400 : 200);
   const [isResizing, setIsResizing] = useState(false);
   const [wasExpanded, setWasExpanded] = useState(isExpanded);
+  const [showInstrumentModal, setShowInstrumentModal] = useState(false);
+
+  const handleInstrumentModalConfirm = (params: InstrumentParameters) => {
+    if (onInstrumentChange) {
+      onInstrumentChange(track.id, params.instrument as InstrumentType, params);
+    }
+    setShowInstrumentModal(false);
+  };
 
   const startResize = (e: React.MouseEvent) => {
     e.preventDefault();
@@ -119,10 +134,17 @@ const ResizableTrackPanel: React.FC<ResizableTrackPanelProps> = ({
               </>
             )}
           </span>
-          <span className="text-xs bg-gray-800 px-2 py-1 rounded-md shadow-sm flex items-center text-white">
+          <button
+            onClick={(e) => {
+              e.stopPropagation();
+              setShowInstrumentModal(true);
+            }}
+            className="text-xs bg-gradient-to-r from-purple-600 to-blue-600 hover:from-purple-700 hover:to-blue-700 px-2 py-1 rounded-md shadow-sm flex items-center text-white transition-all cursor-pointer border border-purple-500"
+            title="Click to edit instrument and parameters"
+          >
             <MusicalNoteIcon className="w-3 h-3 mr-1" />
             {track.instrument}
-          </span>
+          </button>
 
           {/* Octave Controls */}
           {track.mode === "STEP" && (
@@ -208,6 +230,19 @@ const ResizableTrackPanel: React.FC<ResizableTrackPanelProps> = ({
             )}
           </button>
 
+          <button
+            className="px-2 py-1 bg-orange-600 hover:bg-orange-700 rounded-md shadow-sm transition-colors duration-150 text-white"
+            onClick={(e) => {
+              e.stopPropagation();
+              if (confirm(`Clear all notes from "${track.name}"?`)) {
+                onClearPattern();
+              }
+            }}
+            title="Clear all notes from this track"
+          >
+            <TrashIcon className="w-4 h-4" />
+          </button>
+
           <div className="flex items-center gap-1 bg-gray-800 px-2 py-1 rounded-md">
             <label className="text-xs font-medium text-white">Length:</label>
             <input
@@ -274,6 +309,15 @@ const ResizableTrackPanel: React.FC<ResizableTrackPanelProps> = ({
       <div className="border-t border-gray-700">
         <TrackMinimap track={track} currentStep={currentStep} />
       </div>
+
+      {/* Instrument Selector Modal */}
+      <InstrumentSelectorModal
+        isOpen={showInstrumentModal}
+        onClose={() => setShowInstrumentModal(false)}
+        currentInstrument={track.instrument || "Sine"}
+        onConfirm={handleInstrumentModalConfirm}
+        trackName={track.name}
+      />
 
       {/* Resize Handle */}
       <div

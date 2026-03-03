@@ -23,8 +23,26 @@ export interface Track {
 // Simple function to generate unique IDs
 const generateId = () => Math.random().toString(36).substring(2, 15);
 
+// Empty tracks - start with a blank canvas
+export const EMPTY_TRACKS: Track[] = [
+  {
+    id: "track-1",
+    name: "Track 1",
+    mode: TrackMode.STEP,
+    notes: [],
+    length: 16,
+    color: "#4a90e2",
+    solo: false,
+    mute: false,
+    instrument: InstrumentType.Sine,
+    rootNote: "C",
+    scaleName: "major",
+    scaleNotes: ["C", "D", "E", "F", "G", "A", "B"],
+  },
+];
+
 // Demo tracks setup with Bass, Drums and different view types
-export const DEFAULT_TRACKS: Track[] = [
+export const DEMO_TRACKS: Track[] = [
   {
     id: "track-1",
     name: "Bass",
@@ -364,9 +382,12 @@ export const DEFAULT_TRACKS: Track[] = [
 ];
 
 // Generate the next track ID based on existing tracks
-export function getNextTrackId(tracks: Track[] = DEFAULT_TRACKS): string {
+export function getNextTrackId(tracks: Track[] = DEMO_TRACKS): string {
   return `track-${tracks.length + 1}`;
 }
+
+// Export both as default for backwards compatibility
+export const DEFAULT_TRACKS = DEMO_TRACKS;
 
 /**
  * Toggles the solo state of a track and updates other tracks' solo states accordingly

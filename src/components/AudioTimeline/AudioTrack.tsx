@@ -1,6 +1,7 @@
-import React from "react";
+import React, { useState } from "react";
 import { AudioTrack as AudioTrackType } from "../../hooks/useAudioTrackManagement";
-import { Note } from "../../types/audio";
+import { Note, InstrumentType } from "../../types/audio";
+import InstrumentSelectorModal, { InstrumentParameters } from "./InstrumentSelectorModal";
 // Using Tailwind CSS instead of imported CSS
 
 interface AudioTrackProps {
@@ -16,6 +17,7 @@ interface AudioTrackProps {
   onOctaveShift: (id: number, direction: "up" | "down") => void;
   onNoteRemove?: (trackId: number, noteId: string | number) => void;
   onVariationSwitch?: (trackId: number, variation: string) => void;
+  onInstrumentChange?: (trackId: number, instrument: InstrumentType, parameters: InstrumentParameters) => void;
   // Add other props as needed
 }
 
@@ -32,8 +34,17 @@ export const AudioTrack: React.FC<AudioTrackProps> = ({
   onOctaveShift,
   onNoteRemove,
   onVariationSwitch,
+  onInstrumentChange,
   // Other props
 }) => {
+  const [showInstrumentModal, setShowInstrumentModal] = useState(false);
+
+  const handleInstrumentModalConfirm = (params: InstrumentParameters) => {
+    if (onInstrumentChange) {
+      onInstrumentChange(parseInt(track.id), params.instrument, params);
+    }
+    setShowInstrumentModal(false);
+  };
   // Extract the note rendering logic
   const renderNotes = (notes: Note[]) => {
     // Only show notes for the current variation or notes without variation property
@@ -138,7 +149,19 @@ export const AudioTrack: React.FC<AudioTrackProps> = ({
       onClick={onSelect}
     >
       <div className="flex justify-between items-center px-3 py-2 bg-gray-700 border-b border-gray-600">
-        <div className="font-medium text-white truncate mr-2">{track.name}</div>
+        <div className="flex items-center gap-2">
+          <div className="font-medium text-white truncate">{track.name}</div>
+          <button
+            onClick={(e) => {
+              e.stopPropagation();
+              setShowInstrumentModal(true);
+            }}
+            className="px-2 py-1 text-xs font-medium bg-gradient-to-r from-purple-600 to-blue-600 hover:from-purple-700 hover:to-blue-700 text-white rounded border border-purple-500 transition-all hover:shadow-lg"
+            title="Click to edit instrument and parameters"
+          >
+            {track.instrument || "Sine"}
+          </button>
+        </div>
         <div className="flex gap-1 items-center">
           <button
             className={`w-7 h-7 rounded flex items-center justify-center text-xs font-bold ${
@@ -280,6 +303,15 @@ export const AudioTrack: React.FC<AudioTrackProps> = ({
           {track.currentVariation && <div>Variation: {track.currentVariation}</div>}
         </div>
       )}
+
+      {/* Instrument Selector Modal */}
+      <InstrumentSelectorModal
+        isOpen={showInstrumentModal}
+        onClose={() => setShowInstrumentModal(false)}
+        currentInstrument={track.instrument || "Sine"}
+        onConfirm={handleInstrumentModalConfirm}
+        trackName={track.name}
+      />
     </div>
   );
 };

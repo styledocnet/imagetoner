@@ -36,6 +36,8 @@ interface AudioTimelineProps {
   onVariationChange?: (trackId: string, variation: string) => void;
   onGlobalVariationChange?: (variation: string) => void;
   onNoteRemove?: (trackId: string, noteId: string) => void;
+  onClearPattern?: (trackId: string) => void;
+  onInstrumentChange?: (trackId: string, instrument: any) => void;
   enableBlockArranger?: boolean;
 }
 
@@ -90,6 +92,8 @@ const AudioTimeline: React.FC<AudioTimelineProps> = ({
   onScaleChange,
   onVariationChange,
   onGlobalVariationChange,
+  onClearPattern,
+  onInstrumentChange,
   enableBlockArranger,
 }) => {
   const audioContextRef = useRef<AudioContext>();
@@ -212,12 +216,8 @@ const AudioTimeline: React.FC<AudioTimelineProps> = ({
       // Start Tone.js context (needed for browser autoplay policy)
       Tone.start()
         .then(() => {
-          console.log("Tone.js is ready");
-
-          // Force an audio context resume
-          Tone.context.resume().then(() => {
-            console.log("Audio context resumed");
-          });
+          // Resume audio context for playback
+          Tone.context.resume().catch(console.error);
 
           // Make sure scheduler is built and up-to-date
           if (!schedulerRef.current) {
@@ -226,14 +226,9 @@ const AudioTimeline: React.FC<AudioTimelineProps> = ({
 
           if (state.playbackState.isPlaying) {
             schedulerRef.current?.pause();
-            console.log("Audio playback paused");
           } else {
-            // Resume the audio context every time we start playing
-            Tone.context.resume().then(() => {
-              console.log("Audio context resumed");
-              schedulerRef.current?.start();
-              console.log("Audio playback resumed");
-            });
+            // Start playback
+            schedulerRef.current?.start();
           }
         })
         .catch((error) => {
@@ -498,11 +493,7 @@ const AudioTimeline: React.FC<AudioTimelineProps> = ({
       try {
         await Tone.start();
         console.log("Tone.js initialized on component mount");
-
-        // Keep the context in suspended state until user interaction
-        if (Tone.context.state === "running") {
-          (Tone.context as any).suspend().catch(console.error);
-        }
+        // Audio context is now ready for user interaction
       } catch (err) {
         console.error("Failed to initialize Tone.js:", err);
       }
@@ -552,48 +543,87 @@ const AudioTimeline: React.FC<AudioTimelineProps> = ({
     requestAnimationFrameIdRef.current = requestAnimationFrame(updateUI);
   }, []);
 
+  // Sync tracks from props whenever they change
+  useEffect(() => {
+    setState((prevState) => {
+      // Only update if tracks actually changed to avoid infinite loops
+      if (prevState.tracks !== tracks) {
+        return {
+          ...prevState,
+          tracks: tracks,
+        };
+      }
+      return prevState;
+    });
+  }, [tracks]);
+
   // Handle track updates - when notes change or when mute/solo status changes
   useEffect(() => {
-    // Use the rebuildScheduler helper to handle track updates
-    const updated = rebuildScheduler();
+    // Only rebuild if we have valid tracks
+    if (state.tracks && state.tracks.length > 0) {
+      const updated = rebuildScheduler();
 
-    if (updated && state.playbackState.isPlaying) {
-      // Resume playback if we were already playing
-      schedulerRef.current?.start();
+      if (updated && state.playbackState.isPlaying) {
+        // Resume playback if we were already playing
+        schedulerRef.current?.start();
+      }
     }
   }, [state.tracks, rebuildScheduler, state.playbackState.isPlaying]);
 
   // Handle specific track mute/solo changes
   const handleTrackMuteChange = useCallback(
     (trackId: string) => {
-      // Call the parent component's handler
+      // Call the parent component's handler to update parent state
       onTrackMute(trackId);
 
-      // Force scheduler rebuild after state updates
+      // Rebuild scheduler immediately to reflect mute state
       setTimeout(() => {
+        rebuildScheduler();
         if (state.playbackState.isPlaying) {
-          rebuildScheduler();
           schedulerRef.current?.start();
         }
       }, 0);
     },
-    [onTrackMute, rebuildScheduler, state.playbackState.isPlaying],
+    [onTrackMute, rebuildScheduler, state.playbackState.isPlaying, state.tracks],
+  );
+
+  // Handle clearing pattern
+  const handleClearPattern = useCallback(
+    (trackId: string) => {
+      if (onClearPattern) {
+        onClearPattern(trackId);
+      }
+
+      // Cleanup scheduler with a slight delay to allow state to sync
+      setTimeout(() => {
+        if (schedulerRef.current) {
+          schedulerRef.current.cleanup();
+          schedulerRef.current = null;
+        }
+        // Rebuild scheduler after cleanup
+        rebuildScheduler();
+        if (state.playbackState.isPlaying) {
+          schedulerRef.current?.start();
+        }
+      }, 0);
+    },
+    [onClearPattern, rebuildScheduler, state.playbackState.isPlaying],
   );
 
   const handleTrackSoloChange = useCallback(
     (trackId: string) => {
-      // Call the parent component's handler
+      // Call the parent component's handler to update parent state
       onTrackSolo(trackId);
 
-      // Force scheduler rebuild after state updates
+      // Rebuild scheduler immediately to reflect solo state
       setTimeout(() => {
+        rebuildScheduler();
         if (state.playbackState.isPlaying) {
-          rebuildScheduler();
           schedulerRef.current?.start();
         }
       }, 0);
     },
-    [onTrackSolo, rebuildScheduler, state.playbackState.isPlaying],
+    [onTrackSolo, rebuildScheduler, state.playbackState.isPlaying, state.tracks],
   );
 
   // This section has been refactored into the rebuildScheduler function
@@ -746,9 +776,16 @@ const AudioTimeline: React.FC<AudioTimelineProps> = ({
             onSolo={() => handleTrackSoloChange(track.id)}
             onOctaveChange={onOctaveChange}
             onScaleChange={onScaleChange}
+            onInstrumentChange={(trackId, instrument, parameters) => {
+              // Call parent callback to update tracks in parent component
+              if (onInstrumentChange) {
+                onInstrumentChange(trackId, instrument);
+              }
+            }}
             isExpanded={expandedTrackId === track.id}
             onToggleExpand={() => toggleExpandTrack(track.id)}
             currentStep={state.playbackState.currentStep}
+            onClearPattern={() => handleClearPattern(track.id)}
           >
             {track.mode === TrackMode.STEP ? (
               <TimelineTrack

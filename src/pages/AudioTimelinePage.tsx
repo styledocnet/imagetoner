@@ -1,13 +1,14 @@
 import { useState, useCallback, useEffect } from "react";
 import AudioTimeline from "@/components/AudioTimeline";
-import { DEFAULT_TRACKS } from "@/utils/audio/audioTimelineUtils";
+import { EMPTY_TRACKS, DEMO_TRACKS } from "@/utils/audio/audioTimelineUtils";
 import { TrackMode } from "@/types/audio/audiotimeline";
 import { InstrumentType, Note } from "@/types/audio";
 
 import { getDefaultScaleForInstrument, getScaleNotes } from "@/utils/audio/scales";
 
 const AudioTimelinePage = () => {
-  const [tracks, setTracks] = useState(DEFAULT_TRACKS);
+  const [tracks, setTracks] = useState(EMPTY_TRACKS);
+  const [showLoadDemo, setShowLoadDemo] = useState(true);
 
   // Track management functions
   const handleNoteRemove = useCallback((trackId: string, noteId: string) => {
@@ -111,6 +112,10 @@ const AudioTimelinePage = () => {
     );
   }, []);
 
+  const handleClearPattern = useCallback((trackId: string) => {
+    setTracks((prevTracks) => prevTracks.map((track) => (track.id === trackId ? { ...track, notes: [] } : track)));
+  }, []);
+
   const handleAddTrack = useCallback(() => {
     const newTrackId = `track-${tracks.length + 1}`;
     const newTrack = {
@@ -164,6 +169,20 @@ const AudioTimelinePage = () => {
     );
   }, []);
 
+  // Handle instrument changes
+  const handleInstrumentChange = useCallback((trackId: string, instrument: InstrumentType) => {
+    setTracks((prevTracks) =>
+      prevTracks.map((track) =>
+        track.id === trackId
+          ? {
+              ...track,
+              instrument: instrument,
+            }
+          : track,
+      ),
+    );
+  }, []);
+
   // Initialize tracks with scheduler muted state on component mount
   useEffect(() => {
     setTracks((prevTracks) => {
@@ -200,6 +219,8 @@ const AudioTimelinePage = () => {
         onAddNote={handleAddNote}
         onScaleChange={handleScaleChange}
         onNoteRemove={handleNoteRemove}
+        onClearPattern={handleClearPattern}
+        onInstrumentChange={handleInstrumentChange}
       />
     </div>
   );
